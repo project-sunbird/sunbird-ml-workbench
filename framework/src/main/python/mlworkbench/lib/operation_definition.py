@@ -1,5 +1,5 @@
 from pandas import HDFStore
-from utils.common import dir_loc, create_directory, get_parent_dir
+from mlworkbench.utils.common import dir_loc, create_directory, get_parent_dir
 import numpy as np
 
 

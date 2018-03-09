@@ -10,4 +10,4 @@ then
    pip install pybuilder
 fi
 
-pyb install_dependencies publish
+pyb install_dependencies clean package

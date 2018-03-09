@@ -5,8 +5,8 @@ Functions to parse YAML configuration and create DAG
 import yaml
 import numpy as np
 from datetime import datetime, date, timedelta
-from lib.node_registry import callables
-from utils.common import create_directory, dir_loc
+from mlworkbench.lib.node_registry import callables
+from mlworkbench.utils.common import create_directory, dir_loc
 from collections import OrderedDict
 import networkx as nx
 import pickle

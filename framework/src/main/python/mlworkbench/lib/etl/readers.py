@@ -1,5 +1,5 @@
 import pandas as pd
-from lib.operation_definition import NodeOperation
+from mlworkbench.lib.operation_definition import NodeOperation
 
 
 def csv_reader(node):

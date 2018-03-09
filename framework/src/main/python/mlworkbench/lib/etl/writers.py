@@ -1,5 +1,5 @@
-from lib.operation_definition import NodeOperation
-from utils.common import create_directory, get_parent_dir
+from mlworkbench.lib.operation_definition import NodeOperation
+from mlworkbench.utils.common import create_directory, get_parent_dir
 
 def csv_writer(node):
     writer = NodeOperation(node) # initiate

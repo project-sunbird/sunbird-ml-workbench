@@ -6,8 +6,8 @@ from os.path import expanduser
 airflow_dir = os.environ["AIRFLOW_HOME"]
 sys.path.insert(0,os.path.join(airflow_dir,os.pardir,os.pardir,os.pardir))
 
-from lib.node_registry import python_callables, scala_spark_callables
-from executor.parse_configuration import create_nodes, createDAG
+from mlworkbench.lib.node_registry import python_callables, scala_spark_callables
+from mlworkbench.executor.parse_configuration import create_nodes, createDAG
 
 from airflow.operators.python_operator import PythonOperator
 from airflow.operators.bash_operator import BashOperator

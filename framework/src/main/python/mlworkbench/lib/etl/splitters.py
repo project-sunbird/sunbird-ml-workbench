@@ -1,4 +1,4 @@
-from lib.operation_definition import NodeOperation
+from mlworkbench.lib.operation_definition import NodeOperation
 from sklearn.model_selection import KFold
 
 
