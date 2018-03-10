@@ -3,6 +3,7 @@ Functions to parse YAML configuration and create DAG
 '''
 
 import yaml
+import os
 import numpy as np
 from datetime import datetime, date, timedelta
 from mlworkbench.lib.node_registry import callables
@@ -11,6 +12,14 @@ from collections import OrderedDict
 import networkx as nx
 import pickle
 from airflow import DAG
+from mlworkbench.utils.common import normalize_path
+
+# Global objects
+cwd = ""
+if "MLWB_CWD" in os.environ:
+    cwd = os.environ["MLWB_CWD"]
+else:
+    cwd = os.getcwd()
 
 class NodeObject:
 
@@ -36,6 +45,26 @@ class NodeObject:
             self.inputs = []
         if self.outputs is None:
             self.outputs = []
+        
+        cwd = ""
+        if "MLWB_CWD" in os.environ:
+            cwd = os.environ["MLWB_CWD"]
+        else:
+            cwd = os.getcwd()
+        
+        inputs = {}
+        for key in self.graph_inputs:
+            inputs[key] = normalize_path(cwd, self.graph_inputs[key])
+
+        outputs = {}
+        for key in self.graph_outputs:
+            outputs[key] = normalize_path(cwd, self.graph_outputs[key])
+
+        self.graph_inputs = inputs
+        self.graph_outputs = outputs
+        experiment_dir = normalize_path(cwd, self.experiment_dir)
+        self.experiment_dir = experiment_dir
+
         if self.graph_inputs is None:
             self.graph_inputs = {}
         if self.graph_outputs is None:
@@ -54,6 +83,13 @@ class NodeObject:
 
 
 class ComplexNodeObject:
+
+    @staticmethod
+    def normalizePath(cwd, path):
+        if path.startswith('/'):
+            return path
+        else:
+            return os.path.normpath(os.path.join(cwd, path))
 
     @staticmethod
     def _node_arguments_simplifier(properties, index):
@@ -141,6 +177,7 @@ def create_nodes(config_loc):
     if graph_inputs is None:
         graph_inputs = {}
 
+    experiment_dir = normalize_path(cwd, experiment_dir)
     # create experiment directory if it doesn't exist
     create_directory(experiment_dir)
 
@@ -180,6 +217,10 @@ def create_nodes(config_loc):
 
     # Make sure its a DAG
     graph.add_edges_from(edge_list) # create DAG
+
+    with open(dir_loc(experiment_dir)+'graph.pkl', 'wb') as handle:
+        pickle.dump(graph, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
     if not(nx.is_directed_acyclic_graph(graph)): #check
         raise ValueError("Graph is not a valid DAG.")
 
@@ -192,8 +233,7 @@ def create_nodes(config_loc):
     # save output - node mapping in experiment dir
     np.save(dir_loc(experiment_dir)+'output_node_mapping.npy',output_node)
 
-    with open(dir_loc(experiment_dir)+'graph.pkl', 'wb') as handle:
-        pickle.dump(graph, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    
 
     return nodes_sorted
 

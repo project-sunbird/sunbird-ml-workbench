@@ -12,13 +12,13 @@ from mlworkbench.executor.parse_configuration import create_nodes, createDAG
 from airflow.operators.python_operator import PythonOperator
 from airflow.operators.bash_operator import BashOperator
 
-if "MLWB_HOME" in os.environ:
-    working_dir = os.environ["MLWB_HOME"]
+if "DAG_FOLDER" in os.environ:
+    working_dir = os.environ["DAG_FOLDER"]
 else:
-    working_dir = os.path.join(os.path.dirname(__file__),os.pardir,os.pardir
-                               ,os.pardir,os.pardir,"examples")
+    raise ValueError("Cannot find the dags folder to register the dags")
 
-path = os.path.join(working_dir, 'configurations') + '/'
+path = working_dir + '/'
+
 extension = 'yaml'
 os.chdir(path)
 config_files = [i for i in glob.glob('*.{}'.format(extension))]

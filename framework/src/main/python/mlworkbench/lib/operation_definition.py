@@ -96,7 +96,6 @@ class NodeOperation(object):
     # Reader - helper
     def read_files_to_dataframe_storage(self, func):
         # takes a reader function and reads files to HDFStore
-
         for i in range(0,len(self.inputs)):
             input_file_loc = self.graph_inputs[self.inputs[i]]
             data = func(input_file_loc, **self.arguments)

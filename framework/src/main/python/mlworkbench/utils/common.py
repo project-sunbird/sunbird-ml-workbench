@@ -32,3 +32,9 @@ def dir_loc(dir_str):
 
 def get_parent_dir(location):
     return dir_loc(os.path.abspath(os.path.join(location, os.pardir)))
+
+def normalize_path(cwd, path):
+    if path.startswith('/'):
+        return path
+    else:
+        return os.path.normpath(os.path.join(cwd, path))
