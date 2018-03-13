@@ -1,0 +1,104 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+import os
+import shutil
+from mlworkbench.utils.common import normalize_path
+
+
+def getopts(argv):
+    opts = {}  # Empty dictionary to store key-value pairs.
+    while argv:  # While there are arguments left to parse...
+        if argv[0][0] == '-':  # Found a "-name value" pair.
+            opts[argv[0]] = argv[1]  # Add key and value to the dictionary.
+        # Reduce the argument list by copying it starting from index 1.
+        argv = argv[1:]
+    return opts
+
+
+def get_dag_state(dag_id):
+    from airflow.models import DagRun
+    dr = DagRun.find(dag_id)
+    return dr[0].state if len(dr) > 0 else None
+
+
+def setup_exec_environment(vargs, execution_dir):
+
+    shutil.rmtree(execution_dir + '/workingdir')
+    os.makedirs(execution_dir + '/workingdir/airflow')
+    os.makedirs(execution_dir + '/workingdir/airflow_dag_executor')
+    os.makedirs(execution_dir + '/workingdir/dags')
+
+    os.environ['AIRFLOW_HOME'] = execution_dir + '/workingdir/airflow'
+    os.environ['AIRFLOW__CORE__DAGS_FOLDER'] = execution_dir + \
+        '/workingdir/airflow_dag_executor/'
+    os.environ['AIRFLOW__CORE__LOAD_EXAMPLES'] = 'False'
+    os.environ['DAG_FOLDER'] = execution_dir + '/workingdir/dags'
+    os.environ['MLWB_CWD'] = execution_dir
+
+
+def init(execution_dir):
+    import urllib2
+    dag_path = 'https://s3.ap-south-1.amazonaws.com/ekstep-public-dev/artefacts/mlworkbench/airflow_dag.py'
+    filedata = urllib2.urlopen(dag_path)
+    datatowrite = filedata.read()
+    with open(execution_dir + '/workingdir/airflow_dag_executor/airflow_dag.py', 'wb') as f:
+        f.write(datatowrite)
+
+
+def run(vargs, execution_dir):
+    shutil.copy2(normalize_path(
+        execution_dir, vargs['-dag']), execution_dir + '/workingdir/dags')
+
+    from airflow.bin.cli import initdb
+    #from airflow.bin.cli import scheduler
+    from airflow.bin.cli import unpause
+    from collections import namedtuple
+
+    initdb({})
+
+    Arg = namedtuple(
+        'Arg', ['dag_id', 'subdir', 'run_duration', 'num_runs', 'do_pickle', 'pid', 'daemon', 'stdout', 'stderr', 'log_file'])
+    Arg.__new__.__defaults__ = (
+        None, None, None, 1, False, None, False, None, None, None)
+
+    dag_id = vargs["-dag-id"]
+    scheduler_args = Arg(dag_id=dag_id, subdir=execution_dir + "/workingdir/airflow_dag_executor",
+                         pid=execution_dir + '/workingdir/mlwb_scheduler.pid')
+
+    # Start the scheduler
+    import subprocess
+    import time
+    p = subprocess.Popen(["airflow", "scheduler"])
+    time.sleep(10)  # Wait for the scheduler to start
+    # scheduler(scheduler_args)
+
+    print("=======> Submitting the job....")
+    unpause(scheduler_args)
+    time.sleep(10)  # Wait for the scheduler to trigger dag run
+
+    print("=======> Dag State:" + get_dag_state("Iris_Classification"))
+    while get_dag_state(dag_id) == "running":
+        print("=======> Dag State:" + get_dag_state("Iris_Classification"))
+        time.sleep(10)  # Sleep for 10 seconds
+
+    print("=======> Final Dag State:" + get_dag_state("Iris_Classification"))
+    print("=======> Shuttind down the scheduler...")
+    p.terminate()
+
+
+if __name__ == '__main__':
+
+    from sys import argv
+    vargs = getopts(argv)
+    execution_dir = os.getcwd()
+
+    setup_exec_environment(vargs, execution_dir)
+
+    command = argv[1]
+
+    if command == "init":
+        init(execution_dir)
+    if command == "run":
+        init(execution_dir)
+        run(vargs, execution_dir)

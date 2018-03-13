@@ -18,7 +18,10 @@ name = "mlworkbench"
 version = "0.0.1"
 license = "AGPL"
 
+
 @init
 def initialize(project):
+    project.depends_on_requirements("requirements.txt")
     project.build_depends_on('mockito')
-    project.set_property('publish_command', 'cp target/dist/mlworkbench-0.0.1/dist/mlworkbench-0.0.1.tar.gz ../dist')
+    project.set_property(
+        'publish_command', 'cp target/dist/mlworkbench-0.0.1/dist/mlworkbench-0.0.1.tar.gz ../dist')

@@ -1,0 +1,10 @@
+numpy
+airflow==1.8.0
+pandas
+sklearn
+pint
+tables
+networkx
+findspark
+scipy
+surprise
