@@ -24,7 +24,7 @@ def get_dag_state(dag_id):
 
 def setup_exec_environment(vargs, execution_dir):
 
-    shutil.rmtree(execution_dir + '/workingdir')
+    shutil.rmtree(execution_dir + '/workingdir', True)
     os.makedirs(execution_dir + '/workingdir/airflow')
     os.makedirs(execution_dir + '/workingdir/airflow_dag_executor')
     os.makedirs(execution_dir + '/workingdir/dags')
