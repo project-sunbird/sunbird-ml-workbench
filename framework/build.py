@@ -1,7 +1,5 @@
-# [TODO] compile the ML workbench
 # [TODO] run tests
 # [TODO] check for lints
-# [TODO] packaging - framwork and core operators
 
 from pybuilder.core import init, use_plugin
 
@@ -23,5 +21,4 @@ license = "AGPL"
 def initialize(project):
     project.depends_on_requirements("requirements.txt")
     project.build_depends_on('mockito')
-    project.set_property(
-        'publish_command', 'cp target/dist/mlworkbench-0.0.1/dist/mlworkbench-0.0.1.tar.gz ../dist')
+    #project.set_property('publish_command', 'cp target/dist/mlworkbench-0.0.1/dist/mlworkbench-0.0.1.tar.gz ../dist')
