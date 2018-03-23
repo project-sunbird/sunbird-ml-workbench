@@ -32,20 +32,20 @@ graph:
       ascending: True
 
   - node_name: training
-    inputs: training_data
-    outputs: [model_best_rmse, gridsearch_report]
-    operation: KNNBasic_model_trainer
-    arguments:
-      algo_class: KNNBasic
-      best_model_selection_metric: rmse
-      param_grid: 
-        k: [5,10]
-        sim_options:
-          'name': ['cosine']
-          'min_support': [1]
-          'user_based': [False]
-      cv: 2
-      measures: ['rmse','mae']
+  inputs: training_data
+  outputs: [model_best_rmse, gridsearch_report]
+  operation: KNNBasic_model_trainer
+  arguments:
+    algo_class: KNNBasic
+    best_model_selection_metric: rmse
+    param_grid: 
+      k: [5,10]
+      sim_options:
+        'name': ['cosine']
+        'min_support': [1]
+        'user_based': [False]
+    cv: 2
+  measures: ['rmse','mae']
 
   - node_name: prediction_using_rmse
     inputs: [model_best_rmse,prediction_data]
