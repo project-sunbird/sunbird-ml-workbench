@@ -4,11 +4,11 @@ experiment_dir: 'workingdir/experiment'
 inputs: 
   raw_data: "inputs/"
 outputs:
-  dictionary: "outputs/dictionary.dict"
-  corpus: "outputs/corpus.mm"
-  metadata: "outputs/filenames.txt"
-  similarity_matrix_1: "output/default_similarity_matrix.csv"
-  document_recommendation: "output/recommemdation.csv"
+  dictionary: "dictionary.dict"
+  corpus: "corpus.mm"
+  metadata: "filenames.txt"
+  similarity_matrix_1: "default_similarity_matrix.csv"
+  document_recommendation: "recommemdation.csv"
   
 graph:
 

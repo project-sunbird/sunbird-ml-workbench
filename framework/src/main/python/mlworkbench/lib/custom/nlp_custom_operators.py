@@ -48,9 +48,9 @@ def read_text_file_corpus(node):
 def compute_doc_similarity(node):
     doc_sim = NodeOperation(node)  # initiate
     doc_sim.io_check((len(doc_sim.inputs) == 3) & (len(doc_sim.outputs) == 1))
-    metadata_loc = doc_sim.graph_outputs(doc_sim.inputs[0])  # get input data
-    dict_loc = doc_sim.graph_outputs(doc_sim.inputs[1])  # get input data
-    corpus_loc = doc_sim.graph_outputs(doc_sim.inputs[2])  # get input data
+    metadata_loc = doc_sim.graph_outputs[doc_sim.inputs[0]]  # get input data
+    dict_loc = doc_sim.graph_outputs[doc_sim.inputs[1]]  # get input data
+    corpus_loc = doc_sim.graph_outputs[doc_sim.inputs[2]]  # get input data
 
     with open(metadata_loc, 'r') as f:
         filenames = [line.rstrip() for line in f]
