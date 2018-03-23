@@ -1,8 +1,8 @@
 experiment_name: Iris_Classification
 owner: sanjay
-experiment_dir: 'workingdir/experiment'
+experiment_dir: 'MLWBdemo1/experiment/'
 inputs: 
-  raw_data: "data.csv"
+  raw_data: "inputs/Iris.csv"
 outputs:
   prediction_file_1: "outputs/predictions_1.csv"
   prediction_file_2: "outputs/predictions_2.csv"

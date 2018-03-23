@@ -34,7 +34,11 @@ def get_parent_dir(location):
     return dir_loc(os.path.abspath(os.path.join(location, os.pardir)))
 
 def normalize_path(cwd, path):
-    if path.startswith('/'):
+    if os.path.isabs(path):
+        return path
+    elif path.startswith('http'):
+        return path
+    elif path.startswith('s3://'):
         return path
     else:
         return os.path.normpath(os.path.join(cwd, path))

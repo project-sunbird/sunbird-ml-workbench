@@ -1,5 +1,7 @@
 from mlworkbench.lib.operation_definition import NodeOperation
 from sklearn.model_selection import KFold
+import numpy as np
+import pandas as pd
 
 
 def k_fold_splitter(node):
@@ -21,3 +23,17 @@ def k_fold_splitter(node):
 
     # store output
     splitter.put_dataframes(df_list,splitter.outputs)
+
+
+def df_splitter_on_column_values(node):
+    splitter = NodeOperation(node)
+    splitter.io_check((len(splitter.inputs) == 1) & (len(splitter.outputs) == 2))  # check if i/o expectations are met
+    data = splitter.get_dataframes(splitter.inputs)[0]
+
+    data = data.sort_values(by=[splitter.arguments['split_column']], ascending=splitter.arguments['ascending'])
+    totalrows = data.shape[0]
+    split_rows = int(np.ceil(totalrows * splitter.arguments['training_percentage']))
+    train_data = data.iloc[:split_rows, :]
+    val_data = data.iloc[split_rows:, :]
+    df_list = [train_data, val_data]
+    splitter.put_dataframes(df_list, splitter.outputs)
