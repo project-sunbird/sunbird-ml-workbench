@@ -1,6 +1,6 @@
-experiment_name: Example5_MovieLens_CF_with_keras
+experiment_name: Example3a_MovieLens_CF_with_keras
 owner: Soma
-experiment_dir: MLWBdemo_5/experiment/
+experiment_dir: MLWBdemo3a/experiment/
 inputs:
   link_to_raw_data: http://files.grouplens.org/datasets/movielens/ml-100k.zip
   prediction_set: inputs/tutorial3_testset.csv

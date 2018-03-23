@@ -1,0 +1,17 @@
+The_Man_and_the_Serpent.txt
+Tempest.txt
+King_Lear.txt
+The_Lions_Share.txt
+Coriolanus.txt
+The_Wolf_and_the_Crane.txt
+The_Sick_Lion.txt
+The_Dog_and_the_Shadow.txt
+The_Wolf_and_the_Lamb.txt
+HenryV.txt
+Othello.txt
+The_Cock_and_the_Pearl.txt
+The_Fox_and_the_Crow.txt
+The_Ass_and_the_Lapdog.txt
+The_Lion_and_the_Mouse.txt
+The_Town_Mouse_and_the_Country_Mouse.txt
+The_Frogs_Desiring_a_King.txt

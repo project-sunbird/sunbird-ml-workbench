@@ -214,13 +214,15 @@ def KNNBasic_model_trainer(node):
     trainingSet = training_data.build_full_trainset()
     testSet = trainingSet.build_anti_testset()
     modeltype = model.arguments['algo_class']
+    best_model_selection_metric = model.arguments['best_model_selection_metric']
     model_args = dict(model.arguments.copy())
     del model_args['algo_class']
+    del model_args['best_model_selection_metric']
     gs = GridSearchCV(algo_class=surprise_models[modeltype], **model_args)
 
     gs.fit(training_data)
-
-    model_1 = gs.best_estimator['rmse']
+    
+    model_1 = gs.best_estimator[best_model_selection_metric]
     model_1.fit(trainingSet)
 
     model_output_file_1 = model.get_location(model.outputs[0], 'file')

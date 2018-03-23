@@ -1,6 +1,6 @@
 experiment_name: Example2_item_item_similarity
 owner: sanjay
-experiment_dir: MLWBdemo_2/experiment
+experiment_dir: MLWBdemo2/experiment
 inputs:
   link_to_raw_data: http://files.grouplens.org/datasets/movielens/ml-100k.zip
   validation_set: inputs/tutorial2_validation_set.csv

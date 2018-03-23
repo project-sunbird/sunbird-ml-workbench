@@ -1,6 +1,6 @@
-experiment_name: Example4_Iris_Classification_with_keras
+experiment_name: Example1a_Iris_Classification_with_keras
 owner: sanjay
-experiment_dir: 'MLWBdemo5/experiment/'
+experiment_dir: 'MLWBdemo1a/experiment/'
 inputs: 
   raw_data: "inputs/Iris.csv"
 outputs:

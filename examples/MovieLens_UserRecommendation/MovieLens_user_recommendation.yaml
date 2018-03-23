@@ -1,6 +1,6 @@
 experiment_name: Example3_MovieLens_Recommendation
 owner: sanjay
-experiment_dir: MLWBdemo_3/experiment/
+experiment_dir: MLWBdemo3/experiment/
 inputs:
   link_to_raw_data: http://files.grouplens.org/datasets/movielens/ml-100k.zip
   prediction_set: inputs/tutorial3_testset.csv
@@ -37,6 +37,7 @@ graph:
     operation: KNNBasic_model_trainer
     arguments:
       algo_class: KNNBasic
+      best_model_selection_metric: rmse
       param_grid: 
         k: [5,10]
         sim_options:

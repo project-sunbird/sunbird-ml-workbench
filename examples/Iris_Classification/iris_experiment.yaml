@@ -1,4 +1,4 @@
-experiment_name: Iris_Classification
+experiment_name: Example1_Iris_Classification
 owner: sanjay
 experiment_dir: 'MLWBdemo1/experiment/'
 inputs: 

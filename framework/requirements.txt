@@ -12,3 +12,5 @@ matplotlib
 keras
 tensorflow
 h5py
+gensim
+nltk

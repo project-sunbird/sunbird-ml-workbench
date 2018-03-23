@@ -3,6 +3,8 @@ from custom_operators import custom_pyspark_reader, custom_splitter, independent
     model_evaluation, model_predictor, add_user_item_index, CF_keras_model_fitting, evaluate_keras_model, \
     spark_data_prep, movielens_data_fetcher, predict_keras_model, train_keras_svm_model
 
+from nlp_custom_operators import read_text_file_corpus, compute_doc_similarity
+
 
 custom_python_callables = {
     'custom_pyspark_reader': custom_pyspark_reader,
@@ -20,7 +22,9 @@ custom_python_callables = {
     'CF_keras_model_fitting': CF_keras_model_fitting,
     'evaluate_keras_model': evaluate_keras_model,
     'predict_keras_model': predict_keras_model,
-    'train_keras_svm_model': train_keras_svm_model
+    'train_keras_svm_model': train_keras_svm_model,
+    'read_text_file_corpus': read_text_file_corpus,
+    'compute_doc_similarity': compute_doc_similarity
 }
 
 custom_bash_callables = {
