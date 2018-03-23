@@ -1,0 +1,13 @@
+TaskReference= {"Select~Column":"ColumnExtractor",
+"Numeric~~Cast":"NumericCast",
+"Numeric~~Missing~Imputation":"DFMissingNum",
+"Numeric~~Clip":"DFClip",
+"Numeric~~Find~and~Replace":"DFReplace",
+"Numeric~~Unit~Conversion":"UnitConv",
+"Numeric~~Standardization":"DFStandardScaler",
+"Numeric~~Binning":"Binning",
+"Numeric~~Quantile~Binning":"QBinning",
+"String~~Cast":"StringCast",
+"String~~Missing~Imputation":"DFMissingStr",
+"String~~Find~and~Replace":"DFReplace",
+"String~~One~hot~encoding":"DFOneHot"}

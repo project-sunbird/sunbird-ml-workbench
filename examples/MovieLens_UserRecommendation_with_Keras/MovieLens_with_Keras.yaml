@@ -1,0 +1,75 @@
+experiment_name: Example5_MovieLens_CF_with_keras
+owner: Soma
+experiment_dir: MLWBdemo_5/experiment/
+inputs:
+  link_to_raw_data: http://files.grouplens.org/datasets/movielens/ml-100k.zip
+  prediction_set: inputs/tutorial3_testset.csv
+outputs:
+  evaluation_report: outputs/evaluation_report
+  predictions_csv: outputs/prediction.csv
+
+
+graph:
+  - node_name: data_fetch
+    inputs: link_to_raw_data
+    outputs: raw_data
+    operation: movielens_data_fetcher
+    arguments:
+      separator: '\t'
+
+  - node_name: read_prediction_set
+    inputs: prediction_set
+    outputs: prediction_data
+    operation: csv_reader
+    arguments:
+
+  - node_name: data_split
+    inputs: raw_data
+    outputs: [training_data, validation_data]
+    operation: df_splitter_on_column_values
+    arguments:
+      split_column: timestamp
+      training_percentage: 0.8
+      ascending: True
+
+  - node_name: user_item_indexing
+    inputs: [training_data, validation_data]
+    outputs: [training_data_with_indices, validation_data_with_indices]
+    operation: add_user_item_index
+    arguments: 
+
+  - node_name: model_fitting
+    inputs: training_data_with_indices
+    outputs: [fitted_model,fitted_model_weights]
+    operation: CF_keras_model_fitting
+    arguments: 
+      k_factors: 100
+      epochs: 5
+      verbose: 2
+      loss: mae
+      optimizer: adam
+      metrics: ['mae']
+
+
+  - node_name: model_prediction
+    inputs: [training_data_with_indices, prediction_data, fitted_model, fitted_model_weights]
+    outputs: predictions
+    operation: predict_keras_model
+    arguments: 
+      topK: 10
+
+  - node_name: model_evaluation
+    inputs: [fitted_model,fitted_model_weights, validation_data_with_indices]
+    outputs: evaluation_report
+    operation: evaluate_keras_model
+    arguments:
+
+  - node_name: write_outputs
+    inputs:
+      - predictions
+    outputs: 
+      - predictions_csv    
+    operation: csv_writer
+    arguments:
+      index: True
+

@@ -6,7 +6,7 @@ import yaml
 import os
 import numpy as np
 from datetime import datetime, date, timedelta
-from mlworkbench.lib.node_registry import callables
+from mlworkbench.lib.operators_registry import callables
 from mlworkbench.utils.common import create_directory, dir_loc
 from collections import OrderedDict
 import networkx as nx
@@ -19,7 +19,7 @@ cwd = ""
 if "MLWB_CWD" in os.environ:
     cwd = os.environ["MLWB_CWD"]
 else:
-    cwd = os.getcwd()
+    raise ValueError("Cannot find the DAG configuration file. Please check the location specified.")
 
 class NodeObject:
 
@@ -50,7 +50,7 @@ class NodeObject:
         if "MLWB_CWD" in os.environ:
             cwd = os.environ["MLWB_CWD"]
         else:
-            cwd = os.getcwd()
+            raise ValueError("Cannot find the DAG configuration file. Please check the location specified.")
         
         inputs = {}
         for key in self.graph_inputs:
