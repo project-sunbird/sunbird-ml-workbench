@@ -15,3 +15,5 @@ fi
 pyb install_dependencies clean publish
 
 cp -TRv target/dist/mlworkbench-0.0.1/dist/ ../install/
+rm -rf build_env
+rm -rf target
