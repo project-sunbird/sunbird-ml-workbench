@@ -41,8 +41,9 @@ It is a long established fact that a reader will be distracted by the readable c
 ### Examples
 Examples can be found in 'examples' folder. Detailed explantion can of these examples can be found on wiki.
 
-1. Iris Classification - [link to wiki](https://github.com/ekstep/ML-Workbench/wiki/Tutorial-1:-Iris-Classification)
-2. Todo
+1. [Iris Classification](https://github.com/ekstep/ML-Workbench/wiki/Tutorial-1:-Iris-Classification)
+2. [MovieLens - Item Similarity](https://github.com/ekstep/ML-Workbench/wiki/Tutorial-2:-MovieLens---Item-Item-Similarity)
+3. [MovieLens - User Recommendation](https://github.com/ekstep/ML-Workbench/wiki/Tutorial-3:-MovieLens---User-Recommendation)
 
 
 ### Additional notes
