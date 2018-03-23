@@ -15,6 +15,7 @@ from airflow import DAG
 from mlworkbench.utils.common import normalize_path
 
 # Global objects
+global cwd
 cwd = ""
 if "MLWB_CWD" in os.environ:
     cwd = os.environ["MLWB_CWD"]
