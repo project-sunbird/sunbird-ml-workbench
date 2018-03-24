@@ -1,29 +1,34 @@
 # ML-Workbench
 
 ## What is it?
-Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.
+ML-Workbench is a way to create, collaborate and consume Machine Learning (ML) tools and processes. It creates a level of abstraction that enables its users to express a ML application as a Directed Acyclic Graph. Each vertex of the graph represents an operation on the incoming data, while the edges represent the data flow.
+
+It is natural for ML solutions to go through revisions during the design phase or even through its lifetime, as they are unfinished by design. Also, the desired implementation of components that make up a ML application may not always be available in a single library or a language. This has created a high entry and customization barrier, making it difficult to create and maintain ML solutions.
+
+We have designed ML-Workbench as a solution to the above issues at [Ekstep](https://ekstep.org/). ML-Workbench will host common ML operations and processes that are widely recognised in the ML community, to help you quickly get to a baseline solution. These operations and processes may have multiple implementations to suit the needs of different types or scales of data. It will also provide different levels of engagement for people working on the solution design, operational implementation and scalability of the solution, to enable better collaboration and experimentation.
 
 ## Who should use it?
-It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. The point of using Lorem Ipsum is that it has a more-or-less normal distribution of letters, as opposed to using 'Content here, content here', making it look like readable English. Many desktop publishing packages and web page editors now use Lorem Ipsum as their default model text, and a search for 'lorem ipsum' will uncover many web sites still in their infancy. Various versions have evolved over the years, sometimes by accident, sometimes on purpose (injected humour and the like).
+If your solution has a long standing application, it is inevitable that the solution will require revisions and collaboration amongst multiple people. We recommend using ML-Workbench for individuals or organisation that are designing such long standing applications.
 
 ## Guiding principles
 * **Easy to initiate**: ML workbench will provide a ready-made library and documentation, that can enable even novice users to readily write new applications from scratch. 
 * **Highly customizable**: The library will ensure that solutions are highly customizable, as the user can play and experiment with input parameters of APIs. It should enable addition, deletion or modification of intermediate steps.
-* **Extensible**: ML Workbench library will allow users to add their own custom libraries, which would comply with the specified guidelines and conventions.
+* **Extensible**: ML Workbench library will allow users to add their own custom libraries that comply with the specified guidelines and conventions.
 * **Automatically deployable**: The ML workbench will support creation of models and configuration files that can be directly used for deployment in production environment without further human intervention.
-* **Scalable**: The ML workbench will enable creation of an end-to-end ML application, which would work on large scales of data, with high performance.
-* **Repeatable**: The ML workbench will enable creation of applications, which are robust and consistent, i.e. given an identical dataset, they would produce identical results, without failures.
+* **Scalable**: The ML workbench will enable creation of an end-to-end ML application that can work on large scale data, with high performance.
+* **Repeatable**: The ML workbench will enable creation of applications which are robust and consistent, i.e. given identical datasets as input for different runs of an application, they would produce identical results without failure.
 
 ## Installation
 
 ### Requirements
-- python 2.7 and pip
+- python 2.7 and pip (python 3 is not currently supported)
 - [virtualenv](https://virtualenv.pypa.io/en/stable/installation/)
 
 ### Binaries
 1. Create virtual environment - `virtualenv run_env`
 2. Activate virtual environment - `source run_env/bin/activate`
-3. Install - `pip install  ML-Workbench/install/mlworkbench-0.0.1.tar.gz`
+3. Check python version - `python -V`
+4. Install - `pip install  ML-Workbench/install/mlworkbench-0.0.1.tar.gz`
 
 ### Source
 1. Run `bash build.sh` in 'framework' folder
@@ -39,7 +44,7 @@ It is a long established fact that a reader will be distracted by the readable c
 
 
 ### Examples
-Examples can be found in 'examples' folder. Detailed explantion can of these examples can be found on wiki.
+Examples can be found in 'examples' folder. Detailed explanation can of these examples can be found on wiki.
 
 1. [Iris Classification](https://github.com/ekstep/ML-Workbench/wiki/Tutorial-1:-Iris-Classification)
 2. [MovieLens - Item Similarity](https://github.com/ekstep/ML-Workbench/wiki/Tutorial-2:-MovieLens---Item-Item-Similarity)
