@@ -1,5 +1,5 @@
-airflow==1.8.0
 numpy
+airflow==1.8.0
 pandas
 sklearn
 pint
@@ -12,5 +12,3 @@ matplotlib
 keras
 tensorflow
 h5py
-gensim
-nltk

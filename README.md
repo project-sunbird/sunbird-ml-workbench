@@ -56,5 +56,9 @@ Examples can be found in 'examples' folder. Detailed explanation can of these ex
 + `Ctrl + C` will kill the mlworkbench run process (This will work only after the DAG has been submitted)  
 + Graph inputs, outputs and experiment directory locations are defined relative to the yaml file location
 
+## License
+
+[AGPL v3 or later](LICENCE)
+
 
 
