@@ -37,6 +37,7 @@ graph:
     operation: KNNBasic_model_trainer
     arguments:
       algo_class: KNNBasic
+      best_model_selection_metric: rmse
       param_grid: 
         k: [5,10]
         sim_options:
@@ -58,7 +59,6 @@ graph:
     outputs: evalaution_report_rmse
     operation: model_evaluation
     arguments:
-      
 
   - node_name: write_outputs
     inputs:
