@@ -3,7 +3,7 @@
 ## What is it?
 ML-Workbench is a way to create, collaborate and consume Machine Learning (ML) tools and processes. It creates a level of abstraction that enables its users to express a ML application as a Directed Acyclic Graph. Each vertex of the graph represents an operation on the incoming data, while the edges represent the data flow.
 
-It is natural for ML solutions to go through revisions during the design phase or even through its lifetime, as they are unfinished by design. Also, the desired implementation of components that make up a ML application may not always be available in a single library or a language. This has created a high entry and customization barrier, making it difficult to create and maintain ML solutions.
+It is natural for ML solutions to go through revisions during the design phase or even through their lifetime, as they are unfinished by design. Also, the desired implementation of components that make up a ML application may not always be available in a single library or a language. This has created a high entry and customization barrier, making it difficult to create and maintain ML solutions.
 
 We have designed ML-Workbench as a solution to the above issues at [Ekstep](https://ekstep.org/). ML-Workbench will host common ML operations and processes that are widely recognised in the ML community, to help you quickly get to a baseline solution. These operations and processes may have multiple implementations to suit the needs of different types or scales of data. It will also provide different levels of engagement for people working on the solution design, operational implementation and scalability of the solution, to enable better collaboration and experimentation.
 
