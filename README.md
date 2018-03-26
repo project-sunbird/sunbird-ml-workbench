@@ -44,7 +44,7 @@ If your solution has a long standing application, it is inevitable that the solu
 
 
 ### Examples
-Examples can be found in 'examples' folder. Detailed explanation can of these examples can be found on wiki.
+Examples can be found in 'examples' folder. Follow the below links for detailed explanation.
 
 1. [Iris Classification](https://github.com/ekstep/ML-Workbench/wiki/Tutorial-1:-Iris-Classification)
 2. [MovieLens - Item Similarity](https://github.com/ekstep/ML-Workbench/wiki/Tutorial-2:-MovieLens---Item-Item-Similarity)
