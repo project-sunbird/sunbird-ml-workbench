@@ -89,7 +89,7 @@ def run(vargs, execution_dir):
     from airflow.bin.cli import unpause, clear
     from collections import namedtuple
 
-    # initdb({}) # this initiates the wrong db
+    initdb({}) # this initiates the wrong db
 
     Arg = namedtuple(
         'Arg', ['dag_id', 'subdir', 'run_duration', 'num_runs', 'do_pickle', 'pid', 'daemon', 'stdout', 'stderr', 'log_file'])

@@ -3,7 +3,7 @@ owner: Soma
 experiment_dir: MLWBdemo3a/experiment/
 inputs:
   link_to_raw_data: http://files.grouplens.org/datasets/movielens/ml-100k.zip
-  prediction_set: inputs/tutorial3_testset.csv
+  prediction_set: inputs/tutorial3a_testset.csv
 outputs:
   evaluation_report: outputs/evaluation_report
   predictions_csv: outputs/prediction.csv
