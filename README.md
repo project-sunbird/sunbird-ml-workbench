@@ -18,20 +18,17 @@ If your solution has a long standing application, it is inevitable that the solu
 * **Scalable**: The ML workbench will enable creation of an end-to-end ML application that can work on large scale data, with high performance.
 * **Repeatable**: The ML workbench will enable creation of applications which are robust and consistent, i.e. given identical datasets as input for different runs of an application, they would produce identical results without failure.
 
-## Usage
+## Getting started
 
 ### Requirements
 - python 2.7 and pip (python 3 is not currently supported)
 - [virtualenv](https://virtualenv.pypa.io/en/stable/installation/)
 
-### Binaries
+### Installation
 1. Create virtual environment - `virtualenv run_env`
 2. Activate virtual environment - `source run_env/bin/activate`
 3. Check python version - `python -V`
 4. Install - `pip install  ML-Workbench/bin/mlworkbench-0.0.1.tar.gz`
-
-
-## Getting started
 
 ### Running your first example
 1. Activate virtual environment in which mlworkbench is installed - `source run_env/bin/activate` - skip if already in the virtual environment
