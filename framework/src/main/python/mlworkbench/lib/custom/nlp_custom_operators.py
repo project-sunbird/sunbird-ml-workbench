@@ -14,6 +14,7 @@ from mlworkbench.utils.nlp import to_unicode, get_sorted_list
 from mlworkbench.lib.operation_definition import NodeOperation
 
 def read_text_file_corpus(node):
+    nltk.download('stopwords')
     reader = NodeOperation(node)  # initiate
     reader.io_check((len(reader.inputs) == 1) & (len(reader.outputs) == 3))
     filepath = reader.graph_inputs[reader.inputs[0]]
