@@ -7,6 +7,7 @@ import argparse
 from subprocess import call
 
 from daggit.core.utils import nostdout
+
 with nostdout():
     from airflow.models import DagModel
     from airflow import settings
@@ -46,8 +47,15 @@ def init(graph):
         except OSError:
             pass
         shutil.copy2(airflow_dag_file, dag_location)
+        graph_location = os.path.join(os.getcwd(), graph)
+
+        if os.path.isfile(os.path.join(os.getcwd(), graph)):
+            pass
+        else:
+            raise FileNotFoundError("The path to the dag file could not be resolved")
+
         f = open(os.path.join(dag_location,'graph_location'), "w+")
-        f.write(graph)
+        f.write(graph_location)
         f.close()
 
         db.initdb()
