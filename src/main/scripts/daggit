@@ -46,7 +46,11 @@ def init(graph):
             os.remove(os.path.join(dag_location,'airflow_dag.py'))
         except OSError:
             pass
+
+        if not os.path.exists(dag_location):
+            os.makedirs(dag_location)
         shutil.copy2(airflow_dag_file, dag_location)
+
         graph_location = os.path.join(os.getcwd(), graph)
 
         if os.path.isfile(os.path.join(os.getcwd(), graph)):
