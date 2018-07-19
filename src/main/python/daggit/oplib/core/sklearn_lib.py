@@ -3,7 +3,7 @@ from sklearn.pipeline import Pipeline
 from daggit.iolib.io import Pandas_Dataframe, File_Txt, Pickle_Obj
 from daggit.core.base import BaseOperator
 from ..operators_registry import get_op_callable
-
+from ..core.etl import DFFeatureUnion, ColumnExtractor, DFMissingNum, DFMissingStr, DFOneHot
 
 class CustomPreprocess(BaseOperator):
 
