@@ -1,0 +1,78 @@
+experiment_name: House_Prices_Regression_Baseline
+owner: mayankkumar
+
+inputs: 
+  train: "data/train.csv"
+  test: "data/test.csv"
+
+outputs:
+  model_dt.model: "outputs/model_dt/model.pkl"
+  model_dt.report: "outputs/model_dt/report.txt"
+  model_rf.model: "outputs/model_rf/model.pkl"
+  model_rf.report: "outputs/model_rf/report.txt"
+  model_xgb.model: "outputs/model_xgb/model.pkl"
+  model_xgb.report: "outputs/model_xgb/report.txt"
+
+graph:
+
+  - node_name: preprocess
+    inputs: [train, test]
+    outputs: [preprocessed_train, preprocessed_test]
+    operation: sklearn_lib.CustomPreprocess
+    arguments:
+      drop_missing_perc: 0.9
+      target_variable: SalePrice
+      ignore_variables: Id
+      numeric_impute: median
+      categorical_impute: most_frequent
+
+  - node_name: model_dt
+    inputs: preprocess.preprocessed_train
+    outputs: [report, model]
+    operation: sklearn_lib.CrossValidate
+    arguments:
+      model_args: 
+        name: sklearn_lib.CrossValidate
+        arguments:
+          max_depth: 2
+          random_state: 0
+      target_variable: SalePrice
+      cv_args:
+        scoring: neg_mean_squared_error
+        cv: 5
+    imports: 
+      - [sklearn.tree, DecisionTreeRegressor]
+
+  - node_name: model_rf
+    inputs: preprocess.preprocessed_train
+    outputs: [report, model]
+    operation: sklearn_lib.CrossValidate
+    arguments:
+      model_args: 
+        name: RandomForestRegressor
+        arguments:
+          max_depth: 2
+          random_state: 0
+      target_variable: SalePrice 
+      cv_args:
+        scoring: neg_mean_squared_error
+        cv: 5
+    install: [package1==0.0.1, package2] #TODO
+    imports: 
+      - [sklearn.ensemble, RandomForestRegressor]
+
+  - node_name: model_xgb
+    inputs: preprocess.preprocessed_train
+    outputs: [report, model]
+    operation: sklearn_lib.CrossValidate
+    arguments:
+      model_args: 
+        name: XGBRegressor
+        arguments:
+          random_state: 0
+      target_variable: SalePrice
+      cv_args:
+        scoring: neg_mean_squared_error
+        cv: 5
+    imports: 
+      - [xgboost, XGBRegressor]
