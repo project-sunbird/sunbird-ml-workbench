@@ -1,0 +1,100 @@
+#!/usr/bin/env python
+
+import os
+import sys
+import shutil
+import argparse
+from subprocess import call
+
+from daggit.core.utils import nostdout
+with nostdout():
+    from airflow.models import DagModel
+    from airflow import settings
+    from airflow.utils import db
+    from airflow import models
+
+from daggit.core.config import ORCHESTRATOR
+
+# improve orchestrator factory and replace if based switching
+def _unpause(dag):
+
+    if ORCHESTRATOR == 'airflow':
+
+        dag = dag
+
+        session = settings.Session()
+        dm = session.query(DagModel).filter(
+            DagModel.dag_id == dag.dag_id).first()
+        dm.is_paused = False
+        session.commit()
+
+        msg = "Dag: {}, paused: {}".format(dag, str(dag.is_paused))
+        print(msg)
+
+
+def init(graph):
+
+    if ORCHESTRATOR == 'airflow':
+        os.path.expanduser('~')
+        airflow_home = os.getenv('AIRFLOW_HOME', os.path.expanduser('~/airflow'))
+        dag_location = os.path.join(airflow_home, 'dags')
+        pkgdir = sys.modules['daggit'].__path__[0]
+
+        airflow_dag_file = pkgdir + '/runtime/airflow_dag.py'
+        try:
+            os.remove(os.path.join(dag_location,'airflow_dag.py'))
+        except OSError:
+            pass
+        shutil.copy2(airflow_dag_file, dag_location)
+        f = open(os.path.join(dag_location,'graph_location'), "w+")
+        f.write(graph)
+        f.close()
+
+        db.initdb()
+
+
+def run(dag_id, clear_all, clear_failed):
+
+    if ORCHESTRATOR == 'airflow':
+        if clear_all:
+            call(["airflow", "clear", "-c", dag_id])
+        if clear_failed:
+            call(["airflow", "clear", "-c", "-f", dag_id])
+
+        dbag = models.DagBag()
+        mlwb = dbag.get_dag(dag_id)
+        #_unpause(mlwb)
+
+        mlwb.run()
+
+
+if __name__ == '__main__':
+
+    from sys import argv
+
+    parser = argparse.ArgumentParser(prog='daggit')
+    parser.add_argument("-v", "--version", help="MLWB version"
+                        , action='store_true', dest='version', default=False)
+    subparsers = parser.add_subparsers(dest='cmd', help='sub-commands')
+
+    parser_init = subparsers.add_parser('init', help='Initiates a DAG.')
+    parser_init.add_argument('graph', help='YAML file location.')
+
+    parser_run = subparsers.add_parser('run', help='Runs a DAG.')
+    parser_run.add_argument('dag_id', help='Experiment name (DAG ID)')
+    parser_run.add_argument('--clear_all', action='store_true', dest='clear_all', default=False
+                            , help='Clears state of all the tasks before running the DAG.')
+    parser_run.add_argument('--clear_failed', action='store_true', dest='clear_failed', default=False
+                            , help='Clears state of failed tasks before running the DAG.')
+
+    args = parser.parse_args()
+
+
+    if args.cmd == "init":
+        init(args.graph)
+
+    if args.cmd == "run":
+        run(args.dag_id, args.clear_all, args.clear_failed)
+
+    if args.version:
+        print("version - 0.0.2")

@@ -1,0 +1,16 @@
+airflow==1.8.0
+tables
+h5py
+pyyaml
+boto
+sklearn
+pandas
+numpy
+pint
+scipy
+six
+xgboost
+sphinx
+tox
+keras
+tensorflow

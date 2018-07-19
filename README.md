@@ -11,7 +11,7 @@ We have designed ML-Workbench as a solution to the above issues at [Ekstep](http
 If your solution has a long standing application, it is inevitable that the solution will require revisions and collaboration amongst multiple people. We recommend using ML-Workbench for individuals or organisation that are designing such long standing applications.
 
 ## Guiding principles
-* **Easy to initiate**: ML workbench will provide a ready-made library and documentation, that can enable even novice users to readily write new applications from scratch. 
+* **Easy to initiate**: ML workbench will provide a ready-made library and documentation, that can enable even novice users to readily write new applications from scratch.
 * **Highly customizable**: The library will ensure that solutions are highly customizable, as the user can play and experiment with input parameters of APIs. It should enable addition, deletion or modification of intermediate steps.
 * **Extensible**: ML Workbench library will allow users to add their own custom libraries that comply with the specified guidelines and conventions.
 * **Automatically deployable**: The ML workbench will support creation of models and configuration files that can be directly used for deployment in production environment without further human intervention.
@@ -21,33 +21,18 @@ If your solution has a long standing application, it is inevitable that the solu
 ## Getting started
 
 ### Requirements
-- python 2.7 and pip (python 3 is not currently supported)
-- [virtualenv](https://virtualenv.pypa.io/en/stable/installation/)
+- python and pip (python 3 is not currently supported)
+- virtualenv (run `pip install virtualenv` or visit https://virtualenv.pypa.io/en/stable/installation/)
 
 ### Installation
-1. Create virtual environment - `virtualenv run_env`
-2. Activate virtual environment - `source run_env/bin/activate`
-3. Check python version - `python -V`
-4. Install - `pip install  ML-Workbench/bin/mlworkbench-0.0.1.tar.gz`
-
-### Running your first example
-1. Activate virtual environment in which mlworkbench is installed - `source run_env/bin/activate` - skip if already in the virtual environment
-2. Optionally declare a working directory for MLWB  `export MLWB_HOME=some/location/` (default: ~/MLWB_HOME)
-3. `mlworkbench run -dag location/example.yaml` to submit the DAG for execution (to run Iris Classification example -  `mlworkbench run -dag examples/Iris_Classification/iris_experiment.yaml`)
-
-
-### Examples
-Examples can be found in 'examples' folder. Follow the below links for detailed explanation.
-
-1. [Iris Classification](https://github.com/ekstep/ML-Workbench/wiki/Tutorial-1:-Iris-Classification)
-2. [MovieLens - Item Similarity](https://github.com/ekstep/ML-Workbench/wiki/Tutorial-2:-MovieLens---Item-Item-Similarity)
-3. [MovieLens - User Recommendation](https://github.com/ekstep/ML-Workbench/wiki/Tutorial-3:-MovieLens---User-Recommendation)
-
-
-### Additional notes
-+ `localhost:8080` has airflow webserver visualization of the DAG
-+ `Ctrl + C` will kill the mlworkbench run process (This will work only after the DAG has been submitted)  
-+ Graph inputs, outputs and experiment directory locations are defined relative to the yaml file location
+#### Installation from binary
+1. The binary file is present at the following location `bin/`
+2. Install - `pip install  ML-Workbench/bin/mlworkbench-0.0.1.tar.gz`
+#### Installation after build
+1. Clone the repository or download the zipped file from `https://github.com/ekstep/ML-Workbench/tree/v0.0.2-daggit`
+2. Change directory into ML-Workbench
+3. Run `bash build.sh`
+4. Install - `pip install  bin/mlworkbench-0.0.1.tar.gz`
 
 ## License
 

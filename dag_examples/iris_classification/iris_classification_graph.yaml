@@ -1,0 +1,37 @@
+experiment_name: Example1_Iris_Classification
+owner: ekstep
+inputs:
+  raw_data: "inputs/iris.csv"
+outputs:
+  report: 'outputs/model_report'
+  model: 'outputs/model'
+
+graph:
+
+  - node_name: split
+    inputs: raw_data
+    outputs: [train, test]
+    operation: sklearn_lib.Splitters
+    arguments:
+      model_args:
+        name: train_test_split
+        arguments:
+          test_size: 0.2
+    imports:
+      - [sklearn.model_selection, train_test_split]
+
+  - node_name: model_logistic_regression
+    inputs: split.train
+    outputs: [report, model]
+    operation: sklearn_lib.CrossValidate
+    arguments:
+      model_args:
+        name: LogisticRegression
+        arguments:
+          max_iter: 200
+      target_variable: Species
+      ignore_variables: Id
+      cv_args:
+        cv: 5
+    imports:
+      - [sklearn.linear_model, LogisticRegression]

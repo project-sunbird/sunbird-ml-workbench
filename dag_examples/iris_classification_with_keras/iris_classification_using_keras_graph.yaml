@@ -1,0 +1,41 @@
+experiment_name: Example1a_Iris_Classification_with_keras
+owner: sanjay
+experiment_dir: 'MLWBdemo1a/experiment/'
+inputs:
+  raw_data: "inputs/Iris.csv"
+outputs:
+  fitted_model: "outputs/model"
+  predictions: "outputs/predictions.csv"
+  report: "outputs/model_report.txt"
+
+graph:
+
+  - node_name: split
+    inputs: raw_data
+    outputs: [train, test]
+    operation: sklearn_lib.Splitters
+    arguments:
+      model_args:
+        name: train_test_split
+        arguments:
+          test_size: 0.2
+    imports:
+      - [sklearn.model_selection, train_test_split]
+
+  - node_name: keras_model
+    inputs: [split.train, split.test]
+    outputs: [fitted_model, fitted_model_weights, predictions, report]
+    operation: keras_lib.train_svm_model
+    arguments:
+      model_args:
+        name: KerasClassifier
+        module_path: keras.wrappers.scikit_learn
+        arguments:
+          epochs: 200
+          batch_size: 5
+          verbose: 0
+      target_variable: Species
+      ignore_variables: Id
+    imports:
+      - [keras.models, Sequential, model_from_json]
+
