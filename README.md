@@ -34,6 +34,15 @@ If your solution has a long standing application, it is inevitable that the solu
 3. Run `bash build.sh`
 4. Install - `pip install  bin/mlworkbench-0.0.1.tar.gz`
 
+### Running your Dag
+#### Inititalize a DAG
+1. Use Command `daggit init <path_to_yaml_file>`
+#### Run a DAG
+1. Use Command - `daggit run <Experiment_Name>`
+#### Seek help
+1. Use - `daggit --help` to know more about the command
+2. Help on daggit commands can be found using `daggit <command> --help` 
+
 ## License
 
 [AGPL v3 or later](LICENCE)
