@@ -30,7 +30,6 @@ graph:
         arguments:
           max_iter: 200
       target_variable: Species
-      ignore_variables: Id
       cv_args:
         cv: 5
     imports:
