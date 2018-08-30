@@ -53,7 +53,7 @@ class train_svm_model(BaseOperator):
         test_y = test[target_variable]
         test_X = test.drop(target_variable, axis=1).values
 
-        imports = self.node.imports.copy()
+        imports = list(self.node.imports)
         for importlist in imports:
             module_name = importlist.pop(0)
             for imp in importlist:
