@@ -1,3 +1,4 @@
+from future.builtins import super
 from abc import abstractmethod
 import warnings
 import pandas as pd

@@ -1,5 +1,7 @@
+from future.builtins import super
 from airflow.operators.python_operator import PythonOperator
 from daggit.oplib.operators_registry import get_op_callable
+
 
 class DaggitPyOp(PythonOperator):
 
@@ -13,4 +15,3 @@ class DaggitPyOp(PythonOperator):
         op_kwargs = node.arguments
         super().__init__(task_id= task_id, python_callable=python_callable, op_kwargs= op_kwargs, dag=dag,
                           *args, **kwargs)
-

@@ -3,7 +3,8 @@ import os
 from airflow import DAG
 from datetime import datetime, date, timedelta
 from daggit.core.parser import get_nodes
-from daggit.runtime.airflow import DaggitPyOp
+from daggit.runtime.airflow_runtime import DaggitPyOp
+
 
 dirname = os.path.dirname(__file__)
 filename = os.path.join(dirname, 'graph_location')
