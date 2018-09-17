@@ -1,0 +1,45 @@
+experiment_name: Content_tagging
+owner: aleena
+inputs:
+  contentMeta: "inputs/DiksaContent_july12_youtube_english.csv"
+  taxonomy: "inputs/RevisedTaxonomy.csv"
+outputs:
+  path_to_corpus: outputs/content_to_text
+  path_to_Logfile: outputs/logFile'
+
+graph:
+  
+  - node_name: content_to_text
+    inputs: contentMeta
+    outputs: [path_to_corpus, path_to_Logfile]
+    operation: contentTagging.ContentToText
+    arguments:
+      range_start: 0
+      range_end: 3
+      parallelise: False
+      url_type: youtube
+      youtube_extraction:
+        method: youtube_dl
+        contentDownloadField: artifactUrl
+        language_detect: False
+        language_detect_method: google
+        speech_to_text: googleAT
+      ecml:
+        contentDownloadField: downloadUrl
+        speech_to_text: googleAT
+        image_to_text: googleapi
+        language_detect: True
+        language_detect_method: meta
+      pdf:
+        contentDownloadField: artifactUrl
+        method: PyPDF2
+        language_detect: True
+
+  - node_name: keyword_extraction
+    inputs: [contentMeta, content_to_text.path_to_corpus, taxonomy]
+    outputs: [path_to_corpus, path_to_Logfile]
+    operation: contentTagging.KeywordExtraction 
+    arguments: 
+      extract_keywords: True
+      method: tagme
+      filter_criteria: None
