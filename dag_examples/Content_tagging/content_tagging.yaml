@@ -5,7 +5,8 @@ inputs:
   taxonomy: "inputs/RevisedTaxonomy.csv"
 outputs:
   path_to_corpus: outputs/content_to_text
-  path_to_Logfile: outputs/logFile'
+  path_to_Logfile: outputs/logFile
+  path_to_contentTaxonomyMapping: outputs/contentTaxonomyMapping
 
 graph:
   
@@ -15,7 +16,7 @@ graph:
     operation: contentTagging.ContentToText
     arguments:
       range_start: 0
-      range_end: 3
+      range_end: 2
       parallelise: False
       url_type: youtube
       youtube_extraction:
@@ -42,4 +43,4 @@ graph:
     arguments: 
       extract_keywords: True
       method: tagme
-      filter_criteria: None
+      filter_criteria: none
