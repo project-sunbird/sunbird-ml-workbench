@@ -12,11 +12,8 @@ six
 xgboost
 sphinx
 tox
-keras
-tensorflow
 networkx
 findspark
-tensorflow
 gensim
 nltk
 ffmpeg-python

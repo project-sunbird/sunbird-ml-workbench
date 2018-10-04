@@ -60,6 +60,7 @@ class Pandas_Dataframe(DataType):
         self.data_alias = data_pointer.data_alias
 
     def read(self):
+        print("data_location: ", self.data_location)
         if self.data_location[-3:] == 'csv':
             return pd.read_csv(filepath_or_buffer=self.data_location)
         elif self.data_location[-2:] == 'h5':
@@ -128,6 +129,9 @@ class Read_Folder(DataType):
 
 
 class File_Txt(DataType):
+    
+    def location_specify(self):
+        return self.data_location
 
     def read(self):
         f = open(self.data_location, "r")

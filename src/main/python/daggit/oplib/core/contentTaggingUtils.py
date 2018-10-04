@@ -29,7 +29,7 @@ import pandas as pd
 import numpy as np
 import googleapiclient.discovery
 import nltk
-nltk.download("wordnet")
+#nltk.download("wordnet")
 #nltk.download("stopwords")
 from nltk.corpus import stopwords
 stopwords = stopwords.words('english')
@@ -75,21 +75,21 @@ pun_list = list(string.punctuation)
 
 
 def downloadZipFile(url,directory):
-    assert type(url)==unicode
-    assert type(directory)==unicode or type(directory)==str
+    
     r=requests.get(url)
     try:
-        z=zipfile.ZipFile(StringIO.StringIO(r.content))
+        z = zipfile.ZipFile(io.BytesIO(r.content))
         z.extractall(directory)
         return r.ok
     except:
         return False
 
+
 #The shutil module includes high-level file operations such as copying, setting permissions,
 
 def findFiles(directory,substrings):
     ls=[]
-    if (type(directory) == unicode or type(directory) == str) and type(substrings) == list:
+    if (type(directory) == str) and type(substrings) == list:
     # assert type(directory)==unicode or type(directory)==str
     # assert type(substrings)==list
       if os.path.isdir(directory):
@@ -103,7 +103,7 @@ def findFiles(directory,substrings):
 
 
 def unzip_files(directory):
-    assert type(directory)==unicode or type(directory)==str
+    assert type(directory)==str
     #Finds all files in a directory that are of type .zip
     zip_list=findFiles(directory,['.zip'])
     bugs={}
@@ -122,14 +122,15 @@ def unzip_files(directory):
         
 #Transfer the files in assets,data,items and the ecml files
 def copy_main_folders(root,identifier):
-    assert type(identifier)==unicode or type(identifier)==str
-    assert type(root)==unicode or type(root)==str
+    assert type(identifier)==str
+    assert type(root)==str
     #List of files to be copied (To flatten directory structure)
     file_list=findFiles(os.path.join(root,'temp'+identifier),['asset','data','item','ecml'])
     path=os.path.join(root,identifier)
     #To make the new directory in which files will be eventually stored
     if not os.path.exists(path):
         os.makedirs(path)
+
     #To make the new sub-directories in which the files will be eventually stores
     location=[os.path.join(path,folder) for folder in ['assets','data','items']]
     for loc in location:
@@ -150,14 +151,16 @@ def copy_main_folders(root,identifier):
 
 
 def copy_main_folders_new(root, identifier):
-    assert type(identifier)==unicode or type(identifier)==str
-    assert type(root)==unicode or type(root)==str
+    assert type(identifier)==str
+    assert type(root)==str
     download_dir = os.path.join(root,'temp'+identifier)
     path=os.path.join(root,identifier)
     
     #To make the new directory in which files will be eventually stored
     if not os.path.exists(path):
+        print("path:", path)
         os.makedirs(path)
+
     #To make the new sub-directories in which the files will be eventually stores
     location=[os.path.join(path,folder) for folder in ['assets','data','items']]
 
@@ -274,7 +277,7 @@ def embed_youtube_url_validation(url):
         else:
             return "https://www.youtube.com/watch?v="+youtube_regex_match.group(6)
 
-def contentTotext_EndtoEnd(index, content_meta, downloadField, content_to_text):
+def multimodel_text_enrichment(index, content_meta, downloadField, content_to_text_path):
     url = content_meta[downloadField][index]
     # content_to_text = os.path.join(DS_DATA_HOME, "output", "content_to_text")
     # pathTotext_corpus = os.path.join(DS_DATA_HOME, timestr, "textCorpus")
@@ -283,13 +286,13 @@ def contentTotext_EndtoEnd(index, content_meta, downloadField, content_to_text):
 
     fileType = identify_fileType(url)
 
-    print("content_to_text path is: ", content_to_text)
+    print("content_to_text path is: ", content_to_text_path)
     print("fileType of url [{0}] is: {1}". format(url, fileType))
 
     logging.info("CTT_CONTENT_TYPE: {0}".format(fileType))
     logging.info("-----Text Extraction for url: {0}".format(url))
     logging.info("CTT_TEXT_EXTRACTION_START")
-    path_to_text = content_to_text_conversion(url, fileType, content_id, content_to_text)
+    path_to_text = content_to_text_conversion(url, fileType, content_id, content_to_text_path)
     return path_to_text
     logging.info("CTT_CONTENT_TO_TEXT_STOP")
 
@@ -659,8 +662,8 @@ def ecar_zip_file_processing(path_to_id):
                 page_content = page.extractText()
                 text+=page_content
             #processed_txt = word_proc(text)
-            text = text.encode("utf-8").decode("ascii", "ignore")
-            text = str(text)
+            # text = text.encode("utf-8").decode("ascii", "ignore")
+            # text = str(text)
             processed_txt = cleantext(text)# include removing page
             text = ''.join([i for i in processed_txt if not i.isdigit()])
             text = ' '.join(text.split())# check string operation
@@ -790,8 +793,8 @@ def content_to_text_conversion(url, type_of_url, id_name, path_to_save):#, pathT
                 page_content = page.extractText()
                 text+=page_content
                 #processed_txt = word_proc(text)
-            text = text.encode("utf-8").decode("ascii", "ignore")
-            text = str(text)
+            #text = text.encode("utf-8").decode("ascii", "ignore")
+            #text = str(text)
             processed_txt = cleantext(text)# include removing page
             result = ''.join([i for i in processed_txt if not i.isdigit()])
             result = ' '.join(result.split())# check string operation
@@ -815,7 +818,7 @@ def content_to_text_conversion(url, type_of_url, id_name, path_to_save):#, pathT
        try:
            logging.info("CTC_ECAR_URL_START for url: {0} and id_name: {1}".format(url, id_name))
            download_dir = os.path.join(path_to_save,'temp'+id_name)
-           url = unicode(url)
+           # url = unicode(url)
            status = downloadZipFile(url, download_dir)
            if status:
               unzip_files(download_dir)
@@ -947,6 +950,70 @@ def tagme_taxonomy_intersection_keywords(taxonomy_keywords_set, path_to_tagme_ke
     except:
         logging.info("Keywords cannot be extracted")
 
+# #? dont forget to put back self as an argument
+# def keyword_extraction_parallel(dir, path_to_texts, taxonomy, extract_keywords, method, filter_criteria):
+#         print("*******dir*********:", dir)
+#         print("***Extract keywords***:", extract_keywords)
+#         print("***Filter criteria:***", filter_criteria)
+#         path_to_cid_transcript = os.path.join(path_to_texts, dir, "enriched_text.txt")
+#         keywords = os.path.join(path_to_texts, dir, "keywords")
+#         path_to_text_tokens = os.path.join(keywords, "text_tokens")
+#         path_to_tagme_tokens = os.path.join(keywords, "tagme_tokens")
+#         path_to_tagme_taxonomy_intersection = os.path.join(keywords, "tagme_taxonomy_tokens")
+
+#         if os.path.isfile(path_to_cid_transcript):
+#             logging.info("Transcript present for cid: {0}".format(dir))
+#             try:
+
+#                 # text_file = os.listdir(path_to_cid_transcript)[0]
+#                 if os.path.getsize(path_to_cid_transcript) > 0:
+#                     print("Path to transcripts ", path_to_cid_transcript)
+#                     logging.info("Running keyword extraction for {0}".format(path_to_cid_transcript))
+#                     logging.info("---------------------------------------------")
+
+#                     if extract_keywords == True and filter_criteria == "none":
+#                         logging.info("Tagme keyword extraction is running for {0}".format(path_to_cid_transcript))
+#                         path_to_pafy_tagme_tokens = get_tagme_longtext(path_to_cid_transcript, path_to_tagme_tokens)
+#                         logging.info("Path to tagme tokens is {0}".format(path_to_pafy_tagme_tokens))
+
+#                     elif extract_keywords == False:
+#                         logging.info("Text tokens extraction running for {0}".format(path_to_cid_transcript))
+#                         path_to_pafy_text_tokens = pafy_text_tokens(path_to_cid_transcript, path_to_text_tokens)
+#                         logging.info("Path to text tokens is {0}".format(path_to_pafy_text_tokens))
+
+#                     elif extract_keywords == True and filter_criteria == "taxonomy_keywords":
+#                         logging.info("Tagme intersection taxonomy keyword extraction is running for {0}".format(
+#                             path_to_cid_transcript))
+#                         revised_content_df = pd.read_csv(taxonomy, sep=",", index_col=None)
+#                         clean_keywords = map(get_words, list(revised_content_df["Keywords"]))
+#                         clean_keywords = map(clean_string_list, clean_keywords)
+#                         flat_list = [item for sublist in list(clean_keywords) for item in
+#                                      sublist]
+#                         taxonomy_keywords_set = set([cleantext(i) for i in flat_list])
+#                         path_to_pafy_tagme_tokens = get_tagme_longtext(path_to_cid_transcript, path_to_tagme_tokens)
+#                         path_to_tagme_intersect_tax = tagme_taxonomy_intersection_keywords(taxonomy_keywords_set,
+#                                                                                            path_to_pafy_tagme_tokens,
+#                                                                                            path_to_tagme_taxonomy_intersection)
+#                         logging.info \
+#                             ("Path to tagme taxonomy intersection tokens is {0}".format(path_to_tagme_intersect_tax))
+
+#                     else:
+#                         logging.info("Invalid argument provided")
+
+
+#                 else:
+#                     logging.info("The text file {0} has no contents".format(path_to_cid_transcript))
+#                     print("The text file {0} has no contents".format(path_to_cid_transcript))
+
+#             except:
+#                 print("Raise exception for {0} ".format(path_to_cid_transcript))
+#                 logging.info("Raise exception for {0} ".format(path_to_cid_transcript))
+#         else:
+#             logging.info("Transcripts doesnt exist for {0}".format(path_to_cid_transcript))
+#             print("Transcripts doesnt exist for {0}".format(path_to_cid_transcript))
+
+#         return path_to_texts
+
 
 def clean_string_list(x_list):
      #print x_list
@@ -954,7 +1021,7 @@ def clean_string_list(x_list):
      x_list=list(map((str.lower),x_list))
      x_clean=[i.lstrip() for i in x_list]
      x_clean=[i.rstrip() for i in x_clean]
-     x_clean=filter(None, x_clean)
+     x_clean=list(filter(None, x_clean))
      return x_clean
 
 
@@ -965,6 +1032,18 @@ def get_words(x):
      return x
     else:
      return ""
+
+def custom_listPreProc(key_list, preproc, DELIMITTER):
+    key_list=[clean_string_list(x) for x in key_list]
+    key_list_clean=[]
+    for x in key_list: 
+        x=[word_proc(i) for i in x]
+        if preproc == 'stem_lem':
+            key_list_clean.append(stem_lem((x),DELIMITTER))
+        else:
+            print("unknown preproc")
+            return
+    return key_list_clean
 
 
 def stem_lem(keyword_list, DELIMITTER):
@@ -991,6 +1070,11 @@ def get_level_keywords(taxonomy_df,level):
         level_keyword_df.append({level:subject,'Keywords':unique_keywords})
     level_keyword_df=pd.DataFrame(level_keyword_df)
     return level_keyword_df
+
+def getGradedigits(class_x):
+    for i in ["Class","[","]"," ","class","Grade","grade"]:
+        class_x=class_x.replace(i,"")
+    return class_x
 
 
 def match_str_list(list1,list2):
@@ -1135,6 +1219,12 @@ def getEval_agg(dist_all,truetopic_all, sort_order):
 #         window[i]=100.0*count/len(jaccard_consolidated_list)
 #     return pd.DataFrame(window) 
 
+def get_prediction(dist_df,sort_order,number_of_pred):
+    mapped_df=dist_df.T.apply(func=lambda x:get_sorted_list(x,sort_order),axis=0).T
+    mapped_df.columns=range(1,mapped_df.shape[1]+1)
+    return mapped_df.iloc[:,0:number_of_pred]
+
+  
 def keywordAddition_contentMetadata(url, content_metadata_path, path_to_datasource):
     Content_metadata=pd.read_csv(content_metadata_path, index_col=0)
     content_id = clean_url(url)+".csv"
@@ -1156,7 +1246,7 @@ def save_obj(obj, name ):
 
 def load_obj(name ):
     with open( name + '.pkl', 'rb') as f:
-      return pickle.load(f) 
+        return pickle.load(f, encoding='latin1') 
 
 
 def getPhrase(x_list,DELIMITTER):

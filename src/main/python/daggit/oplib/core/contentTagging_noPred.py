@@ -11,11 +11,10 @@ from functools import partial
 from daggit.iolib.io import Pandas_Dataframe, Read_Folder, Pickle_Obj, File_Txt
 from daggit.core.base import BaseOperator
 from ..operators_registry import get_op_callable
-from ..core.contentTaggingUtils import clean_url, identify_fileType, content_to_text_conversion, multimodel_text_enrichment
+from ..core.contentTaggingUtils import clean_url, identify_fileType, content_to_text_conversion, multimode_text_enrichment
 from ..core.contentTaggingUtils import get_tagme_longtext, pafy_text_tokens
 from ..core.contentTaggingUtils import word_proc, get_words, clean_string_list ,stem_lem, get_level_keywords, jaccard_with_phrase, save_obj, load_obj
 from ..core.contentTaggingUtils import custom_listPreProc, dictionary_merge, get_sorted_list, get_prediction, getGradedigits
-from ..core.contentTaggingUtils import getEvalMatrix
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.feature_extraction.text import CountVectorizer
@@ -43,11 +42,21 @@ class ContentToText(BaseOperator):
         timestr = time.strftime("%Y%m%d-%H%M%S")
         content_to_text_path = os.path.join(DS_DATA_HOME, timestr, "content_to_text")
         
+        # log_file:
+        # log_live = self.outputs["path_to_LogFile"].read_loc()
+        # log_file = os.path.join(log_live, "content_to_text", timestr)
+        # if not os.path.exists(log_file):
+        #     os.makedirs(log_file)
+
         # content dump:
         if not os.path.exists(content_to_text_path):
             os.makedirs(content_to_text_path)
             print("content_to_text: ", content_to_text_path)
-       
+
+        #setting up logging
+        # logging.basicConfig(filename=os.path.join(log_file, "content_to_text.log"), filemode='w', level=logging.DEBUG,
+        #                     format='%(asctime)s %(message)s')
+
         logging.info("CTT_CONTENT_TO_TEXT_START")
         logging.info(
             "CTT_Config: content_meta from range_start: {0} to range_end: {1} created in: {2}".format(
@@ -92,7 +101,7 @@ class ContentToText(BaseOperator):
         print("Parallelising!!!!!")
         # if __name__ == "__main__":
         pool = multiprocessing.Pool(processes=int(num_of_processes))
-        contentTotext_partial = partial(multimodel_text_enrichment, content_meta=content_meta,
+        contentTotext_partial = partial(multimode_text_enrichment, content_meta=content_meta,
                                         downloadField=downloadField, content_to_text_path=content_to_text_path)  # prod_x has only one argument x (y is fixed to 10)
         results = pool.map(contentTotext_partial, [i for i in range(range_start, range_end)])
         print(results)
@@ -359,15 +368,14 @@ class ContentTaxonomyMapping(BaseOperator):
         else:
             print("list of folders in path_to_corpus: ", os.listdir(path_to_corpus))
             for content in content_meta['identifier']:
-                #logging.info("content keywordlist creation for id:{0}".format(content))
                 if not os.path.exists(os.path.join(path_to_corpus ,content, "keywords", keyword_subfolder, "keywords.csv")):
                     extracted_keys = []
                 else:
                     extracted_keyword_df =pd.read_csv(os.path.join(path_to_corpus ,content, "keywords", keyword_subfolder, "keywords.csv"), keep_default_na=False)
-                    print("keywords {0} for id {1}:".format(list(extracted_keyword_df['KEYWORDS']), content))
+                    print("keywords:", list(extracted_keyword_df['KEYWORDS']))
                     extracted_keys =list(extracted_keyword_df['KEYWORDS'])
                 content_keywords_list.append(extracted_keys)
-            
+            print("*****keyword list:", content_keywords_list)
 
             content_keywords_list=custom_listPreProc(content_keywords_list,'stem_lem', DELIMITTER) #??
             content_meta['Content_keywords'] =content_keywords_list
@@ -380,13 +388,9 @@ class ContentTaxonomyMapping(BaseOperator):
             print("content meta columns: ", content_meta.columns)
             print("taxonomy columns:", taxonomy.columns)
             print("Domains: ", domains)
-            
-            if not domains:#empty domain
-                logging.info("No Subjects common")
+
             logging.info("Aggregated on level: {0}".format(level))
             logging.info("------------------------------------------")
-
-            logging.info("Skipping Content id: {0}".format(list(content_meta[~content_meta['subject'].isin(domains)]['identifier'])))
 
             dist_all =dict()
             for i in domains:
@@ -443,47 +447,6 @@ class ContentTaxonomyMapping(BaseOperator):
             self.outputs["path_to_timestampFolder"].write(root_path)
             self.outputs["path_to_distMeasure"].write(os.path.join(output,distanceMeasure+"_dist_all"))
 
-class PredictTag(BaseOperator):
-
-    @property
-    def inputs(self):
-        return {"path_to_timestampFolder": File_Txt(self.node.inputs[0])
-                }
-
-    @property  # how to write to a folder?
-    def outputs(self):
-        return {"path_to_timestampFolder1": File_Txt(self.node.outputs[0]),
-                "path_to_predictedTags": File_Txt(self.node.outputs[1])
-                }
-
-    def run(self, window, distanceMeasure):
-
-        if distanceMeasure=="jaccard1" or distanceMeasure=="jaccard2":
-            sort_order=0
-        if distanceMeasure=="cosine":
-            sort_order=1
-        level_pred_dict=dict()
-        timestr = time.strftime("%Y%m%d-%H%M%S")
-        timestamp_folder = self.inputs["path_to_timestampFolder"].read()
-        logging.info("PT_START")
-        output = timestamp_folder+"/content_taxonomy_mapping"
-        print("output:", output)
-        prediction_folder = timestamp_folder+"/prediction"
-        if not os.path.exists(prediction_folder):
-            os.makedirs(prediction_folder)
-        logging.info("PT_PRED_FOLDER_CREATED: {0}".format(prediction_folder))
-        logging.info("PT_DISTANCE_MEASURE: {0}". format(distanceMeasure))
-        logging.info("PT_WINDOW: {0}". format(window))
-        dist_dict_list=[load_obj(os.path.join(output, path_to_runFolder, distanceMeasure +"_dist_all")) for path_to_runFolder in os.listdir(output) if os.path.exists(os.path.join(output, path_to_runFolder, distanceMeasure+"_dist_all.pkl"))]
-
-        dist_dict = dictionary_merge(dist_dict_list)
-        print(dist_dict_list)
-        for subject in dist_dict.keys():
-            level_pred_dict[subject]=(get_prediction(dist_dict[subject],sort_order,window))
-        save_obj(level_pred_dict, os.path.join(prediction_folder,"predicted_tags"))
-        self.outputs["path_to_timestampFolder1"].write(timestamp_folder)
-        self.outputs["path_to_predictedTags"].write(os.path.join(prediction_folder,"predicted_tags.pkl"))
-        logging.info("PT_END")
 
 class EvlnKnownTags(BaseOperator):
 
@@ -491,7 +454,7 @@ class EvlnKnownTags(BaseOperator):
     def inputs(self):
         return {"content_meta": Pandas_Dataframe(self.node.inputs[0]),
                 "taxonomy": Pandas_Dataframe(self.node.inputs[1]),
-                "path_to_timestampFolder1": File_Txt(self.node.inputs[2])
+                "path_to_timestampFolder": File_Txt(self.node.inputs[2])
                 }
 
     @property  # how to write to a folder?
@@ -509,7 +472,7 @@ class EvlnKnownTags(BaseOperator):
         timestr = time.strftime("%Y%m%d-%H%M%S")
         content_meta = self.inputs["content_meta"].read()
         taxonomy = self.inputs["taxonomy"].read()
-        timestamp_folder = self.inputs["path_to_timestampFolder1"].read()
+        timestamp_folder = self.inputs["path_to_timestampFolder"].read()
         
         output=timestamp_folder+"/content_taxonomy_mapping"
         if not os.path.exists(output):
