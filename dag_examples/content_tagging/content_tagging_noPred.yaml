@@ -52,7 +52,7 @@ graph:
     arguments:
       keyword_subfolder: "tagme_tokens"
       update_corpus: True
-      delimiter: “_”
+      delimiter: "_"
 
   - node_name: content_taxonomy_mapping
     inputs: [contentMeta, taxonomy, corpus_creation.root_path, corpus_creation.path_to_corpus]
@@ -63,7 +63,7 @@ graph:
       grade_end: 11
       keyword_subfolder: "tagme_tokens"
       level : "Chapter Name"
-      delimiter: “_”
+      delimiter: "_"
       phrase_split: True
       distanceMeasure: "jaccard1"
       embedding_method: "none"

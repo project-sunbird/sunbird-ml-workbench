@@ -29,8 +29,8 @@ import pandas as pd
 import numpy as np
 import googleapiclient.discovery
 import nltk
-#nltk.download("wordnet")
-#nltk.download("stopwords")
+nltk.download("wordnet")
+nltk.download("stopwords")
 from nltk.corpus import stopwords
 stopwords = stopwords.words('english')
 import time
@@ -39,7 +39,7 @@ import time
 from google.cloud import translate
 from google.cloud import vision
 from pydub.playback import play
-import matplotlib.pyplot as plt
+from PyPDF2 import PdfFileReader
 import Levenshtein
 import plotly.plotly as py
 import plotly.tools as tls
@@ -54,7 +54,7 @@ from collections import Counter
 from nltk.stem import WordNetLemmatizer
 from nltk.stem import PorterStemmer
 from sklearn.feature_extraction.text import CountVectorizer
-from pyemd import emd
+
 
 
 GOOGLE_APPLICATION_CREDENTIALS = r"""{
@@ -89,16 +89,17 @@ def downloadZipFile(url,directory):
 
 def findFiles(directory,substrings):
     ls=[]
-    if (type(directory) == str) and type(substrings) == list:
+    if type(directory) == str and type(substrings) == list:
     # assert type(directory)==unicode or type(directory)==str
     # assert type(substrings)==list
-      if os.path.isdir(directory):
-        for dirname, dirnames, filenames in os.walk(directory):
-            for filename in filenames:
-                string=os.path.join(dirname, filename)
-            for substring in substrings:
-                if(string.find(substring)>=0):
-                    ls.append(string)
+        if os.path.isdir(directory):
+            for dirname, dirnames, filenames in os.walk(directory):
+                print(dirname, dirnames, filenames)
+                for filename in filenames:
+                    string=os.path.join(dirname, filename)
+                    for substring in substrings:
+                        if(string.find(substring)>=0):
+                            ls.append(string)
     return ls
 
 
@@ -182,31 +183,16 @@ def copy_main_folders_new(root, identifier):
 
 def getImgTags(img_file_name):
     # Instantiates a client
-    vision_client = vision.Client()
+    vision_client = vision.ImageAnnotatorClient()
     with io.open(img_file_name, 'rb') as image_file:
         content = image_file.read()
-    image = vision_client.image(content=content)
-    # Performs label detection on the image file
-    labels = image.detect_labels()
-    # Optical Character Recognition on the image
-    full_text=image.detect_full_text()
-    # Detects Web references of the image
-    web_entities=image.detect_web()
-            
-    label_text=[]
-    for label in labels:
-        label_text.append(label.description)
-            
-    web_entities_text=[]
-    for entities in web_entities.web_entities:
-        web_entities_text.append(entities.description)
-    print('........Image text extraction complete')
-    #text= web_entities_text+label_text+list(str(full_text.text).split("\n"))
-    #text= list(str(full_text.text).split("\n"))
-        
-    text = list((unicodedata.normalize('NFKD', full_text.text).encode('ascii','ignore').decode('utf-8')).split('\n'))
-    img_dct={'text':','.join(set(text))}   
-
+    image = types.Image(content=content)
+    response = vision_client.text_detection(image)
+    texts = response.text_annotations
+    full_text = []
+    for text in texts:
+        full_text.append(text.description)
+    img_dct={'text': full_text[0]}   
     return img_dct
 
 
@@ -608,15 +594,14 @@ def ecar_zip_file_processing(path_to_id):
 
             except:
                   print('........ Error: could not process file')
-        image_text = list(set(text.lower().split(',')))
-        image_text = ','.join(image_text)
-        print("Image_text: ",image_text)
-
+        text = list(str(text.lower()).split("\n"))
+        image_text = ' '.join(list(set(text)))
+        print("Image_text: ", image_text)
     except:
         print('...no image file processed')
         logging.info(".....no image file processed")
         image_text = ""
-    
+
 
     # mp4 processing
     try:
@@ -680,7 +665,7 @@ def ecar_zip_file_processing(path_to_id):
             os.path.join(path_to_id, "manifest.json")):
         all_text = ''
         try:
-            xmldoc = ET.parse(os.path.join(path_to_id, "data", "index.ecml"))
+            xmldoc = ET.parse(os.path.join(path_to_id, "index.ecml"))
             all_text = ''
 
             xmldoc = minidom.parse(ecml_file)
@@ -704,35 +689,33 @@ def ecar_zip_file_processing(path_to_id):
 
         except:
             # get json text and translate
-           
-              try:
-                  print('...File type detected as json')
-                  json_data = open(os.path.join(path_to_id, "manifest.json"))
-                  jdata = json.load(json_data)
-                  jtext = getText_json(jdata, '__text')
+            try:
+                print('...File type detected as json')
+                json_data = open(os.path.join(path_to_id, "manifest.json"))
+                jdata = json.load(json_data)
+                jtext = getText_json(jdata, '__text')
 
-                  # jfeedback=getText_json(jdata,'feedback')# would repeat for mcq type
-
-
-                  for text in jtext:  # +jfeedback
-                      try:
-                          all_text += " " + text
-
-                      except:
-                          print('........ Unable to extract json text')
-                          text = ""
-                  all_text += " " + audio_text + image_text + video_text + pdf_text
-                  all_text = all_text.encode("utf-8").decode("ascii", "ignore")
+              # jfeedback=getText_json(jdata,'feedback')# would repeat for mcq type
 
 
-              except:
-                  print('...File type neither ecml or json. Skipped.')
+                for text in jtext:  # +jfeedback
+                    try:
+                        all_text += " " + text
+                    except:
+                        print('........ Unable to extract json text')
+                        text = ""
+                all_text += " " + audio_text + image_text + video_text + pdf_text
+                all_text = all_text.encode("utf-8").decode("ascii", "ignore")
+
+
+            except:
+                print('...File type neither ecml or json. Skipped.')
 
 
 
     else:
         all_text = audio_text + image_text + video_text + pdf_text
-
+        all_text = all_text.encode("utf-8").decode("ascii", "ignore")
     if not os.path.exists(path_to_id):
         os.mkdir(path_to_id)
     with open(os.path.join(path_to_id, "enriched_text.txt"), 'w') as text_file:

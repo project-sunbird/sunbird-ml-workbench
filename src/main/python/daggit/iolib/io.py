@@ -62,7 +62,7 @@ class Pandas_Dataframe(DataType):
     def read(self):
         print("data_location: ", self.data_location)
         if self.data_location[-3:] == 'csv':
-            return pd.read_csv(filepath_or_buffer=self.data_location)
+            return pd.read_csv(filepath_or_buffer=self.data_location, encoding="latin1")
         elif self.data_location[-2:] == 'h5':
             store = pd.HDFStore(self.data_location)
             return store.get(self.data_alias)

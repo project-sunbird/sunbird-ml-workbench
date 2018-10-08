@@ -16,6 +16,8 @@ networkx
 findspark
 gensim
 nltk
+grpcio
+grpcio-tools
 ffmpeg-python
 youtube_dl
 google-cloud

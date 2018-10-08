@@ -1,0 +1,139 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>build &#8212; mlworkbench 0.0.2 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for build</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">pybuilder.core</span> <span class="k">import</span> <span class="n">init</span><span class="p">,</span> <span class="n">use_plugin</span>
+
+<span class="n">use_plugin</span><span class="p">(</span><span class="s2">&quot;python.core&quot;</span><span class="p">)</span>
+<span class="n">use_plugin</span><span class="p">(</span><span class="s2">&quot;python.install_dependencies&quot;</span><span class="p">)</span>
+<span class="n">use_plugin</span><span class="p">(</span><span class="s2">&quot;python.distutils&quot;</span><span class="p">)</span>
+<span class="n">use_plugin</span><span class="p">(</span><span class="s1">&#39;copy_resources&#39;</span><span class="p">)</span>
+<span class="n">use_plugin</span><span class="p">(</span><span class="s2">&quot;python.unittest&quot;</span><span class="p">)</span>
+<span class="c1"># use_plugin(&quot;python.coverage&quot;)</span>
+<span class="n">use_plugin</span><span class="p">(</span><span class="s1">&#39;python.flake8&#39;</span><span class="p">)</span>
+<span class="n">use_plugin</span><span class="p">(</span><span class="s2">&quot;exec&quot;</span><span class="p">)</span>
+<span class="n">use_plugin</span><span class="p">(</span><span class="s1">&#39;python.pycharm&#39;</span><span class="p">)</span>
+<span class="n">use_plugin</span><span class="p">(</span><span class="s1">&#39;python.sphinx&#39;</span><span class="p">)</span>
+<span class="n">use_plugin</span><span class="p">(</span><span class="s1">&#39;python.integrationtest&#39;</span><span class="p">)</span>
+
+<span class="n">default_task</span> <span class="o">=</span> <span class="s2">&quot;publish&quot;</span>
+
+<span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;daggit&quot;</span>
+<span class="n">version</span> <span class="o">=</span> <span class="s2">&quot;0.0.2&quot;</span>
+<span class="n">license</span> <span class="o">=</span> <span class="s2">&quot;MIT License&quot;</span>
+
+<div class="viewcode-block" id="initialize"><a class="viewcode-back" href="../build.html#build.initialize">[docs]</a><span class="nd">@init</span>
+<span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="n">project</span><span class="p">):</span>
+    <span class="n">project</span><span class="o">.</span><span class="n">plugin_depends_on</span><span class="p">(</span><span class="s2">&quot;flake8&quot;</span><span class="p">,</span> <span class="s2">&quot;~=3.5&quot;</span><span class="p">)</span>
+    <span class="n">project</span><span class="o">.</span><span class="n">depends_on_requirements</span><span class="p">(</span><span class="s2">&quot;requirements.txt&quot;</span><span class="p">)</span>
+    <span class="n">project</span><span class="o">.</span><span class="n">build_depends_on</span><span class="p">(</span><span class="s1">&#39;mockito&#39;</span><span class="p">)</span>
+    <span class="n">project</span><span class="o">.</span><span class="n">set_property_if_unset</span><span class="p">(</span><span class="s2">&quot;filter_resources_target&quot;</span><span class="p">,</span> <span class="s2">&quot;$dir_target&quot;</span><span class="p">)</span>
+    <span class="n">project</span><span class="o">.</span><span class="n">get_property</span><span class="p">(</span><span class="s1">&#39;copy_resources_glob&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;LICENSE&#39;</span><span class="p">)</span>
+    <span class="n">project</span><span class="o">.</span><span class="n">set_property_if_unset</span><span class="p">(</span><span class="s2">&quot;flake8_break_build&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+    <span class="n">project</span><span class="o">.</span><span class="n">set_property_if_unset</span><span class="p">(</span><span class="s2">&quot;flake8_max_line_length&quot;</span><span class="p">,</span> <span class="mi">120</span><span class="p">)</span>
+    <span class="n">project</span><span class="o">.</span><span class="n">set_property_if_unset</span><span class="p">(</span><span class="s2">&quot;flake8_include_patterns&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">project</span><span class="o">.</span><span class="n">set_property_if_unset</span><span class="p">(</span><span class="s2">&quot;flake8_exclude_patterns&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">project</span><span class="o">.</span><span class="n">set_property_if_unset</span><span class="p">(</span><span class="s2">&quot;flake8_include_test_sources&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+    <span class="n">project</span><span class="o">.</span><span class="n">set_property_if_unset</span><span class="p">(</span><span class="s2">&quot;flake8_include_scripts&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+    <span class="n">project</span><span class="o">.</span><span class="n">set_property_if_unset</span><span class="p">(</span><span class="s2">&quot;flake8_max_complexity&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+    <span class="n">project</span><span class="o">.</span><span class="n">set_property</span><span class="p">(</span><span class="s2">&quot;sphinx_config_path&quot;</span><span class="p">,</span> <span class="s2">&quot;docs/source/&quot;</span><span class="p">)</span>
+    <span class="n">project</span><span class="o">.</span><span class="n">set_property</span><span class="p">(</span><span class="s2">&quot;sphinx_source_dir&quot;</span><span class="p">,</span> <span class="s2">&quot;docs/source/&quot;</span><span class="p">)</span>
+    <span class="n">project</span><span class="o">.</span><span class="n">set_property</span><span class="p">(</span><span class="s2">&quot;sphinx_output_dir&quot;</span><span class="p">,</span> <span class="s2">&quot;docs/_build&quot;</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">mlworkbench</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Ekstep.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
