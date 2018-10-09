@@ -60,8 +60,8 @@ graph:
       grade_start: 1
       grade_end: 11
       keyword_subfolder: "tagme_tokens"
-      level : "Chapter Name"
-      delimiter:"_"
+      level: "Chapter Name"
+      delimiter: "_"
       phrase_split: True
       distanceMeasure: "jaccard1"
       embedding_method: "none"
