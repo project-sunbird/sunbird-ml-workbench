@@ -10,7 +10,7 @@ def get_nodes(dag_config_file):
     dag_config = {}
 
     # Load dag configuration
-    with open(dag_config_file, 'r') as stream:
+    with open(dag_config_file, 'r', encoding="latin1") as stream:
         try:
             dag_config = yaml.load(stream)
         except yaml.YAMLError as exc:
