@@ -192,8 +192,12 @@ def getImgTags(img_file_name):
     full_text = []
     for text in texts:
         full_text.append(text.description)
-    img_dct={'text': full_text[0]}   
-    return img_dct
+    print(full_text)
+    if len(full_text) > 0:
+        img_dct={'text': full_text[0]}   
+    else:
+        img_dct={'text': ""}
+    return img_dct['text']
 
 
 def clean_url(my_url):
@@ -589,7 +593,7 @@ def ecar_zip_file_processing(path_to_id):
         logging.info('...image file processing started')
         for file in image_names:
             try:
-                text += getImgTags(file)['text']
+                text += getImgTags(file)
                 imagefile_count += 1
 
             except:
@@ -694,9 +698,6 @@ def ecar_zip_file_processing(path_to_id):
                 json_data = open(os.path.join(path_to_id, "manifest.json"))
                 jdata = json.load(json_data)
                 jtext = getText_json(jdata, '__text')
-
-              # jfeedback=getText_json(jdata,'feedback')# would repeat for mcq type
-
 
                 for text in jtext:  # +jfeedback
                     try:

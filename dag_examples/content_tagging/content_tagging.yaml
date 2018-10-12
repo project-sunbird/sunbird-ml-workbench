@@ -4,7 +4,7 @@ inputs:
   contentMeta: "inputs/DiksaContent_july12_youtube_english.csv"
   taxonomy: "inputs/RevisedTaxonomy.csv"
 outputs:
-  DS_DATA_HOME: /home/DS_DATA_HOME
+  DS_DATA_HOME: /home/aleena/DS_DATA_HOME
 
 graph:
   
@@ -52,7 +52,7 @@ graph:
       update_corpus: True
       delimiter: "_"
 
-  - node_name: content_taxonomy_mapping
+  - node_name: content_taxonomy_scoring
     inputs: [contentMeta, taxonomy, corpus_creation.root_path, corpus_creation.path_to_corpus]
     outputs: [path_to_timestampFolder, path_to_distMeasure]
     operation: contentTagging.ContentTaxonomyMapping
@@ -65,9 +65,10 @@ graph:
       phrase_split: True
       distanceMeasure: "jaccard1"
       embedding_method: "none"
+      observed_tagname: "none"
   
   - node_name: predict_tag
-    inputs: [content_taxonomy_mapping.path_to_timestampFolder]
+    inputs: [content_taxonomy_scoring.path_to_timestampFolder]
     outputs: [path_to_timestampFolder1, path_to_predictedTags]
     operation: contentTagging.PredictTag
     arguments:

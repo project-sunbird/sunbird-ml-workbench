@@ -15,7 +15,7 @@ from ..core.contentTaggingUtils import clean_url, identify_fileType, content_to_
 from ..core.contentTaggingUtils import get_tagme_longtext, pafy_text_tokens
 from ..core.contentTaggingUtils import word_proc, get_words, clean_string_list ,stem_lem, get_level_keywords, jaccard_with_phrase, save_obj, load_obj
 from ..core.contentTaggingUtils import custom_listPreProc, dictionary_merge, get_sorted_list, get_prediction, getGradedigits
-from ..core.contentTaggingUtils import getEvalMatrix
+from ..core.contentTaggingUtils import getEvalMatrix, get_sorted_list
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.feature_extraction.text import CountVectorizer
@@ -414,7 +414,9 @@ class ContentTaxonomyMapping(BaseOperator):
                                     taxonomy_keywords =list(map(word_proc,level_domain_taxonomy_df['Keywords'][col_ind]))#??
                                     jaccard_index = jaccard_with_phrase(content_keywords ,taxonomy_keywords)#??
                                     dist_df.iloc[row_ind ,col_ind ] =jaccard_index[distanceMeasure]#??
-                            dist_all['& '.join(subject)] = dist_df    
+                                    mapped_df=dist_df.T.apply(func=lambda x:get_sorted_list(x,0),axis=0).T
+                                    mapped_df.columns=range(1,mapped_df.shape[1]+1)
+                            dist_all['& '.join(subject)] = mapped_df    
                 if (distanceMeasure=='cosine'): 
                     if len(level_domain_taxonomy_df) > 1:
                         taxonomy_documents = [" ".join(doc) for doc in list(level_domain_taxonomy_df['Keywords'])]#??
@@ -434,7 +436,9 @@ class ContentTaxonomyMapping(BaseOperator):
                         content_freq_df=vectorizer.transform(content_documents)
                         content_freq_df=pd.DataFrame(content_freq_df.todense(), index=list(domain_content_df.index), columns=vectorizer.get_feature_names())
                         dist_df=pd.DataFrame(cosine_similarity(content_freq_df,taxonomy_freq_df), index=list(domain_content_df.index), columns=list(level_domain_taxonomy_df[level]))
-                        dist_all['& '.join(subject)] = dist_df 
+                        mapped_df=dist_df.T.apply(func=lambda x:get_sorted_list(x,0),axis=0).T
+                        mapped_df.columns=range(1,mapped_df.shape[1]+1)
+                        dist_all['& '.join(subject)] = mapped_df 
 
 
             if not os.path.exists(output):
@@ -456,12 +460,8 @@ class PredictTag(BaseOperator):
                 "path_to_predictedTags": File_Txt(self.node.outputs[1])
                 }
 
-    def run(self, window, distanceMeasure):
+    def run(self, window):
 
-        if distanceMeasure=="jaccard1" or distanceMeasure=="jaccard2":
-            sort_order=0
-        if distanceMeasure=="cosine":
-            sort_order=1
         level_pred_dict=dict()
         timestr = time.strftime("%Y%m%d-%H%M%S")
         timestamp_folder = self.inputs["path_to_timestampFolder"].read()
@@ -472,7 +472,6 @@ class PredictTag(BaseOperator):
         if not os.path.exists(prediction_folder):
             os.makedirs(prediction_folder)
         logging.info("PT_PRED_FOLDER_CREATED: {0}".format(prediction_folder))
-        logging.info("PT_DISTANCE_MEASURE: {0}". format(distanceMeasure))
         logging.info("PT_WINDOW: {0}". format(window))
         dist_dict_list=[load_obj(os.path.join(output, path_to_runFolder, distanceMeasure +"_dist_all")) for path_to_runFolder in os.listdir(output) if os.path.exists(os.path.join(output, path_to_runFolder, distanceMeasure+"_dist_all.pkl"))]
 
