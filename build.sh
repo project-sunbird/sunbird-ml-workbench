@@ -26,4 +26,4 @@ fi
 
 cp target/dist/daggit-0.0.2/dist/* bin/
 
-rm -rf target/
+#rm -rf target/

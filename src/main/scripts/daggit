@@ -6,7 +6,7 @@ import shutil
 import argparse
 from subprocess import call
 
-from daggit.core.utils import nostdout
+from daggit.core.base.utils import nostdout
 
 with nostdout():
     from airflow.models import DagModel
@@ -14,7 +14,7 @@ with nostdout():
     from airflow.utils import db
     from airflow import models
 
-from daggit.core.config import ORCHESTRATOR
+from daggit.core.base.config import ORCHESTRATOR
 
 # improve orchestrator factory and replace if based switching
 def _unpause(dag):

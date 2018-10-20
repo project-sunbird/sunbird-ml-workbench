@@ -11,7 +11,7 @@ graph:
   - node_name: split
     inputs: raw_data
     outputs: [train, test]
-    operation: sklearn_lib.Splitters
+    operation: sklearn.Splitters
     arguments:
       model_args:
         name: train_test_split
@@ -23,7 +23,7 @@ graph:
   - node_name: model_logistic_regression
     inputs: split.train
     outputs: [report, model]
-    operation: sklearn_lib.CrossValidate
+    operation: sklearn.CrossValidate
     arguments:
       model_args:
         name: LogisticRegression

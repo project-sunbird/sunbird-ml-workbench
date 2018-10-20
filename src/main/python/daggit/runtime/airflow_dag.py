@@ -2,7 +2,7 @@ import six
 import os
 from airflow import DAG
 from datetime import datetime, date, timedelta
-from daggit.core.parser import get_nodes
+from daggit.core.base.parser import get_nodes
 from daggit.runtime.airflow_runtime import DaggitPyOp
 
 

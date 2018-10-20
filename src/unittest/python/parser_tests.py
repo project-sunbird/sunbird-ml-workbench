@@ -5,7 +5,7 @@ testdir = os.path.dirname(__file__)
 srcdir = '../../../../src/main/python/daggit'
 sys.path.insert(0, os.path.abspath(os.path.join(testdir, srcdir)))
 
-from daggit.core.parser import get_nodes
+from daggit.core.base.parser import get_nodes
 
 
 class UnitTests(unittest.TestCase):

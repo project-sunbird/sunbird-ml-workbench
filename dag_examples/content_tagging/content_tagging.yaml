@@ -1,88 +1,96 @@
 experiment_name: Content_tagging
 owner: aleena
 inputs:
-  contentMeta: "inputs/DiksaContent_july12_youtube_english.csv"
-  taxonomy: "inputs/RevisedTaxonomy.csv"
+  pathTocontentMeta: "inputs/DiksaContent_july12_youtube_english.csv"
+  pathTotaxonomy: "inputs/RevisedTaxonomy.csv"
 outputs:
-  DS_DATA_HOME: /home/aleena/DS_DATA_HOME
+  DS_DATA_HOME: /home/DS_DATA_HOME 
 
 graph:
   
   - node_name: content_to_text
-    inputs: contentMeta
+    inputs: pathTocontentMeta
     outputs: [DS_DATA_HOME, timestamp_folder]
     operation: contentTagging.ContentToText
     arguments:
       range_start: 2
       range_end: 3
-      num_of_processes: 4
-      url_type: youtube
-      youtube_extraction:
-        method: youtube_dl
-        contentDownloadField: artifactUrl
-        language_detect: False
-        language_detect_method: google
-        speech_to_text: googleAT
-      ecml:
-        contentDownloadField: downloadUrl
-        speech_to_text: googleAT
-        image_to_text: googleapi
-        language_detect: True
-        language_detect_method: meta
-      pdf:
-        contentDownloadField: artifactUrl
-        method: PyPDF2
-        language_detect: True
+      num_of_processes: 1
+      subset_contentMeta_by: youtube
+      content_type:
+        youtube:
+          contentDownloadField: artifactUrl
+          video_to_speech: none
+          speech_to_text: googleAT
+          image_to_text: none
+          pdf_to_text: none
+          ecml_index_to_text: none
+        ecml:
+          contentDownloadField: downloadUrl
+          video_to_speech: ffmpeg
+          speech_to_text: googleAT
+          image_to_text: googleVision
+          pdf_to_text: PyPDF2
+          ecml_index_to_text: parse
+        pdf:
+          contentDownloadField: downloadUrl
+          video_to_speech: none
+          speech_to_text: none
+          image_to_text: none
+          pdf_to_text: PyPDF2
+          ecml_index_to_text: none
 
   - node_name: keyword_extraction
-    inputs: [contentMeta, taxonomy, content_to_text.timestamp_folder]
-    outputs: [path_to_contentKeywords]
+    inputs: [pathTocontentMeta, pathTotaxonomy, content_to_text.timestamp_folder]
+    outputs: [pathTocontentKeywords]
     operation: contentTagging.KeywordExtraction 
     arguments: 
-      extract_keywords: True
-      method: "tagme"
-      filter_criteria: "none"
-  
+      extract_keywords: tagme
+      filter_criteria: none
+        
   - node_name: corpus_creation
-    inputs: [taxonomy, keyword_extraction.path_to_contentKeywords]
+    inputs: [pathTotaxonomy, keyword_extraction.pathTocontentKeywords]
     outputs: [root_path, path_to_corpus]
     operation: contentTagging.CorpusCreation
     arguments:
-      keyword_subfolder: "tagme_tokens"
+      Keyword_folder_name: tagme_none
       update_corpus: True
-      delimiter: "_"
+      word_preprocess: 
+         delimitter: "_"
+         method: stem_lem
 
   - node_name: content_taxonomy_scoring
-    inputs: [contentMeta, taxonomy, corpus_creation.root_path, corpus_creation.path_to_corpus]
+    inputs: [pathTocontentMeta, pathTotaxonomy, corpus_creation.root_path, corpus_creation.path_to_corpus]
     outputs: [path_to_timestampFolder, path_to_distMeasure]
-    operation: contentTagging.ContentTaxonomyMapping
+    operation: contentTagging.ContentTaxonomyScoring
     arguments:
-      grade_start: 1
-      grade_end: 11
-      keyword_subfolder: "tagme_tokens"
-      level: "Chapter Name"
-      delimiter: "_"
+      keyword_extract_filter_by: tagme_none
       phrase_split: True
-      distanceMeasure: "jaccard1"
-      embedding_method: "none"
-      observed_tagname: "none"
-  
+      distanceMeasure: jaccard
+      embedding_method: none
+      delimitter: "_"
+      filter_by:
+        contentMeta:
+          column: subject
+          alignment_depth: none
+        taxonomy:
+          column: Subject
+          alignment_depth: Chapter Name
+
   - node_name: predict_tag
     inputs: [content_taxonomy_scoring.path_to_timestampFolder]
     outputs: [path_to_timestampFolder1, path_to_predictedTags]
     operation: contentTagging.PredictTag
     arguments:
       window: 5
-      distanceMeasure: "jaccard1"
-      
 
-  - node_name: evaluation_on_knownTags
-    inputs: [contentMeta, taxonomy, predict_tag.path_to_timestampFolder1]
+  - node_name: known_tags_discovery
+    inputs: [pathTocontentMeta, pathTotaxonomy, predict_tag.path_to_timestampFolder1]
     outputs: [path_to_EvaluationMatrix]
-    operation: contentTagging.EvlnKnownTags
+    operation: contentTagging.KnownTagsDiscovery
     arguments:
       window: 5
-      distanceMeasure: "jaccard1"
-      level: "Chapter Name"
-      tax_known_tag: "Grade"
-      content_known_tag: "gradeLevel"
+      level: Chapter Name
+      tax_known_tag: Grade
+      content_known_tag: gradeLevel
+

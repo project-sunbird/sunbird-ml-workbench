@@ -39,108 +39,18 @@
 </div>
 <div class="section" id="module-src.main.python.daggit.core.base">
 <span id="src-main-python-daggit-core-base-module"></span><h2>src.main.python.daggit.core.base module<a class="headerlink" href="#module-src.main.python.daggit.core.base" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
-<dt id="src.main.python.daggit.core.base.BaseDAGManager">
-<em class="property">class </em><code class="descclassname">src.main.python.daggit.core.base.</code><code class="descname">BaseDAGManager</code><span class="sig-paren">(</span><em>dag</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main/python/daggit/core/base.html#BaseDAGManager"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.main.python.daggit.core.base.BaseDAGManager" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
-<dl class="method">
-<dt id="src.main.python.daggit.core.base.BaseDAGManager.init">
-<code class="descname">init</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main/python/daggit/core/base.html#BaseDAGManager.init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.main.python.daggit.core.base.BaseDAGManager.init" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="src.main.python.daggit.core.base.BaseDAGManager.run">
-<code class="descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main/python/daggit/core/base.html#BaseDAGManager.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.main.python.daggit.core.base.BaseDAGManager.run" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="src.main.python.daggit.core.base.BaseOperator">
-<em class="property">class </em><code class="descclassname">src.main.python.daggit.core.base.</code><code class="descname">BaseOperator</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main/python/daggit/core/base.html#BaseOperator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.main.python.daggit.core.base.BaseOperator" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
-<dl class="attribute">
-<dt id="src.main.python.daggit.core.base.BaseOperator.inputs">
-<code class="descname">inputs</code><a class="headerlink" href="#src.main.python.daggit.core.base.BaseOperator.inputs" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="src.main.python.daggit.core.base.BaseOperator.outputs">
-<code class="descname">outputs</code><a class="headerlink" href="#src.main.python.daggit.core.base.BaseOperator.outputs" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="src.main.python.daggit.core.base.BaseOperator.run">
-<code class="descname">run</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main/python/daggit/core/base.html#BaseOperator.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.main.python.daggit.core.base.BaseOperator.run" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="src.main.python.daggit.core.base.Node">
-<em class="property">class </em><code class="descclassname">src.main.python.daggit.core.base.</code><code class="descname">Node</code><span class="sig-paren">(</span><em>node_config</em>, <em>experiment_name</em>, <em>owner</em>, <em>graph_inputs</em>, <em>graph_outputs</em>, <em>inputs_parents</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main/python/daggit/core/base.html#Node"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.main.python.daggit.core.base.Node" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
-<dl class="method">
-<dt id="src.main.python.daggit.core.base.Node.infer_data_objects">
-<code class="descname">infer_data_objects</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main/python/daggit/core/base.html#Node.infer_data_objects"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.main.python.daggit.core.base.Node.infer_data_objects" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="src.main.python.daggit.core.base.NodeData">
-<em class="property">class </em><code class="descclassname">src.main.python.daggit.core.base.</code><code class="descname">NodeData</code><span class="sig-paren">(</span><em>dag_id</em>, <em>task_id</em>, <em>data_alias</em>, <em>parent_task=None</em>, <em>external_ref=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main/python/daggit/core/base.html#NodeData"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.main.python.daggit.core.base.NodeData" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
-</dd></dl>
-
 </div>
-<div class="section" id="module-src.main.python.daggit.core.config">
-<span id="src-main-python-daggit-core-config-module"></span><h2>src.main.python.daggit.core.config module<a class="headerlink" href="#module-src.main.python.daggit.core.config" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="src-main-python-daggit-core-config-module">
+<h2>src.main.python.daggit.core.config module<a class="headerlink" href="#src-main-python-daggit-core-config-module" title="Permalink to this headline">¶</a></h2>
 </div>
-<div class="section" id="src-main-python-daggit-core-io-module">
-<h2>src.main.python.daggit.core.io module<a class="headerlink" href="#src-main-python-daggit-core-io-module" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-src.main.python.daggit.core.io">
+<span id="src-main-python-daggit-core-io-module"></span><h2>src.main.python.daggit.core.io module<a class="headerlink" href="#module-src.main.python.daggit.core.io" title="Permalink to this headline">¶</a></h2>
 </div>
-<div class="section" id="module-src.main.python.daggit.core.parser">
-<span id="src-main-python-daggit-core-parser-module"></span><h2>src.main.python.daggit.core.parser module<a class="headerlink" href="#module-src.main.python.daggit.core.parser" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
-<dt id="src.main.python.daggit.core.parser.get_nodes">
-<code class="descclassname">src.main.python.daggit.core.parser.</code><code class="descname">get_nodes</code><span class="sig-paren">(</span><em>dag_config_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main/python/daggit/core/parser.html#get_nodes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.main.python.daggit.core.parser.get_nodes" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
+<div class="section" id="src-main-python-daggit-core-parser-module">
+<h2>src.main.python.daggit.core.parser module<a class="headerlink" href="#src-main-python-daggit-core-parser-module" title="Permalink to this headline">¶</a></h2>
 </div>
-<div class="section" id="module-src.main.python.daggit.core.utils">
-<span id="src-main-python-daggit-core-utils-module"></span><h2>src.main.python.daggit.core.utils module<a class="headerlink" href="#module-src.main.python.daggit.core.utils" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
-<dt id="src.main.python.daggit.core.utils.DummyFile">
-<em class="property">class </em><code class="descclassname">src.main.python.daggit.core.utils.</code><code class="descname">DummyFile</code><a class="reference internal" href="_modules/src/main/python/daggit/core/utils.html#DummyFile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.main.python.daggit.core.utils.DummyFile" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
-<dl class="method">
-<dt id="src.main.python.daggit.core.utils.DummyFile.write">
-<code class="descname">write</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main/python/daggit/core/utils.html#DummyFile.write"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.main.python.daggit.core.utils.DummyFile.write" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="function">
-<dt id="src.main.python.daggit.core.utils.create_dir">
-<code class="descclassname">src.main.python.daggit.core.utils.</code><code class="descname">create_dir</code><span class="sig-paren">(</span><em>directory</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main/python/daggit/core/utils.html#create_dir"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.main.python.daggit.core.utils.create_dir" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="src.main.python.daggit.core.utils.get_as_list">
-<code class="descclassname">src.main.python.daggit.core.utils.</code><code class="descname">get_as_list</code><span class="sig-paren">(</span><em>string_or_list</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main/python/daggit/core/utils.html#get_as_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.main.python.daggit.core.utils.get_as_list" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="src.main.python.daggit.core.utils.normalize_path">
-<code class="descclassname">src.main.python.daggit.core.utils.</code><code class="descname">normalize_path</code><span class="sig-paren">(</span><em>cwd</em>, <em>path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main/python/daggit/core/utils.html#normalize_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.main.python.daggit.core.utils.normalize_path" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="src.main.python.daggit.core.utils.nostdout">
-<code class="descclassname">src.main.python.daggit.core.utils.</code><code class="descname">nostdout</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/main/python/daggit/core/utils.html#nostdout"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#src.main.python.daggit.core.utils.nostdout" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
+<div class="section" id="src-main-python-daggit-core-utils-module">
+<h2>src.main.python.daggit.core.utils module<a class="headerlink" href="#src-main-python-daggit-core-utils-module" title="Permalink to this headline">¶</a></h2>
 </div>
 <div class="section" id="module-src.main.python.daggit.core">
 <span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-src.main.python.daggit.core" title="Permalink to this headline">¶</a></h2>
