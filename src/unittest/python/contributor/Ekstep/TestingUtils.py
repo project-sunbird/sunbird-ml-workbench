@@ -1,5 +1,5 @@
-import daggit 
 import difflib 
+import daggit 
 from daggit.contrib.ekstep.operators.contentTaggingUtils import *
 
 
