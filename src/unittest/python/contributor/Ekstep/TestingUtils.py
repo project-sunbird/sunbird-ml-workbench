@@ -11,10 +11,10 @@ def read_yaml(data_location):
   return data  
 
 def content_meta_features_checking(data_location, mandatoy_fields_location):
-  read_data = read_yaml(data_location)
+  read_data = pd.read_csv(data_location)
   read_mandatoy_fields = read_yaml(mandatoy_fields_location)
   mandatoy_fields = list(read_mandatoy_fields['mandatory_fields']) 
-  check = [0 if elem in list(read_data.keys()) else 1 for elem in mandatoy_fields]
+  check = [0 if elem in list(read_data.columns)  else 1 for elem in mandatoy_fields]
   if sum(check) > 0:
     return 0
   else:
