@@ -1,5 +1,6 @@
 import unittest
 import sys, os
+import pandas as pd
 
 
 testdir = os.path.dirname(os.path.realpath(__file__))
@@ -17,9 +18,11 @@ from contributor.Ekstep.TestingUtils import jaccard_evaluation
 
 
 class UnitTests(unittest.TestCase):
-	#@staticmethod
-	#def test_content_meta_features_checking():
-	#	assert(test_case_data_location + "Content_Meta_feature_checking_df_1.csv", ['artifactUrl']) == 1 
+	@staticmethod
+	def test_content_meta_features_checking():
+		content_meta_location = test_case_data_location + "Content_Meta_feature_checking_df_1.yaml"
+		mandatatory_field_location = test_case_data_location + "ContentTagging_mandatory_fields.yaml" 
+		assert content_meta_features_checking(content_meta_location, mandatatory_field_location) == 1
 	@staticmethod
 	def test_keyword_extraction():
 		assert keyword_extraction(test_case_data_location + "empty.txt", test_case_data_location, ["animal"])== "Text is not available"

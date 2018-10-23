@@ -1,0 +1,14 @@
+mandatory_fields: !!set
+  artifactUrl: null
+  concepts: null
+  contentType: null
+  createdBy: null
+  description: null
+  downloadUrl: null
+  gradeLevel: null
+  identifier: null
+  keywords: null
+  language: null
+  name: null
+  objectType: null
+  subject: null
