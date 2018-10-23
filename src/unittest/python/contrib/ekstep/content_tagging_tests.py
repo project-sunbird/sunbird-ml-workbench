@@ -4,16 +4,16 @@ import pandas as pd
 
 
 testdir = os.path.dirname(os.path.realpath(__file__))
-srcdir = '../../../../../src/unittest/python/contributor' 
+srcdir = '../../../../../src/unittest/python/contrib' 
 os.chdir(os.path.join(testdir, '../../../'))
 abs_path = os.path.abspath(os.path.join(testdir, srcdir)) 
-test_case_data_location = abs_path + "/Ekstep/test_cases_data/" 
+test_case_data_location = abs_path + "/ekstep/test_cases_data/" 
 sys.path.insert(0, abs_path)
 
-from contributor.Ekstep.TestingUtils import content_meta_features_checking
-from contributor.Ekstep.TestingUtils import text_Extraction
-from contributor.Ekstep.TestingUtils import keyword_extraction
-from contributor.Ekstep.TestingUtils import jaccard_evaluation
+from contrib.ekstep.TestingUtils import content_meta_features_checking
+from contrib.ekstep.TestingUtils import text_Extraction
+from contrib.ekstep.TestingUtils import keyword_extraction
+from contrib.ekstep.TestingUtils import jaccard_evaluation
 
 
 

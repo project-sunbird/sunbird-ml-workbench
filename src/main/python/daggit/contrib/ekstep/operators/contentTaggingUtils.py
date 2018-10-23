@@ -427,7 +427,7 @@ def getTexts(AUDIO_FILE,lan):
   #         logging.info('........Google api: RequestError for:  '+ str(AUDIO_FILE))
         audio_text=''
 
-    print("-----audio_text:-------", audio_text)
+    #print("-----audio_text:-------", audio_text)
     mp3_dct={"text":audio_text}
     return  mp3_dct
 
