@@ -202,7 +202,7 @@ def download_from_downloadUrl(url_to_download, path_to_folder, file_name):
         path_to_file = os.path.join(path_to_folder, file_name)
         return path_to_file
 
-def content_meta_features_checking(df, mandatoy_fields):  
+def df_feature_check(df, mandatoy_fields):  
     check = [0 if elem in list(df.columns) else 1 for elem in list(mandatoy_fields)]
     if sum(check)>0:
         return False
@@ -889,7 +889,7 @@ def pdf_to_text(method, path_to_assets, pdf_url):
                 text+=page_content
         processed_txt = cleantext(text)# include removing page
         text = ''.join([i for i in processed_txt if not i.isdigit()])
-        text = ' '.join(result.split())# check string operation
+        text = ' '.join(text.split())# check string operation
     if method == "none":
         logging.info("PDF_NOT_PERFORMED")
     
