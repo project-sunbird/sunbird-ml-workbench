@@ -37,14 +37,14 @@ class UnitTests(unittest.TestCase):
 		actual_text = speech_to_text('googleAT',test_case_data_location)
 		file = open(test_case_data_location + 'speech_to_text_exp_output.txt', "r")
 		expected_text = file.readline()
-		assert sentence_similarity(actual_text,expected_text,.90)== 1
+		assert sentence_similarity(actual_text,expected_text,.70)== 1
 
 	@staticmethod
 	def test_pdf_to_text():
-		actual_text = pdf_to_text("PyPDF2", "/Users/anjana/ML-Workbench/src/unittest/python/contrib/ekstep/test_cases_data/assets", 'none') 
+		actual_text = pdf_to_text("PyPDF2", test_case_data_location + "assets", 'none') 
 		file = open(test_case_data_location + 'pdf_to_text_exp_output.txt', "r")
 		expected_text = file.readline()
-		assert sentence_similarity(actual_text,expected_text,.50)== 1
+		assert sentence_similarity(actual_text,expected_text,.70)== 1
 	
 	
 	
