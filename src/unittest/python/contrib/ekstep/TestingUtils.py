@@ -43,7 +43,7 @@ def keyword_extraction( path_to_text, path_to_save_tagme, expected_output):
 def jaccard_evaluation(content_keywords, taxonomy_keywords, evaluation_criteria, threshold):
     evaluation_score = jaccard_with_phrase(content_keywords, taxonomy_keywords)
     if evaluation_score[evaluation_criteria] < threshold:
-        return 1          #### Jaacard value, 
+        return 1          
     else:
         return 0 
 
