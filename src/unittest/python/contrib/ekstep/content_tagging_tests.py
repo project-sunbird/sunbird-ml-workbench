@@ -13,7 +13,6 @@ test_case_data_location = abs_path + "/ekstep/test_cases_data/"
 sys.path.insert(0, abs_path)
 
 from contrib.ekstep.TestingUtils import keyword_extraction
-from contrib.ekstep.TestingUtils import jaccard_evaluation
 from contrib.ekstep.TestingUtils import sentence_similarity
 
 
@@ -46,8 +45,6 @@ class UnitTests(unittest.TestCase):
 		expected_text = file.readline()
 		assert sentence_similarity(actual_text,expected_text,.70)== 1
 	
-	
-	
 	@staticmethod
 	def test_keyword_extraction():
 		eng_text_actual_keywords = pd.read_csv(test_case_data_location + "eng_text_actual_keywords.csv")['KEYWORDS']
@@ -56,6 +53,7 @@ class UnitTests(unittest.TestCase):
 
 	@staticmethod
 	def test_jaccard_evaluation():
-	    assert jaccard_evaluation(['simple','algebraic','problem','mathematics'],['algebraic','maths'],'jaccard', 0.6 ) == 1 
+	    assert jaccard_with_phrase(['simple','algebraic','problem','mathematics'],['algebraic','maths'])['jaccard'] == 0.2 
+	    assert jaccard_with_phrase(['simple','algebraic','problem','mathematics'],['tree','apple'])['jaccard'] == 0 
 
 
