@@ -123,7 +123,7 @@ class HDF_Pandas(DataType):
         dataframe_store.put(key=self.data_alias, value=data, format='t', append=True)
         dataframe_store.close()
 
-class Read_Folder(DataType): 
+class ReadDaggitTask_Folderpath(DataType): 
 
     def read_loc(self):
         return self.data_location
