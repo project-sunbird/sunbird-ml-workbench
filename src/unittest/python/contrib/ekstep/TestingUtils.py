@@ -22,7 +22,7 @@ def intersection_lists(list_1, list_2, threshold):
 
 def keyword_extraction( path_to_text, path_to_save_tagme, expected_output):
     file_ = open(path_to_text, "r")
-    text = file_.readline()
+    text = file_.readline() 
     if text == '':
         return "Text is not available"
     else:
@@ -32,6 +32,10 @@ def keyword_extraction( path_to_text, path_to_save_tagme, expected_output):
       intersection_lists_output = intersection_lists(actual_output, expected_output,0.8)  
       return intersection_lists_output
 
-
+def text_reading(text_location):
+  file = open(text_location, "r")
+  text = file.readline()
+  return text
+ 
 
 

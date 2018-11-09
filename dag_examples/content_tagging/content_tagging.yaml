@@ -4,7 +4,7 @@ inputs:
   pathTocontentMeta: "inputs/content_tagged_2184.csv"
   pathTotaxonomy: "inputs/RevisedTaxonomy.csv"
 outputs:
-  DS_DATA_HOME: /home/aleena/Desktop 
+  DS_DATA_HOME: /home/DS_DATA_HOME  
 
 graph:
   

@@ -1,0 +1,35 @@
+LESSON PLAN
+Subject: Mathematics
+Unit: Polygon
+Topic: How to find the sum of the interior angle of nth polygon ? Class: 9th
+1. Learning points.
+How to find the sum of the interior angle of nth polygon ?
+2. Learning outcomes,
+To facilitate the students,
+1. To recall the definition of polygon
+2. To recognize the different types of polygon.
+3. To recognize how the polygon is divided into geometrical figures
+when they draw the diagonal.
+4. To recognize to find the sum of the interior angle of nth polygon.
+3. Management of learners. Group learning
+Group type: learning together
+4. Instructional strategies: Indo detective method
+5. Resources required
+Powerpoint presentation, geogebra, image of different types of polygon .
+6. Evidence for learning Test.
+What teacher doesWhat students will do 
+Engage
+360.
+No response.Statement of aim: in todays class we will study “ how to find the sum of the interior angle of nth polygon?”
+What teacher doesWhat students will doWe shall learn this answer through an activity.
+Now make a group of 4 to 5 members.
+Now, listen students, I will show pictures on screen observe it, noteOk
+Students will make group.
+Ok mamdown in books then I will give time discuss in group and answer to my question.
+Explore:
+in geogebra Observe each stage
+Express:
+Each one of you have observed each stage start discuss in group what you have observed.
+After few minutes teacher ask each group to tell what they have observed?
+Answer will be elicited from each group.
+inside the polygon after drawing diagonal?
