@@ -70,6 +70,11 @@ GOOGLE_APPLICATION_CREDENTIALS = r"""{
 pun_list = list(string.punctuation)
 
 
+def language_detection(text):
+    translate_client = translate.Client()
+    result = translate_client.detect_language(text)
+    return result["language"]
+
 def downloadZipFile(url, directory):
     """
     Multimedia Content are stored in cloud in ecar or zip format.
@@ -119,7 +124,6 @@ def findFiles(directory, substrings):
     if type(directory) == str and type(substrings) == list:
         if os.path.isdir(directory):
             for dirname, dirnames, filenames in os.walk(directory):
-                print(dirname, dirnames, filenames)
                 for filename in filenames:
                     string=os.path.join(dirname, filename)
                     for substring in substrings:
@@ -384,22 +388,25 @@ def audio_split(path_to_audiofile, path_to_split_audio):
     """
     if not os.path.exists(path_to_split_audio):
         os.makedirs(path_to_split_audio)
-
-    split_path = os.path.split(path_to_audiofile)
-    sample_audio = AudioSegment.from_mp3(path_to_audiofile)
-    if sample_audio.frame_rate > 16000:
-        sample_audio = sample_audio.set_frame_rate(16000)
-    limit_sec = 59*1000
-    no_of_splits = int(np.ceil(sample_audio.duration_seconds/59))
-    for split in range(no_of_splits):
-        batch = sample_audio[limit_sec*(split):min(limit_sec*(split+1), len(sample_audio))]
-        path = os.path.join(path_to_split_audio,split_path[1][:-4])
-        if not os.path.exists(path):
-            os.mkdir(path)
-            batch.export(path+"/"+split_path[1][:-4]+"_"+str(split)+".mp3", format="mp3")
-        else:
-            batch.export(path+"/"+split_path[1][:-4]+"_"+str(split)+".mp3", format="mp3")
-    return path
+        split_path = os.path.split(path_to_audiofile)
+        sample_audio = AudioSegment.from_mp3(path_to_audiofile)
+        if sample_audio.frame_rate > 16000:
+            sample_audio = sample_audio.set_frame_rate(16000)
+        limit_sec = 59*1000
+        no_of_splits = int(np.ceil(sample_audio.duration_seconds/59))
+        for split in range(no_of_splits):
+            batch = sample_audio[limit_sec*(split):min(limit_sec*(split+1), len(sample_audio))]
+            path = os.path.join(path_to_split_audio,split_path[1][:-4])
+            if not os.path.exists(path):
+                os.mkdir(path)
+                batch.export(path+"/"+split_path[1][:-4]+"_"+str(split)+".mp3", format="mp3")
+            else:
+                batch.export(path+"/"+split_path[1][:-4]+"_"+str(split)+".mp3", format="mp3")
+        return path
+    else:
+        r = re.search('(.*)/assets', path_to_split_audio)
+        id = os.path.split(r.group(1))[1]
+        return os.path.join(path_to_split_audio, id)
 
 
 def getTexts(AUDIO_FILE, lan):
@@ -429,7 +436,7 @@ def getTexts(AUDIO_FILE, lan):
     
     try:
         audio_text = r.recognize_google_cloud(audio, credentials_json=GOOGLE_APPLICATION_CREDENTIALS,language=lan) #lan="kn-IN"
-  #         logging.info('........'+ str(AUDIO_FILE)+' translated')
+
   #         logging.info('........Done')
 
     except sr.UnknownValueError:
@@ -461,17 +468,13 @@ def translate_english(text):
     return translation['translatedText']
 
 
-def audio_to_text(path_to_audio_split_folder): #loc read if exists then.. else folder then blah blah
-    text = "" 
-    
+def audio_to_text(path_to_audio_split_folder):
+    text = ""
     for i in natsorted(os.listdir(path_to_audio_split_folder), reverse=False):
        if i[-4:] == ".mp3":
-           print(i)
-           try: 
-               print("*************")
+           try:
                text+=getTexts(os.path.join(path_to_audio_split_folder,i),'en-IN')['text']
            except:
-               print("&&&&&&&&&&&&&&&")
                continue
     return text
 
@@ -514,7 +517,7 @@ def download_to_local(method, url_to_download, path_to_save, id_name):
     if method == "youtube":
         logging.info("DTL_YOUTUBE_URL: {0}".format(url_to_download))
         path_to_id = os.path.join(path_to_save, id_name)
-        location = [os.path.join(path_to_id,folder) for folder in ['assets','data','items']]
+        location = [os.path.join(path_to_id, folder) for folder in ['assets','data','items']]
 
         path_to_audio_download = os.path.join(path_to_id, "assets")
         for loc in location:
@@ -522,7 +525,6 @@ def download_to_local(method, url_to_download, path_to_save, id_name):
                 os.makedirs(loc)
         path_to_audio = url_to_audio_extraction(url_to_download, path_to_audio_download)
         logging.info("Path to audio file is {0}".format(path_to_audio))
-         ##should we returning path_to_audio or path_to_id
     
     if method == "pdf":
         logging.info("DTL_PDF_URL: {0}".format(url_to_download))
@@ -538,7 +540,7 @@ def download_to_local(method, url_to_download, path_to_save, id_name):
     return path_to_id
  
 
-def video_to_speech(method, path_to_assets): #method can be ffmpeg or youtube_dl
+def video_to_speech(method, path_to_assets):
     logging.info('VTS_START')
     video_names = findFiles(path_to_assets, ['mp4'])
     logging.info('...detected {0} video files'.format(str(len(video_names))))
@@ -563,26 +565,27 @@ def video_to_speech(method, path_to_assets): #method can be ffmpeg or youtube_dl
     return path_to_assets
 
 
-def speech_to_text(method, path_to_assets): 
+def speech_to_text(method, path_to_assets):
     logging.info("STT_START")
     text=""
-    if not os.path.exists(path_to_assets): #check for empty string
+    if not os.path.exists(path_to_assets):
         logging.info("No audio file detected")
     else:
         audio_names = findFiles(path_to_assets, ['mp3'])
-        if method == "googleAT" and len(audio_names)>0:
+        if method == "googleAT" and len(audio_names) > 0:
             for i in audio_names:
                 logging.info("STT_AUDIO_FILEPATH: {0}".format(os.path.join(path_to_assets, i)))
-                path_to_split = audio_split(os.path.join(path_to_assets, i), 
+                path_to_split = audio_split(os.path.join(path_to_assets, i),
                                             os.path.join(path_to_assets, "audio_split"))
                 logging.info("STT_AUDIO_SPLIT: {0}".format(path_to_split))
                 text += audio_to_text(path_to_split)
-        elif method  == "none":
+        elif method == "none":
             logging.info("STT_NOT_PERFORMED")
         else:
             logging.info("Unknown method given")
     logging.info("STT_STOP")
-    return text
+    text_dict = {"text": text}
+    return text_dict
 
 
 def image_to_text(method, path_to_assets):
@@ -597,29 +600,31 @@ def image_to_text(method, path_to_assets):
                 image_text += getImgTags(file)
             except:
                 print('........ Error: could not process file')
-        print("Text: ", image_text)        
+        print("Text: ", image_text)
         text = list(str(image_text.lower()).split("\n"))
         image_text = ' '.join(list(set(text)))
     if method == "none":
         logging.info("ITT_NOT_PERFORMED")
     logging.info("ITT_STOP")
-    return image_text
+    text_dict = {"text": image_text}
+    return text_dict
 
 
 def pdf_to_text(method, path_to_assets, pdf_url):
     text = ""
+    number_of_pages = 0
     logging.info("PTT_START")
     if method == "PyPDF2":
         logging.info("PTT_METHOD: {0}".format(method))
-        pdf_names = findFiles(path_to_assets, ['pdf'])
+        pdf_names = findFiles(path_to_assets, ['.pdf'])
         text = ""
-        for j in range(0,len(pdf_names)+1):
-            if (len(pdf_names)==0):
-                r = requests.get(pdf_url)  
+        for j in range(0, len(pdf_names)+1):
+            if (len(pdf_names) == 0):
+                r = requests.get(pdf_url)
                 f = io.BytesIO(r.content)
                 read_pdf = PdfFileReader(f)
-            elif j<(len(pdf_names)):
-                pdf_files=pdf_names[j]
+            elif j < (len(pdf_names)):
+                pdf_files = pdf_names[j]
                 text = ""
                 f = open(pdf_files, 'rb')
                 read_pdf = PdfFileReader(f)
@@ -627,15 +632,16 @@ def pdf_to_text(method, path_to_assets, pdf_url):
             for i in range(number_of_pages):
                 page = read_pdf.getPage(i)
                 page_content = page.extractText()
-                text+=page_content
+                text += page_content
         processed_txt = cleantext(text)
         text = ''.join([i for i in processed_txt if not i.isdigit()])
         text = ' '.join(text.split())
     if method == "none":
         logging.info("PDF_NOT_PERFORMED")
-    
+
     logging.info("PTT_STOP")
-    return text
+    text_dict = {"text": text, "no_of_pages": number_of_pages}
+    return text_dict
 
 
 def ecml_index_to_text(method, path_to_id):
@@ -679,7 +685,8 @@ def ecml_index_to_text(method, path_to_id):
     if method == "none":
         logging.info("JTT_NOT_PERFORMED")
     logging.info("JTT_STOP")
-    return all_text
+    text_dict = {"text": all_text}
+    return text_dict
 
 
 def multimodal_text_enrichment(index, content_meta, content_type, content_to_text_path):
@@ -689,10 +696,10 @@ def multimodal_text_enrichment(index, content_meta, content_type, content_to_tex
 
         Parameters
         ----------
-        index: int
-        row id for the Content 
+        index: intpdf_to
+        row id for the Content
 
-        content_meta: datarame 
+        content_meta: datarame
         A dataframe of Content metadata.
         Mandatory fields: ['artifactUrl', 'content_type','downloadUrl', 'gradeLevel', 'identifier','keywords', 'language', 'subject'
 
@@ -713,28 +720,46 @@ def multimodal_text_enrichment(index, content_meta, content_type, content_to_tex
         url = content_meta[downloadField][index]
         logging.info("MTT_START_FOR_URL {0}".format(url))
         # start text extraction pipeline:
-        try:
-            path_to_id = download_to_local(type_of_url, url, content_to_text_path, id_name)
-            path_to_assets = os.path.join(path_to_id, "assets")
-            path_to_audio = video_to_speech(content_type[type_of_url]["video_to_speech"],  path_to_assets)
-            textExtraction_pipeline = [(speech_to_text, (content_type[type_of_url]["speech_to_text"], path_to_assets)), 
-                                       (image_to_text, (content_type[type_of_url]["image_to_text"],  path_to_assets)),
-                                       (pdf_to_text, (content_type[type_of_url]["pdf_to_text"],  path_to_assets, url)),
-                                       (ecml_index_to_text, (content_type[type_of_url]["ecml_index_to_text"], path_to_id))]
-            path_to_transcript = os.path.join(path_to_id, "enriched_text.txt")
-            text = ""
-            for method, param_tuple in textExtraction_pipeline:
-                text+=method(*param_tuple)
-            if os.path.exists(path_to_id):
-                with open(path_to_transcript, "w") as myTextFile:
-                    myTextFile.write(text)
-                logging.info("MTT_TRANSCRIPT_PATH_CREATED: {0}".format(path_to_transcript))
-                logging.info("MTT_CONTENT_ID_READ: {0}".format(id_name))
-            logging.info("MTT_STOP_FOR_URL {0}".format(url))
-            return path_to_transcript
-        except:
-            logging.info("TextEnrichment failed for url:{0} with id:{1}".format(url, id_name))
+        # try:
+        path_to_id = download_to_local(type_of_url, url, content_to_text_path, id_name)
+        path_to_assets = os.path.join(path_to_id, "assets")
+        path_to_audio = video_to_speech(content_type[type_of_url]["video_to_speech"],  path_to_assets)
+        if len(findFiles(path_to_assets, ["mp3"])) > 0:
+            audio = AudioSegment.from_mp3(findFiles(path_to_assets, ["mp3"])[0])
+            duration = round(len(audio)/1000)
+        else:
+            duration = 0
+        textExtraction_pipeline = [(speech_to_text, (content_type[type_of_url]["speech_to_text"], path_to_assets)), 
+                                   (image_to_text, (content_type[type_of_url]["image_to_text"],  path_to_assets)),
+                                   (pdf_to_text, (content_type[type_of_url]["pdf_to_text"],  path_to_assets, url)),
+                                   (ecml_index_to_text, (content_type[type_of_url]["ecml_index_to_text"], path_to_id))]
+        path_to_transcript = os.path.join(path_to_id, "enriched_text.txt")
+        text = ""
+        for method, param_tuple in textExtraction_pipeline:
+            text += method(*param_tuple)["text"]
+        if os.path.exists(path_to_id):
+            with open(path_to_transcript, "w") as myTextFile:
+                myTextFile.write(text)
+        _, num_of_PDFpages = pdf_to_text("none",  path_to_assets, url)
+        mnt_output_dict = {
+            'Content_info': [
+                {
+                    'ML_content_type': type_of_url,
+                    'ML_text': text,
+                    'ML_medium': language_detection(text),
+                    'ML_video_duration': duration,
+                    'ML_num_of_PDFpages': num_of_PDFpages
 
+                }]}
+
+        with open(os.path.join(path_to_id, "ML_content_data.json"), "w") as info:
+            mnt_json_dump = json.dump(mnt_output_dict, info, sort_keys=True, indent=4)
+        logging.info("MTT_TRANSCRIPT_PATH_CREATED: {0}".format(path_to_transcript))
+        logging.info("MTT_CONTENT_ID_READ: {0}".format(id_name))
+        logging.info("MTT_STOP_FOR_URL {0}".format(url))
+        return os.path.join(path_to_id, "ML_content_data.json")
+        # except:
+        #     logging.info("TextEnrichment failed for url:{0} with id:{1}".format(url, id_name))
 
 
 def custom_tokenizer(path_to_text_file, path_to_text_tokens_folder):
@@ -890,9 +915,11 @@ def keyword_extraction_parallel(dir, content_to_text_path, taxonomy, extract_key
         print("*******dir*********:", dir)
         print("***Extract keywords***:", extract_keywords)
         print("***Filter criteria:***", filter_criteria)
+        path_to_id = os.path.join(content_to_text_path, dir)
         path_to_cid_transcript = os.path.join(content_to_text_path, dir, "enriched_text.txt")
         keywords = os.path.join(content_to_text_path, dir, "keywords")
         path_to_keywords = os.path.join(keywords, extract_keywords+"_"+filter_criteria)
+        path_to_saved_keywords = ""
         if os.path.isfile(path_to_cid_transcript):
             logging.info("Transcript present for cid: {0}".format(dir))
 #             try:
@@ -903,13 +930,13 @@ def keyword_extraction_parallel(dir, content_to_text_path, taxonomy, extract_key
 
                 if extract_keywords == "tagme" and filter_criteria == "none":
                     print("Tagme keyword extraction is running for {0}".format(path_to_cid_transcript))
-                    path_to_tagme_keywords = get_tagme_longtext(path_to_cid_transcript, path_to_keywords)
-                    logging.info("Path to tagme tokens is {0}".format(path_to_tagme_keywords))
+                    path_to_saved_keywords = get_tagme_longtext(path_to_cid_transcript, path_to_keywords)
+                    logging.info("Path to tagme tokens is {0}".format(path_to_saved_keywords))
 
                 elif extract_keywords == "text_token" and filter_criteria == "none":
                     print("Text tokens extraction running for {0}".format(path_to_cid_transcript))
-                    path_to_text_tokens = custom_tokenizer(path_to_cid_transcript, path_to_keywords)
-                    print("Path to text tokens is {0}".format(path_to_text_tokens))
+                    path_to_saved_keywords = custom_tokenizer(path_to_cid_transcript, path_to_keywords)
+                    print("Path to text tokens is {0}".format(path_to_saved_keywords))
 
                 elif extract_keywords == "text_token" and filter_criteria == "taxonomy":
                     print("Text tokens intersection taxonomy running for {0}".format(path_to_cid_transcript))
@@ -922,9 +949,9 @@ def keyword_extraction_parallel(dir, content_to_text_path, taxonomy, extract_key
                     flat_list = [item for sublist in list(clean_keywords) for item in
                                  sublist]
                     taxonomy_keywords_set = set([cleantext(i) for i in flat_list])
-                    path_to_text_intersect_tax = text_token_taxonomy_intersection_keywords(taxonomy_keywords_set, path_to_text_tokens, path_to_keywords)
+                    path_to_saved_keywords = text_token_taxonomy_intersection_keywords(taxonomy_keywords_set, path_to_text_tokens, path_to_keywords)
                     print \
-                        ("Path to text tokens intersection taxonomy is {0}".format(path_to_text_intersect_tax))
+                        ("Path to text tokens intersection taxonomy is {0}".format(path_to_saved_keywords))
 
                 elif extract_keywords == "tagme" and filter_criteria == "taxonomy":
                     print("Tagme intersection taxonomy keyword extraction is running for {0}".format(
@@ -935,11 +962,11 @@ def keyword_extraction_parallel(dir, content_to_text_path, taxonomy, extract_key
                                  sublist]
                     taxonomy_keywords_set = set([cleantext(i) for i in flat_list])
                     path_to_tagme_keywords = get_tagme_longtext(path_to_cid_transcript, os.path.join(keywords, "tagme"))
-                    path_to_tagme_intersect_tax = tagme_taxonomy_intersection_keywords(taxonomy_keywords_set,
+                    path_to_saved_keywords = tagme_taxonomy_intersection_keywords(taxonomy_keywords_set,
                                                                                        path_to_tagme_keywords,
                                                                                        path_to_keywords)
                     print \
-                        ("Path to tagme taxonomy intersection tokens is {0}".format(path_to_tagme_intersect_tax))
+                        ("Path to tagme taxonomy intersection tokens is {0}".format(path_to_saved_keywords))
 
                 else:
                     print("Invalid argument provided")
@@ -953,7 +980,19 @@ def keyword_extraction_parallel(dir, content_to_text_path, taxonomy, extract_key
 #                 logging.info("Raise exception for {0} ".format(path_to_cid_transcript))
         else:
             print("Transcripts doesnt exist for {0}".format(path_to_cid_transcript))
+        if path_to_saved_keywords:
+            keywords_list = list(pd.read_csv(path_to_saved_keywords)["KEYWORDS"])
+        else:
+            keywords_list = []
+        kep_output_dict = {
+            'Content_keyword_info': [
+                {
+                    'ML_keywords': keywords_list
 
+                }]}
+
+        with open(os.path.join(path_to_id, "ML_keyword_info.json"), "w") as info:
+            kep_json_dump = json.dump(kep_output_dict, info, sort_keys=True, indent=4)
         return content_to_text_path
 
 def clean_string_list(x_list):
@@ -1070,7 +1109,7 @@ def get_sorted_list(x,order): #order=0-decreasing(Jaccard), 1-increasing(MED,EMD
      return list(x_df.sort_values(by=list(x_df.columns), ascending=order).index)
 
 
-def save_obj(obj, name ):
+def save_obj(obj, name):
     with open(name + '.pkl', 'wb') as f:
       pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
 

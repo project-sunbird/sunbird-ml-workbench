@@ -103,15 +103,7 @@ class ContentToText(BaseOperator):
             subset_contentMeta_by.split(", "))]
         content_meta.reset_index(drop=True, inplace=True)
         print("Number of processes: ", num_of_processes)
-        # pool = multiprocessing.Pool(processes=int(num_of_processes))
-        result = [
-            multimodal_text_enrichment(
-                i,
-                content_meta,
-                content_type,
-                content_to_text_path) for i in range(
-                range_start,
-                range_end)]
+        result = [multimodal_text_enrichment(i, content_meta, content_type, content_to_text_path) for i in range(range_start, range_end)]
         print(result)
         os.chdir(oldwd)
         print("Current directory c2t: ", os.getcwd())
