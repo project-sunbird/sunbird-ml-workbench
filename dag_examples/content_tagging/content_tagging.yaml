@@ -4,7 +4,7 @@ inputs:
   pathTocontentMeta: "inputs/content_tagged_2184.csv"
   pathTotaxonomy: "inputs/RevisedTaxonomy.csv"
 outputs:
-  DS_DATA_HOME: /home/DS_DATA_HOME 
+  DS_DATA_HOME: /home/DS_DATA_HOME
 
 graph:
 
@@ -13,7 +13,7 @@ graph:
     outputs: [DS_DATA_HOME, timestamp_folder]
     operation: contentTagging.ContentToText
     arguments:
-      range_start: 10
+      range_start: 11
       range_end: 12
       num_of_processes: 1
       subset_contentMeta_by: youtube
@@ -48,6 +48,15 @@ graph:
       extract_keywords: tagme
       filter_criteria: none
   
+  - node_name: transaction_event_writer
+    inputs: [content_to_text.timestamp_folder]
+    outputs: []
+    operation: contentTagging.TransactionEventWriter
+    arguments:
+      unwrap: True
+      content_info_json: ML_content_info.json
+      keyword_info_json: ML_keyword_info.json
+
   - node_name: corpus_creation
     inputs: [pathTotaxonomy, keyword_extraction.pathTocontentKeywords]
     outputs: [root_path, path_to_corpus]

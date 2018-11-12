@@ -164,6 +164,26 @@ class KeywordExtraction(BaseOperator):
             pool.close()
             pool.join()
 
+class TransactionEventWriter(BaseOperator):
+
+    @property
+    def inputs(self):
+        return {"timestamp_folder": File_Txt(self.node.inputs[0])
+                }
+ 
+    def run(self, unwrap, content_info_json, keyword_info_json):
+        timestamp_folder = self.inputs["timestamp_folder"].read()
+        root_path = timestamp_folder + "content_to_text"
+        if unwrap == True:
+            for i in os.listdir(root_path):
+                if content_info_json != "none":
+                    if keyword_info_json != "none":
+                        with open(os.path.join(root_path, i, content_info_json), "rb") as info:
+                            new_json = json.load(info)
+                            new_json["transaction_data"]["properties"]["ML_keywords"] = json.load(open(os.path.join(root_path, i, keyword_info_json), "rb"))["ML_keywords"]
+                        with open(os.path.join(root_path, i, content_info_json), "w") as info:
+                            json_dump = json.dump(new_json, info, sort_keys=True, indent=4)
+
 
 class CorpusCreation(BaseOperator):
 

@@ -699,7 +699,7 @@ def multimodal_text_enrichment(index, content_meta, content_type, content_to_tex
         index: intpdf_to
         row id for the Content
 
-        content_meta: datarame
+        content_meta: dataframe
         A dataframe of Content metadata.
         Mandatory fields: ['artifactUrl', 'content_type','downloadUrl', 'gradeLevel', 'identifier','keywords', 'language', 'subject'
 
@@ -740,19 +740,35 @@ def multimodal_text_enrichment(index, content_meta, content_type, content_to_tex
         if os.path.exists(path_to_id):
             with open(path_to_transcript, "w") as myTextFile:
                 myTextFile.write(text)
-        _, num_of_PDFpages = pdf_to_text("none",  path_to_assets, url)
+        num_of_PDFpages = pdf_to_text("none",  path_to_assets, url)["no_of_pages"]
+
+        nodeUniqueId = id_name
+        operationType = "UPDATE"
+        nodeType = "ContentTagging"
+        graphId = content_meta[content_meta["identifier"] == id_name]["subject"].iloc[0]
+        object_type = content_meta[content_meta["identifier"] == id_name]["contentType"].iloc[0]
+        nodeGraphId = 0
+
         mnt_output_dict = {
-            'Content_info': [
-                {
+            "nodeUniqueId": nodeUniqueId,
+            "operationType": operationType,
+            "nodeType": nodeType,
+            "graphId": graphId,
+            "object_type": object_type,
+            "nodeGraphId": nodeGraphId,
+            "transaction_data": {
+                "properties": {
                     'ML_content_type': type_of_url,
                     'ML_text': text,
                     'ML_medium': language_detection(text),
                     'ML_video_duration': duration,
                     'ML_num_of_PDFpages': num_of_PDFpages
 
-                }]}
+                }
+            }
+        }
 
-        with open(os.path.join(path_to_id, "ML_content_data.json"), "w") as info:
+        with open(os.path.join(path_to_id, "ML_content_info.json"), "w") as info:
             mnt_json_dump = json.dump(mnt_output_dict, info, sort_keys=True, indent=4)
         logging.info("MTT_TRANSCRIPT_PATH_CREATED: {0}".format(path_to_transcript))
         logging.info("MTT_CONTENT_ID_READ: {0}".format(id_name))
@@ -984,12 +1000,7 @@ def keyword_extraction_parallel(dir, content_to_text_path, taxonomy, extract_key
             keywords_list = list(pd.read_csv(path_to_saved_keywords)["KEYWORDS"])
         else:
             keywords_list = []
-        kep_output_dict = {
-            'Content_keyword_info': [
-                {
-                    'ML_keywords': keywords_list
-
-                }]}
+        kep_output_dict = {'ML_keywords': keywords_list}
 
         with open(os.path.join(path_to_id, "ML_keyword_info.json"), "w") as info:
             kep_json_dump = json.dump(kep_output_dict, info, sort_keys=True, indent=4)
