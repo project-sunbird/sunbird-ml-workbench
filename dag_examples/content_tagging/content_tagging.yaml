@@ -1,5 +1,6 @@
 experiment_name: Content_tagging
 owner: aleena
+
 inputs:
   pathTocontentMeta: "inputs/content_tagged_2184.csv"
   pathTotaxonomy: "inputs/RevisedTaxonomy.csv"
@@ -13,8 +14,8 @@ graph:
     outputs: [DS_DATA_HOME, timestamp_folder]
     operation: contentTagging.ContentToText
     arguments:
-      range_start: 11
-      range_end: 12
+      range_start: 5
+      range_end: 6
       num_of_processes: 1
       subset_contentMeta_by: youtube
       content_type:

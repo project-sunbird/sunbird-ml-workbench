@@ -16,8 +16,10 @@ def baseline_model_svm():
     model.add(Dropout(0.2))
     model.add(Dense(3, activation='softmax'))
     # Compile model
-    # model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
-    model.compile(loss='categorical_hinge', optimizer='adam', metrics=['accuracy'])
+    model.compile(
+        loss='categorical_hinge',
+        optimizer='adam',
+        metrics=['accuracy'])
     return model
 
 
@@ -30,14 +32,18 @@ class train_svm_model(BaseOperator):
 
     @property
     def outputs(self):
-        return {"model" :File_Txt(self.node.outputs[0]),
-                "model_weights" :Pickle_Obj(self.node.outputs[1]),
+        return {"model": File_Txt(self.node.outputs[0]),
+                "model_weights": Pickle_Obj(self.node.outputs[1]),
                 "predictions": Pandas_Dataframe(self.node.outputs[2]),
                 "report": Pickle_Obj(self.node.outputs[3]),
                 }
 
-
-    def run(self, target_variable, ignore_variables=None, model_args=None, cv_args=None):
+    def run(
+            self,
+            target_variable,
+            ignore_variables=None,
+            model_args=None,
+            cv_args=None):
         from keras.utils import np_utils
         from sklearn.preprocessing import LabelEncoder
 
@@ -59,7 +65,9 @@ class train_svm_model(BaseOperator):
             for imp in importlist:
                 importlib.import_module(name=module_name, package=imp)
         print(self.node.imports)
-        model = get_op_callable(module_path=model_args['module_path'], operator=model_args['name'])
+        model = get_op_callable(
+            module_path=model_args['module_path'],
+            operator=model_args['name'])
         model_params = model_args['arguments']
 
         encoder = LabelEncoder()
@@ -71,13 +79,15 @@ class train_svm_model(BaseOperator):
         encoded_Y_test = encoder.transform(test_y)
         # convert integers to dummy variables (i.e. one hot encoded)
         dummy_y_test = np_utils.to_categorical(encoded_Y_test)
-        estimator = model(build_fn = baseline_model_svm, **model_params)
+        estimator = model(build_fn=baseline_model_svm, **model_params)
 
         estimator.fit(x=train_X, y=dummy_y)
 
         model_score = estimator.score(x=test_X, y=dummy_y_test)
         pred = estimator.predict(x=test_X)
-        predictions = pd.DataFrame(encoder.inverse_transform(pred), columns=['predictions'])
+        predictions = pd.DataFrame(
+            encoder.inverse_transform(pred),
+            columns=['predictions'])
         report = 'The accuracy of the model is: ' + str(model_score)
 
         model_json = estimator.model.to_json()

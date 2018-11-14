@@ -47,12 +47,7 @@ class DFReplace(TransformerMixin):
     Refer https://pandas.pydata.org/pandas-docs/stable/generated/pandas.DataFrame.replace.html
     '''
 
-    def __init__(self, to_replace=None, value=None
-                 #                  , inplace=False
-                 #                  , limit=None
-                 , regex=False
-                 #                  , method='pad'
-                 ):
+    def __init__(self, to_replace=None, value=None, regex=False):
         self.to_replace = to_replace
         self.value = value
         self.inplace = False
@@ -100,7 +95,7 @@ class DFMissingNum(TransformerMixin):
 
     def fit(self, X, y=None):
 
-        if type(self.replace) == dict:
+        if isinstance(self.replace, dict):
             for key, value in six.iteritems(self.replace):
                 if value in ['mean', 'median', 'most_frequent']:
                     self.replace[key] = _Impute(value=value, S=X[key])
@@ -119,7 +114,7 @@ class DFMissingNum(TransformerMixin):
         elif self.replace in ['backfill', 'bfill', 'pad', 'ffill']:
             X_replaced = X.fillna(method=self.replace)
 
-        elif type(self.replace) == dict:
+        elif isinstance(self.replace, dict):
             X_replaced = X.copy()
             for key, value in six.iteritems(self.replace):
                 if value in ['backfill', 'bfill', 'pad', 'ffill']:
@@ -145,7 +140,7 @@ class DFMissingStr(TransformerMixin):
 
     def fit(self, X, y=None):
 
-        if type(self.replace) == dict:
+        if isinstance(self.replace, dict):
             for key, value in six.iteritems(self.replace):
                 if value == 'most_frequent':
                     self.replace[key] = X[key].mode()[0]
@@ -163,7 +158,7 @@ class DFMissingStr(TransformerMixin):
         elif self.replace in ['backfill', 'bfill', 'pad', 'ffill']:
             X_replaced = X.fillna(method=self.replace)
 
-        elif type(self.replace) == dict:
+        elif isinstance(self.replace, dict):
             X_replaced = X.copy()
             for key, value in six.iteritems(self.replace):
                 if value in ['backfill', 'bfill', 'pad', 'ffill']:
@@ -273,7 +268,8 @@ class ColumnExtractor(TransformerMixin):
 
 class Binning(TransformerMixin):
 
-    # Binning - https://pandas.pydata.org/pandas-docs/stable/generated/pandas.cut.html
+    # Binning -
+    # https://pandas.pydata.org/pandas-docs/stable/generated/pandas.cut.html
 
     def __init__(self, nBins, labels=None, right=True, include_lowest=False):
         self.nBins = nBins
@@ -284,7 +280,11 @@ class Binning(TransformerMixin):
 
     def fit(self, X, y=None):
         for i in list(range(X.shape[1])):
-            fitted = pd.cut(X.iloc[:, i], self.nBins, right=self.right, retbins=True,
+            fitted = pd.cut(X.iloc[:,
+                                   i],
+                            self.nBins,
+                            right=self.right,
+                            retbins=True,
                             include_lowest=self.include_lowest)
             fitted[1][0] = floor(fitted[1][0] * 1000) / 1000
             fitted[1][-1] = ceil(fitted[1][-1] * 1000) / 1000
@@ -297,7 +297,8 @@ class Binning(TransformerMixin):
                                      right=self.right, labels=self.labels,
                                      include_lowest=self.include_lowest)
             if 'Xtransform' in locals():
-                Xtransform = pd.concat([Xtransform.reset_index(drop=True), Xtransform_temp], axis=1)
+                Xtransform = pd.concat(
+                    [Xtransform.reset_index(drop=True), Xtransform_temp], axis=1)
             else:
                 Xtransform = Xtransform_temp
 
@@ -308,7 +309,7 @@ class Binning(TransformerMixin):
 class QBinning(TransformerMixin):
 
     # Quantile binning - https://pandas.pydata.org/pandas-docs/stable/generated/pandas.qcut.html
-    ## WARNING: Lower limit is -Inf and upper limit is Inf
+    # WARNING: Lower limit is -Inf and upper limit is Inf
 
     def __init__(self, q, labels=None, duplicates='raise'):
         self.q = q
@@ -319,7 +320,12 @@ class QBinning(TransformerMixin):
 
     def fit(self, X, y=None):
         for i in list(range(X.shape[1])):
-            fitted = pd.qcut(X.iloc[:, i], self.q, labels=self.labels, retbins=True, duplicates=self.duplicates)
+            fitted = pd.qcut(X.iloc[:,
+                                    i],
+                             self.q,
+                             labels=self.labels,
+                             retbins=True,
+                             duplicates=self.duplicates)
             fitted[1][0] = float("-inf")
             fitted[1][len(fitted[1]) - 1] = float("inf")
             self._bounds[i] = fitted[1]
@@ -331,7 +337,8 @@ class QBinning(TransformerMixin):
             Xtransform_temp = pd.cut(X.iloc[:, i], self._bounds.get(i),
                                      labels=self.labels)
             if 'Xtransform' in locals():
-                Xtransform = pd.concat([Xtransform.reset_index(drop=True), Xtransform_temp], axis=1)
+                Xtransform = pd.concat(
+                    [Xtransform.reset_index(drop=True), Xtransform_temp], axis=1)
             else:
                 Xtransform = Xtransform_temp
         Xtransform = pd.DataFrame(Xtransform, index=X.index, columns=X.columns)
@@ -408,6 +415,13 @@ class DFFeatureUnion(TransformerMixin):
     def transform(self, X):
         # assumes X is a DataFrame
         Xts = [t.transform(X) for _, t in self.transformer_list]
-        Xunion = reduce(lambda X1, X2: pd.merge(X1, X2, left_index=True, right_index=True), Xts)
+        Xunion = reduce(
+            lambda X1,
+            X2: pd.merge(
+                X1,
+                X2,
+                left_index=True,
+                right_index=True),
+            Xts)
         print("Feature union - successful transform.")
         return Xunion

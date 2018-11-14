@@ -3,7 +3,10 @@ from sklearn.pipeline import Pipeline
 from daggit.core.io.io import Pandas_Dataframe, File_Txt, Pickle_Obj
 from daggit.core.base.factory import BaseOperator
 from daggit.core.operators.operators_registry import get_op_callable
-from daggit.core.operators.etl import DFFeatureUnion, ColumnExtractor, DFMissingNum, DFMissingStr, DFOneHot
+from daggit.core.operators.etl import DFFeatureUnion, ColumnExtractor
+from daggit.core.operators.etl import DFMissingStr, DFOneHot
+from daggit.core.operators.etl import DFMissingNum
+
 
 class CustomPreprocess(BaseOperator):
 
@@ -17,25 +20,43 @@ class CustomPreprocess(BaseOperator):
         return {"preprocessed_train": Pandas_Dataframe(self.node.outputs[0]),
                 "preprocessed_test": Pandas_Dataframe(self.node.outputs[1])}
 
-    def run(self, drop_missing_perc, target_variable, ignore_variables, categorical_impute, numeric_impute):
+    def run(
+            self,
+            drop_missing_perc,
+            target_variable,
+            ignore_variables,
+            categorical_impute,
+            numeric_impute):
         train = self.inputs["train"].read()
         test = self.inputs["test"].read()
 
         if ignore_variables is not list:
             ignore_variables = [ignore_variables]
 
-        data_availability = train.describe(include='all').loc['count'] / train.shape[0]
-        selected_cols = data_availability[data_availability > drop_missing_perc].index
-        selected_cols = set(selected_cols) - (set([target_variable]).union(set(ignore_variables)))
+        data_availability = train.describe(
+            include='all').loc['count'] / train.shape[0]
+        selected_cols = data_availability[data_availability >
+                                          drop_missing_perc].index
+        selected_cols = set(selected_cols) - \
+            (set([target_variable]).union(set(ignore_variables)))
 
-        numeric_cols = list(set(list(train._get_numeric_data())).intersection(selected_cols))
+        numeric_cols = list(
+            set(list(train._get_numeric_data())).intersection(selected_cols))
         categorical_cols = list(selected_cols - set(numeric_cols))
 
-        preprocess = Pipeline([("features",DFFeatureUnion([
-            ("numeric",Pipeline([("num_sel",ColumnExtractor(numeric_cols)),("num_impute",DFMissingNum(replace='median'))])),
-            ("categorical",Pipeline([("cat_sel",ColumnExtractor(categorical_cols))
-                                        ,("str_impute",DFMissingStr(replace='most_frequent')),("one_hot",DFOneHot())]))
-        ]))])
+        preprocess = Pipeline([("features",
+                                DFFeatureUnion([("numeric",
+                                                 Pipeline([("num_sel",
+                                                            ColumnExtractor(numeric_cols)),
+                                                           ("num_impute",
+                                                            DFMissingNum(replace='median'))])),
+                                                ("categorical",
+                                                 Pipeline([("cat_sel",
+                                                            ColumnExtractor(categorical_cols)),
+                                                           ("str_impute",
+                                                            DFMissingStr(replace='most_frequent')),
+                                                           ("one_hot",
+                                                            DFOneHot())]))]))])
 
         processed_train = preprocess.fit_transform(train)
         processed_train[target_variable] = train[target_variable]
@@ -53,21 +74,21 @@ class CrossValidate(BaseOperator):
 
     @property
     def outputs(self):
-        return {"report":File_Txt(self.node.outputs[0])
-            ,"model": Pickle_Obj(self.node.outputs[1])}
+        return {
+            "report": File_Txt(
+                self.node.outputs[0]), "model": Pickle_Obj(
+                self.node.outputs[1])}
 
     def run(self, target_variable, model_args, cv_args):
         from sklearn.model_selection import cross_val_score
-        
         preprocessed_train = self.inputs['preprocessed_train'].read()
 
         y = preprocessed_train[target_variable]
         X = preprocessed_train.drop(target_variable, axis=1).values
 
-        #model = globals()[model_args['name']]
         imports = self.node.imports
-        model = get_op_callable(imports[0][1],module_path=imports[0][0])
-    
+        model = get_op_callable(imports[0][1], module_path=imports[0][0])
+
         model_params = model_args['arguments']
         reg = model(**model_params)
         scores = cross_val_score(reg, X, y, **cv_args)
@@ -101,6 +122,3 @@ class Splitters(BaseOperator):
         train, test = model(input_df, **model_params)
         self.outputs["train"].write(train)
         self.outputs["test"].write(test)
-
-
-

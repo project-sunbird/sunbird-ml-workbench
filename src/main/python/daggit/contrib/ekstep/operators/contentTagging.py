@@ -103,7 +103,14 @@ class ContentToText(BaseOperator):
             subset_contentMeta_by.split(", "))]
         content_meta.reset_index(drop=True, inplace=True)
         print("Number of processes: ", num_of_processes)
-        result = [multimodal_text_enrichment(i, content_meta, content_type, content_to_text_path) for i in range(range_start, range_end)]
+        result = [
+            multimodal_text_enrichment(
+                i,
+                content_meta,
+                content_type,
+                content_to_text_path) for i in range(
+                range_start,
+                range_end)]
         print(result)
         os.chdir(oldwd)
         print("Current directory c2t: ", os.getcwd())
@@ -164,25 +171,36 @@ class KeywordExtraction(BaseOperator):
             pool.close()
             pool.join()
 
+
 class TransactionEventWriter(BaseOperator):
 
     @property
     def inputs(self):
         return {"timestamp_folder": File_Txt(self.node.inputs[0])
                 }
- 
+
     def run(self, unwrap, content_info_json, keyword_info_json):
         timestamp_folder = self.inputs["timestamp_folder"].read()
         root_path = timestamp_folder + "content_to_text"
-        if unwrap == True:
+        if unwrap is True:
             for i in os.listdir(root_path):
-                if content_info_json != "none":
-                    if keyword_info_json != "none":
-                        with open(os.path.join(root_path, i, content_info_json), "rb") as info:
-                            new_json = json.load(info)
-                            new_json["transaction_data"]["properties"]["ML_keywords"] = json.load(open(os.path.join(root_path, i, keyword_info_json), "rb"))["ML_keywords"]
-                        with open(os.path.join(root_path, i, content_info_json), "w") as info:
-                            json_dump = json.dump(new_json, info, sort_keys=True, indent=4)
+                if os.path.exists(
+                    os.path.join(
+                        root_path,
+                        i,
+                        content_info_json)):
+                    if content_info_json != "none":
+                        if keyword_info_json != "none":
+                            with open(os.path.join(root_path, i, content_info_json), "rb") as info:
+                                new_json = json.load(info)
+                                new_json["transaction_data"]["properties"]["ML_keywords"] = json.load(
+                                    open(os.path.join(root_path, i, keyword_info_json), "rb"))["ML_keywords"]
+                            with open(os.path.join(root_path, i, content_info_json), "w") as info:
+                                json.dump(new_json, info, sort_keys=True, indent=4)
+                else:
+                    logging.info(
+                        "Content_info_json not present for id {0}".format(i))
+                    continue
 
 
 class CorpusCreation(BaseOperator):
@@ -250,9 +268,9 @@ class CorpusCreation(BaseOperator):
             else:
                 corpus = []
             all_words = list(set(
-                     [i for item1 in taxonomy_keywords for i in item1] +
-                     [j for item2 in content_keywords_list for j in item2] +
-                     corpus))
+                [i for item1 in taxonomy_keywords for i in item1] +
+                [j for item2 in content_keywords_list for j in item2] +
+                corpus))
             print(all_words)
             print("number of unique words: " + str(len(set(all_words))))
             vocabulary = dict()
@@ -492,8 +510,8 @@ class ContentTaxonomyScoring(BaseOperator):
                             content_documents)
                         content_freq_df = pd.DataFrame(content_freq_df.todense(),
                                                        index=list(
-                                                             domain_content_df.index),
-                                                       columns=vectorizer.get_feature_names())
+                            domain_content_df.index),
+                            columns=vectorizer.get_feature_names())
                         dist_df = pd.DataFrame(
                             cosine_similarity(
                                 content_freq_df, taxonomy_freq_df), index=list(

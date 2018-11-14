@@ -1,4 +1,5 @@
-import os, errno
+import os
+import errno
 import contextlib
 import sys
 
@@ -13,6 +14,7 @@ def create_dir(directory):
 
 class DummyFile(object):
     def write(self, x): pass
+
 
 @contextlib.contextmanager
 def nostdout():

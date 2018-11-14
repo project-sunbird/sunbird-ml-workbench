@@ -12,5 +12,10 @@ class DaggitPyOp(PythonOperator):
         concrete_op_object = get_op_callable(node.operation)(node)
         python_callable = getattr(concrete_op_object, '_run')
         op_kwargs = node.arguments
-        super().__init__(task_id= task_id, python_callable=python_callable, op_kwargs= op_kwargs, dag=dag,
-                          *args, **kwargs)
+        super().__init__(
+            task_id=task_id,
+            python_callable=python_callable,
+            op_kwargs=op_kwargs,
+            dag=dag,
+            *args,
+            **kwargs)

@@ -10,13 +10,16 @@ from ..base.config import STORAGE_FORMAT
 
 # TODO configuration file for settings
 
+
 class DataType(object):
 
     def __init__(self, data_pointer, **kwargs):
 
         if data_pointer.external_ref is None:
-            self.data_location = self.get_temp_path(data_pointer.dag_id,
-                                                    data_pointer.parent_task, data_pointer.data_alias+STORAGE_FORMAT)
+            self.data_location = self.get_temp_path(
+                data_pointer.dag_id,
+                data_pointer.parent_task,
+                data_pointer.data_alias + STORAGE_FORMAT)
         else:
             self.data_location = data_pointer.external_ref
 
@@ -38,8 +41,9 @@ class DataType(object):
         store_type = STORE
 
         if store_type == 'Local':
-            store_path = os.path.join(os.getenv("DAGGIT_HOME"), "daggit_storage")
-             
+            store_path = os.path.join(
+                os.getenv("DAGGIT_HOME"), "daggit_storage")
+
         else:
             raise ValueError("Unrecognised store type.")
 
@@ -50,7 +54,7 @@ class DataType(object):
                 path = os.path.join(store_path, dag_id, task_id)
             else:
                 path = os.path.join(store_path, dag_id, task_id, data_alias)
-        
+
         return path
 
 
@@ -71,12 +75,13 @@ class Pandas_Dataframe(DataType):
             return pd.read_json(path_or_buf=self.data_location)
         else:
             try:
-                warnings.warn('Reading the input file as a tab/space delimited file. \n'+
-                              'Please verify your input or use csv, HDF5 or josn format')
-                return pd.read_csv(self.data_location, sep = " ")
+                warnings.warn(
+                    'Reading the input file as a tab/space delimited file. \n' +
+                    'Please verify your input or use csv, HDF5 or josn format')
+                return pd.read_csv(self.data_location, sep=" ")
             except pd.errors.ParserError:
-                raise IOError('Unidentified Data format. Please use csv, HDF5 or json files for input')
-
+                raise IOError(
+                    'Unidentified Data format. Please use csv, HDF5 or json files for input')
 
     def write(self, data):
         if self.data_location[-3:] == 'csv':
@@ -85,16 +90,27 @@ class Pandas_Dataframe(DataType):
         elif self.data_location[-2:] == 'h5':
             create_dir(os.path.dirname(self.data_location))
             dataframe_store = pd.HDFStore(self.data_location)
-            dataframe_store.put(key=self.data_alias, value=data, format='t', append=True)
+            dataframe_store.put(
+                key=self.data_alias,
+                value=data,
+                format='t',
+                append=True)
             dataframe_store.close()
         elif self.data_location[-4:] == 'json':
             create_dir(os.path.dirname(self.data_location))
             data.to_json(path_or_buf=self.data_location)
         else:
 
-            warnings.warn('Writing the dataframe into a tab/space delimited file. \n' +
-                          'Please verify your output file or use csv, HDF5 or josn format')
-            data.to_csv(self.data_location+'.txt', header=True, index=False, sep=' ', mode='a')
+            warnings.warn(
+                'Writing the dataframe into a tab/space delimited file. \n' +
+                'Please verify your output file or use csv, HDF5 or josn format')
+            data.to_csv(
+                self.data_location +
+                '.txt',
+                header=True,
+                index=False,
+                sep=' ',
+                mode='a')
 
 
 class CSV_Pandas(DataType):
@@ -120,17 +136,22 @@ class HDF_Pandas(DataType):
     def write(self, data):
         create_dir(os.path.dirname(self.data_location))
         dataframe_store = pd.HDFStore(self.data_location)
-        dataframe_store.put(key=self.data_alias, value=data, format='t', append=True)
+        dataframe_store.put(
+            key=self.data_alias,
+            value=data,
+            format='t',
+            append=True)
         dataframe_store.close()
 
-class ReadDaggitTask_Folderpath(DataType): 
+
+class ReadDaggitTask_Folderpath(DataType):
 
     def read_loc(self):
         return self.data_location
 
 
 class File_Txt(DataType):
-    
+
     def location_specify(self):
         return self.data_location
 
@@ -139,7 +160,10 @@ class File_Txt(DataType):
         return f.read()
 
     def write(self, data):
-        print("dirname for data_location:", os.path.dirname(self.data_location))
+        print(
+            "dirname for data_location:",
+            os.path.dirname(
+                self.data_location))
         create_dir(os.path.dirname(self.data_location))
         f = open(self.data_location, "w+")
         f.write(data)

@@ -18,6 +18,7 @@ gensim
 nltk
 grpcio
 grpcio-tools
+ffmpy
 ffmpeg-python
 youtube_dl
 google-cloud

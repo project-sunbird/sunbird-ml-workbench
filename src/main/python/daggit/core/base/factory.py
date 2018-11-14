@@ -1,6 +1,7 @@
 from abc import ABCMeta, abstractmethod
 from daggit.core.base.utils import get_as_list
 
+
 class BaseOperator(object):
     __metaclass__ = ABCMeta
 
@@ -26,7 +27,7 @@ class BaseOperator(object):
         self.run(**kwargs)
 
     def _pre_execute(self):
-        pass # TODO
+        pass
 
 
 class BaseDAGManager(object):
@@ -46,16 +47,30 @@ class BaseDAGManager(object):
 
 class NodeData(object):
 
-    def __init__(self, dag_id, task_id, data_alias, parent_task=None, external_ref=None):
+    def __init__(
+            self,
+            dag_id,
+            task_id,
+            data_alias,
+            parent_task=None,
+            external_ref=None):
         self.dag_id = dag_id
         self.task_id = task_id
         self.data_alias = data_alias
         self.parent_task = parent_task
         self.external_ref = external_ref
 
+
 class Node(object):
 
-    def __init__(self, node_config, experiment_name, owner, graph_inputs, graph_outputs, inputs_parents):
+    def __init__(
+            self,
+            node_config,
+            experiment_name,
+            owner,
+            graph_inputs,
+            graph_outputs,
+            inputs_parents):
 
         self.dag_id = experiment_name
         self.owner = owner
@@ -80,36 +95,53 @@ class Node(object):
         self.infer_data_objects()
 
     def infer_data_objects(self):
-        
+
         inputs_list = []
         for data_label in self.inputs:
 
             if data_label in self.graph_inputs:
-                data_object = NodeData(dag_id=self.dag_id, task_id=self.task_id,
-                                   data_alias=data_label, external_ref=self.graph_inputs[data_label])
+                data_object = NodeData(
+                    dag_id=self.dag_id,
+                    task_id=self.task_id,
+                    data_alias=data_label,
+                    external_ref=self.graph_inputs[data_label])
             else:
                 try:
                     data_name = data_label.split(".")[1]
                 except IndexError:
                     data_name = data_label.split(".")[0]
-                data_object = NodeData(dag_id=self.dag_id, task_id=self.task_id, data_alias=data_name,
-                                   parent_task=self.inputs_parents[data_label])
+                data_object = NodeData(
+                    dag_id=self.dag_id,
+                    task_id=self.task_id,
+                    data_alias=data_name,
+                    parent_task=self.inputs_parents[data_label])
 
             inputs_list.append(data_object)
         self.inputs = inputs_list
 
         outputs_list = []
         for data_label in self.outputs:
-            namespaced_data_label = self.task_id+'.'+data_label
+            namespaced_data_label = self.task_id + '.' + data_label
             if namespaced_data_label in self.graph_outputs:
-                data_object = NodeData(dag_id=self.dag_id, task_id=self.task_id, parent_task=self.task_id,
-                                       data_alias=data_label, external_ref=self.graph_outputs[namespaced_data_label])
+                data_object = NodeData(
+                    dag_id=self.dag_id,
+                    task_id=self.task_id,
+                    parent_task=self.task_id,
+                    data_alias=data_label,
+                    external_ref=self.graph_outputs[namespaced_data_label])
             elif data_label in self.graph_outputs:
-                data_object = NodeData(dag_id=self.dag_id, task_id=self.task_id, parent_task=self.task_id,
-                                       data_alias=data_label, external_ref=self.graph_outputs[data_label])
+                data_object = NodeData(
+                    dag_id=self.dag_id,
+                    task_id=self.task_id,
+                    parent_task=self.task_id,
+                    data_alias=data_label,
+                    external_ref=self.graph_outputs[data_label])
             else:
-                data_object = NodeData(dag_id=self.dag_id, task_id=self.task_id, data_alias=data_label,
-                                       parent_task=self.task_id)
+                data_object = NodeData(
+                    dag_id=self.dag_id,
+                    task_id=self.task_id,
+                    data_alias=data_label,
+                    parent_task=self.task_id)
 
             outputs_list.append(data_object)
         self.outputs = outputs_list

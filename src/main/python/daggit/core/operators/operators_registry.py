@@ -6,7 +6,7 @@ srcdir = 'src/main/python/daggit'
 abs_path = os.path.join(testdir, srcdir)
 
 
-def get_op_callable(operator):
+def get_op_callable(operator, module_path=None):
     operator_full_path = operator.split('.')
     operator_name = operator_full_path.pop(-1)
     operator_module = '.'.join(operator_full_path)
