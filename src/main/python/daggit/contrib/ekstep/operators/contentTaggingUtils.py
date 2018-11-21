@@ -23,6 +23,7 @@ import zipfile
 import json
 import re
 import io
+import time
 import requests
 import os
 import logging
@@ -699,28 +700,44 @@ def pdf_to_text(method, path_to_assets, pdf_url):
     return text_dict
 
 
+def ecml_parser(ecml_file):
+    all_text = ""
+    xmldoc = ET.parse(ecml_file)
+    if any(i.tag in ['text', 'htext'] for i in xmldoc.iter()):
+        for elem in xmldoc.iter():
+            if ((elem.tag == 'text') or (elem.tag == 'htext')):
+                try:
+                    text = str(elem.text).strip() + ' '
+                except BaseException:
+                    text = elem.text
+                    all_text += text
+    else:
+        all_text = ""
+    plugin_used = []
+    for elem in xmldoc.iter():
+        if (elem.tag in ['media']):
+            plugin_used.append(elem.attrib['plugin'])
+        if (elem.tag in ['plugin']):
+            plugin_used.append(elem.attrib['id'])
+    plugin_used = list(set(plugin_used))
+    num_stages = [i.tag for i in xmldoc.iter()].count('stage')
+    return dict({'text': all_text, 'plugin': plugin_used, 'stages': num_stages})
+
+
 def ecml_index_to_text(method, path_to_id):
     all_text = ""
+    plugin_used = []
+    num_stages = 0
     logging.info("JTT_START")
     if method == "parse":
         if os.path.exists(os.path.join(path_to_id, "index.ecml")):
             ecml_file = os.path.join(path_to_id, "index.ecml")
             try:
-                xmldoc = ET.parse(ecml_file)
                 logging.info('...File type detected as ecml')
-                count_text = 0
-                if any(i.tag in ['text', 'htext'] for i in xmldoc.iter()):
-                    for elem in xmldoc.iter():
-                        if ((elem.tag == 'text') or (elem.tag == 'htext')):
-                            count_text += 1
-                            try:
-                                text = str(elem.text).strip() + ' '
-                            except BaseException:
-                                text = elem.text
-                                all_text += text
-                else:
-                    logging.info('........ No text or htext detected')
-                    all_text = ""
+                ecml_tags = ecml_parser(ecml_file)
+                all_text = ecml_tags['text']
+                plugin_used = ecml_tags['plugin']
+                num_stages = ecml_tags['stages']
             except BaseException:
                 logging.info("ecml_text cannot be extracted")
 
@@ -745,12 +762,13 @@ def ecml_index_to_text(method, path_to_id):
     if method == "none":
         logging.info("JTT_NOT_PERFORMED")
     logging.info("JTT_STOP")
-    text_dict = {"text": all_text}
+    text_dict = {"text": all_text, "plugin_used": plugin_used, 'num_stage': num_stages}
     return text_dict
 
 
 def multimodal_text_enrichment(
         index,
+        timestr,
         content_meta,
         content_type,
         content_to_text_path):
@@ -820,44 +838,51 @@ def multimodal_text_enrichment(
         if os.path.exists(path_to_id):
             with open(path_to_transcript, "w") as myTextFile:
                 myTextFile.write(text)
-        num_of_PDFpages = pdf_to_text("none", path_to_assets, url)["no_of_pages"]
+        # num_of_PDFpages = pdf_to_text("none", path_to_assets, url)["no_of_pages"]
+        # Reading pdata
+        airflow_home = os.getenv('AIRFLOW_HOME', os.path.expanduser('~/airflow'))
+        dag_location = os.path.join(airflow_home, 'dags')
+        print("AIRFLOW_HOME: ", dag_location)
+        filename = os.path.join(dag_location, 'graph_location')
+        f = open(filename, "r")
+        pdata = f.read()
+        f.close()
 
-        nodeUniqueId = id_name
-        operationType = "UPDATE"
-        nodeType = "DATA_NODE"
-        graphId = content_meta[content_meta["identifier"]
-                               == id_name]["subject"].iloc[0]
-        object_type = content_meta[content_meta["identifier"]
-                                   == id_name]["contentType"].iloc[0]
-        nodeGraphId = 0
+        # estimating ets:
+        epoch_time = time.mktime(time.strptime(timestr, "%Y%m%d-%H%M%S"))
+        domain = content_meta["subject"][index]
+
+        template = ""
+        plugin_used = []
+        num_of_stages = 0
+        # only for type ecml
+        if type_of_url == "ecml":
+            plugin_used = ecml_index_to_text("parse", path_to_id)["plugin_used"]
+            num_of_stages = ecml_index_to_text("parse", path_to_id)["num_stage"]
 
         mnt_output_dict = {
-            "nodeUniqueId": nodeUniqueId,
-            "operationType": operationType,
-            "nodeType": nodeType,
-            "graphId": graphId,
-            "object_type": object_type,
-            "nodeGraphId": nodeGraphId,
-            "transaction_data": {
-                "properties": {
-                    'ML_content_type': type_of_url,
-                    'ML_text': text,
-                    'ML_medium': language_detection(text),
-                    'ML_video_duration': duration,
-                    'ML_num_of_PDFpages': num_of_PDFpages
-
+                    'ETS': int(epoch_time),
+                    'content_id': id_name,
+                    'content_type': type_of_url,
+                    'domain': domain,
+                    'medium': language_detection(text),
+                    'duration': duration,
+                    'plugin_used': plugin_used,
+                    'num_of_stages': num_of_stages,
+                    'template': template,
+                    'text': text,
+                    'pdata': pdata,
+                    'commit_id': ""
                 }
-            }
-        }
 
         with open(os.path.join(path_to_id, "ML_content_info.json"), "w") as info:
             mnt_json_dump = json.dump(
-                mnt_output_dict, info, sort_keys=True, indent=4)
+                mnt_output_dict, info, sort_keys=False, indent=4)
             print(mnt_json_dump)
         logging.info("MTT_TRANSCRIPT_PATH_CREATED: {0}".format(path_to_transcript))
         logging.info("MTT_CONTENT_ID_READ: {0}".format(id_name))
         logging.info("MTT_STOP_FOR_URL {0}".format(url))
-        return os.path.join(path_to_id, "ML_content_data.json")
+        return os.path.join(path_to_id, "ML_content_info.json")
     except BaseException:
         logging.info("TextEnrichment failed for url:{0} with id:{1}".format(url, id_name))
 
@@ -993,6 +1018,7 @@ def tagme_taxonomy_intersection_keywords(
 
 def keyword_extraction_parallel(
         dir,
+        timestr,
         content_to_text_path,
         taxonomy,
         extract_keywords,
@@ -1123,7 +1149,23 @@ def keyword_extraction_parallel(
         keywords_list = list(pd.read_csv(path_to_saved_keywords)["KEYWORDS"])
     else:
         keywords_list = []
-    kep_output_dict = {'ML_keywords': keywords_list}
+    # Reading pdata:
+    airflow_home = os.getenv('AIRFLOW_HOME', os.path.expanduser('~/airflow'))
+    dag_location = os.path.join(airflow_home, 'dags')
+    filename = os.path.join(dag_location, 'graph_location')
+    f = open(filename, "r")
+    pdata = f.read()
+    f.close()
+    print("AIRFLOW_HOME: ", dag_location)
+    # estimating ets:
+    epoch_time = time.mktime(time.strptime(timestr, "%Y%m%d-%H%M%S"))
+    kep_output_dict = {
+                        'keywords': keywords_list,
+                        'content_id': dir,
+                        "pdata": pdata,
+                        "commit_id": "",
+                        "ETS": int(epoch_time)
+                        }
 
     with open(os.path.join(path_to_id, "ML_keyword_info.json"), "w") as info:
         kep_json_dump = json.dump(

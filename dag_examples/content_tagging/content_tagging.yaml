@@ -49,14 +49,6 @@ graph:
       extract_keywords: tagme
       filter_criteria: none
   
-  - node_name: transaction_event_writer
-    inputs: [content_to_text.timestamp_folder]
-    outputs: []
-    operation: contentTagging.TransactionEventWriter
-    arguments:
-      unwrap: True
-      content_info_json: ML_content_info.json
-      keyword_info_json: ML_keyword_info.json
 
   - node_name: corpus_creation
     inputs: [pathTotaxonomy, keyword_extraction.pathTocontentKeywords]

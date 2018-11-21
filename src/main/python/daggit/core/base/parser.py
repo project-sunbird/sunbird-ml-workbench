@@ -69,7 +69,7 @@ def get_nodes(dag_config_file):
     return nodes_bag
 
 
-def get_dag(dag_config_file):
+def create_dag(dag_config_file):
     dag_config = {}
     with open(dag_config_file, 'r', encoding="latin1") as stream:
         try:
@@ -82,7 +82,7 @@ def get_dag(dag_config_file):
 
     default_args = {}
 
-    # 'depends_on_past
+    # depends_on_past
     try:
         default_args['depends_on_past'] = dag_config['dag_config']['depends_on_past']
     except BaseException:
@@ -104,7 +104,7 @@ def get_dag(dag_config_file):
         schedule_interval = ORCHESTRATOR_AIRFLOW_dag_config_schedule_interval
 
     default_args['owner'] = owner
-
+    print("Experiment name: ", experiment_name)
     dag = DAG(
         experiment_name,
         default_args=default_args,
@@ -153,7 +153,7 @@ def get_dag(dag_config_file):
     # Dag creation
     nodes_upstream = {}
     for node in list(nodes_bag.values()):
-        locals()[node.task_id] = DaggitPyOp(node=node, dag=dag)
+        globals()[node.task_id] = DaggitPyOp(node=node, dag=dag)
         upstream_tasks = []
         for i in node.inputs:
             upstream_tasks.append(i.parent_task)
@@ -163,6 +163,6 @@ def get_dag(dag_config_file):
         upstream_list = [e for e in upstream_list if e is not None]
         if len(upstream_list) > 0:
             for upstream_task in upstream_list:
-                locals()[node].set_upstream(locals()[upstream_task])
+                globals()[node].set_upstream(globals()[upstream_task])
 
     return dag

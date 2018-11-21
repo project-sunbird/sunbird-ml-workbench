@@ -34,13 +34,13 @@ def _unpause(dag):
 
 
 def init(graph):
-
+    
     if ORCHESTRATOR == 'airflow':
         os.path.expanduser('~')
         airflow_home = os.getenv('AIRFLOW_HOME', os.path.expanduser('~/airflow'))
         dag_location = os.path.join(airflow_home, 'dags')
         pkgdir = sys.modules['daggit'].__path__[0]
-
+        print("pkgdir:-", pkgdir)
         airflow_dag_file = pkgdir + '/runtime/airflow_dag.py'
         try:
             os.remove(os.path.join(dag_location,'airflow_dag.py'))
@@ -58,10 +58,10 @@ def init(graph):
         else:
             raise FileNotFoundError("The path to the dag file could not be resolved")
 
-        f = open(os.path.join(dag_location,'graph_location'), "w+")
+        f = open(os.path.join(dag_location, 'graph_location'), "w+")
         f.write(graph_location)
         f.close()
-
+        print("current_directory: ", os.getcwd())
         db.initdb()
 
 
@@ -74,7 +74,9 @@ def run(dag_id, clear_all, clear_failed):
             call(["airflow", "clear", "-c", "-f", dag_id])
 
         dbag = models.DagBag()
+        print("dag_id:", dag_id)
         mlwb = dbag.get_dag(dag_id)
+        print("mlwb: ", mlwb)
         #_unpause(mlwb)
 
         mlwb.run()

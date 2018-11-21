@@ -172,35 +172,35 @@ class KeywordExtraction(BaseOperator):
             pool.join()
 
 
-class TransactionEventWriter(BaseOperator):
+# class TransactionEventWriter(BaseOperator):
 
-    @property
-    def inputs(self):
-        return {"timestamp_folder": File_Txt(self.node.inputs[0])
-                }
+#     @property
+#     def inputs(self):
+#         return {"timestamp_folder": File_Txt(self.node.inputs[0])
+#                 }
 
-    def run(self, unwrap, content_info_json, keyword_info_json):
-        timestamp_folder = self.inputs["timestamp_folder"].read()
-        root_path = timestamp_folder + "content_to_text"
-        if unwrap is True:
-            for i in os.listdir(root_path):
-                if os.path.exists(
-                    os.path.join(
-                        root_path,
-                        i,
-                        content_info_json)):
-                    if content_info_json != "none":
-                        if keyword_info_json != "none":
-                            with open(os.path.join(root_path, i, content_info_json), "rb") as info:
-                                new_json = json.load(info)
-                                new_json["transaction_data"]["properties"]["ML_keywords"] = json.load(
-                                    open(os.path.join(root_path, i, keyword_info_json), "rb"))["ML_keywords"]
-                            with open(os.path.join(root_path, i, content_info_json), "w") as info:
-                                json.dump(new_json, info, sort_keys=True, indent=4)
-                else:
-                    logging.info(
-                        "Content_info_json not present for id {0}".format(i))
-                    continue
+#     def run(self, unwrap, content_info_json, keyword_info_json):
+#         timestamp_folder = self.inputs["timestamp_folder"].read()
+#         root_path = timestamp_folder + "content_to_text"
+#         if unwrap is True:
+#             for i in os.listdir(root_path):
+#                 if os.path.exists(
+#                     os.path.join(
+#                         root_path,
+#                         i,
+#                         content_info_json)):
+#                     if content_info_json != "none":
+#                         if keyword_info_json != "none":
+#                             with open(os.path.join(root_path, i, content_info_json), "rb") as info:
+#                                 new_json = json.load(info)
+#                                 new_json["transaction_data"]["properties"]["ML_keywords"] = json.load(
+#                                     open(os.path.join(root_path, i, keyword_info_json), "rb"))["ML_keywords"]
+#                             with open(os.path.join(root_path, i, content_info_json), "w") as info:
+#                                 json.dump(new_json, info, sort_keys=True, indent=4)
+#                 else:
+#                     logging.info(
+#                         "Content_info_json not present for id {0}".format(i))
+#                     continue
 
 
 class CorpusCreation(BaseOperator):
