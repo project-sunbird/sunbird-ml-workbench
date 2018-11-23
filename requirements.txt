@@ -1,4 +1,5 @@
 airflow==1.8.0
+pytest-runner
 tables
 h5py
 pyyaml

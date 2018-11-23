@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # this needs to point to virtual env where build is done
-virtualenv -p python3 mlwb_venv
+virtualenv --python=`which python3.6` mlwb_venv
 source mlwb_venv/bin/activate
 
 cd "$(dirname "$0")"

@@ -1,6 +1,7 @@
 import multiprocessing
 import time
 import os
+import re
 import glob
 import json
 import logging
@@ -39,7 +40,8 @@ class ContentToText(BaseOperator):
     def outputs(self):
         return {
             "DS_DATA_HOME": ReadDaggitTask_Folderpath(
-                self.node.outputs[0]), "timestamp_folder": File_Txt(
+                self.node.outputs[0]),
+            "timestamp_folder": File_Txt(
                 self.node.outputs[1])}
 
     def run(
@@ -106,6 +108,7 @@ class ContentToText(BaseOperator):
         result = [
             multimodal_text_enrichment(
                 i,
+                timestr,
                 content_meta,
                 content_type,
                 content_to_text_path) for i in range(
@@ -143,6 +146,8 @@ class KeywordExtraction(BaseOperator):
         assert filter_criteria == "none" or filter_criteria == "taxonomy" or filter_criteria == "dbpedia"
         taxonomy = self.inputs["pathTotaxonomy"].read()
         timestamp_folder = self.inputs["timestamp_folder"].read()
+        r = re.search('(.*)/', timestamp_folder)
+        timestr = os.path.split(r.group(1))[1]
         print("****timestamp folder:", timestamp_folder)
 
         content_to_text_path = timestamp_folder + "content_to_text"
@@ -154,6 +159,7 @@ class KeywordExtraction(BaseOperator):
             pool = multiprocessing.Pool(processes=4)
             keywordExtraction_partial = partial(
                 keyword_extraction_parallel,
+                timestr=timestr,
                 content_to_text_path=content_to_text_path,
                 taxonomy=taxonomy,
                 extract_keywords=extract_keywords,

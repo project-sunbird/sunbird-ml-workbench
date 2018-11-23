@@ -14,8 +14,8 @@ graph:
     outputs: [DS_DATA_HOME, timestamp_folder]
     operation: contentTagging.ContentToText
     arguments:
-      range_start: 5
-      range_end: 6
+      range_start: 1
+      range_end: 3
       num_of_processes: 1
       subset_contentMeta_by: youtube
       content_type:
