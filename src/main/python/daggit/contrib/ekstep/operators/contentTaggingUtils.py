@@ -132,6 +132,30 @@ def unzip_files(directory):
             bugs.append(zip_file)
 
 
+def merge_json(merge_json_loc_list):
+    ignore_list = ["ETS"]
+    dict_list = []
+    for file in merge_json_loc_list:
+        with open(file, "rb") as info:
+            new_json = json.load(info)
+            [new_json.pop(ignore) for ignore in ignore_list if ignore in new_json.keys()]
+        dict_list.append(new_json)
+    merge_dict = {}
+    for dictionary in dict_list:
+        for k, _ in dictionary.items():
+            if k in merge_dict.keys():
+                print(k)
+                try:
+                    assert dictionary.get(k) == merge_dict.get(k)
+                    print(merge_dict.get(k))
+                    merge_dict.update({k: dictionary.get(k)})
+                except BaseException:
+                    raise Exception("Trying to merge keys with different values")
+            else:
+                merge_dict.update({k: dictionary.get(k)})
+    return merge_dict
+
+
 def ekstep_ecar_unzip(download_location, copy_location):
     """
     This function unzips an ecar file(ekstep file format)
@@ -561,18 +585,21 @@ def download_to_local(method, url_to_download, path_to_save, id_name):
             logging.info("Skipped url: {0}".format(url_to_download))
 
     if method == "youtube":
-        logging.info("DTL_YOUTUBE_URL: {0}".format(url_to_download))
-        path_to_id = os.path.join(path_to_save, id_name)
-        location = [os.path.join(path_to_id, folder)
-                    for folder in ['assets', 'data', 'items']]
+        try:
+            logging.info("DTL_YOUTUBE_URL: {0}".format(url_to_download))
+            path_to_id = os.path.join(path_to_save, id_name)
+            location = [os.path.join(path_to_id, folder)
+                        for folder in ['assets', 'data', 'items']]
 
-        path_to_audio_download = os.path.join(path_to_id, "assets")
-        for loc in location:
-            if not os.path.exists(loc):
-                os.makedirs(loc)
-        path_to_audio = url_to_audio_extraction(
-            url_to_download, path_to_audio_download)
-        logging.info("Path to audio file is {0}".format(path_to_audio))
+            path_to_audio_download = os.path.join(path_to_id, "assets")
+            for loc in location:
+                if not os.path.exists(loc):
+                    os.makedirs(loc)
+            path_to_audio = url_to_audio_extraction(
+                url_to_download, path_to_audio_download)
+            logging.info("Path to audio file is {0}".format(path_to_audio))
+        except BaseException:
+            logging.info("Could not download the youtube url")
 
     if method == "pdf":
         logging.info("DTL_PDF_URL: {0}".format(url_to_download))
@@ -675,20 +702,24 @@ def pdf_to_text(method, path_to_assets, pdf_url):
         pdf_names = findFiles(path_to_assets, ['.pdf'])
         text = ""
         for j in range(0, len(pdf_names) + 1):
-            if (len(pdf_names) == 0):
+            if (len(pdf_names) == 0 and pdf_url.endswith('pdf')):
                 r = requests.get(pdf_url)
                 f = io.BytesIO(r.content)
                 read_pdf = PdfFileReader(f)
+                number_of_pages = read_pdf.getNumPages()
             elif j < (len(pdf_names)):
                 pdf_files = pdf_names[j]
                 text = ""
                 f = open(pdf_files, 'rb')
                 read_pdf = PdfFileReader(f)
-            number_of_pages = read_pdf.getNumPages()
-            for i in range(number_of_pages):
-                page = read_pdf.getPage(i)
-                page_content = page.extractText()
-                text += page_content
+                number_of_pages = read_pdf.getNumPages()
+            else:
+                number_of_pages = 0
+            if number_of_pages > 0:
+                for i in range(number_of_pages):
+                    page = read_pdf.getPage(i)
+                    page_content = page.extractText()
+                    text += page_content
         processed_txt = cleantext(text)
         text = ''.join([i for i in processed_txt if not i.isdigit()])
         text = ' '.join(text.split())
@@ -804,87 +835,87 @@ def multimodal_text_enrichment(
     url = content_meta[downloadField][index]
     logging.info("MTT_START_FOR_URL {0}".format(url))
     # start text extraction pipeline:
-    try:
-        path_to_id = download_to_local(
-            type_of_url, url, content_to_text_path, id_name)
-        path_to_assets = os.path.join(path_to_id, "assets")
-        path_to_audio = video_to_speech(
-            content_type[type_of_url]["video_to_speech"],
-            path_to_assets)
-        print(path_to_audio)
-        if len(findFiles(path_to_assets, ["mp3"])) > 0:
-            audio = AudioSegment.from_mp3(findFiles(path_to_assets, ["mp3"])[0])
-            duration = round(len(audio) / 1000)
-        else:
-            duration = 0
-        textExtraction_pipeline = [
-            (speech_to_text,
-             (content_type[type_of_url]["speech_to_text"],
-              path_to_assets)),
-            (image_to_text,
-             (content_type[type_of_url]["image_to_text"],
-              path_to_assets)),
-            (pdf_to_text,
-             (content_type[type_of_url]["pdf_to_text"],
-              path_to_assets,
-              url)),
-            (ecml_index_to_text,
-             (content_type[type_of_url]["ecml_index_to_text"],
-              path_to_id))]
-        path_to_transcript = os.path.join(path_to_id, "enriched_text.txt")
-        text = ""
-        for method, param_tuple in textExtraction_pipeline:
-            text += method(*param_tuple)["text"]
-        if os.path.exists(path_to_id):
-            with open(path_to_transcript, "w") as myTextFile:
-                myTextFile.write(text)
-        # num_of_PDFpages = pdf_to_text("none", path_to_assets, url)["no_of_pages"]
-        # Reading pdata
-        airflow_home = os.getenv('AIRFLOW_HOME', os.path.expanduser('~/airflow'))
-        dag_location = os.path.join(airflow_home, 'dags')
-        print("AIRFLOW_HOME: ", dag_location)
-        filename = os.path.join(dag_location, 'graph_location')
-        f = open(filename, "r")
-        pdata = f.read()
-        f.close()
+    # try:
+    path_to_id = download_to_local(
+        type_of_url, url, content_to_text_path, id_name)
+    path_to_assets = os.path.join(path_to_id, "assets")
+    path_to_audio = video_to_speech(
+        content_type[type_of_url]["video_to_speech"],
+        path_to_assets)
+    print(path_to_audio)
+    if len(findFiles(path_to_assets, ["mp3"])) > 0:
+        audio = AudioSegment.from_mp3(findFiles(path_to_assets, ["mp3"])[0])
+        duration = round(len(audio) / 1000)
+    else:
+        duration = 0
+    textExtraction_pipeline = [
+        (speech_to_text,
+         (content_type[type_of_url]["speech_to_text"],
+          path_to_assets)),
+        (image_to_text,
+         (content_type[type_of_url]["image_to_text"],
+          path_to_assets)),
+        (pdf_to_text,
+         (content_type[type_of_url]["pdf_to_text"],
+          path_to_assets,
+          url)),
+        (ecml_index_to_text,
+         (content_type[type_of_url]["ecml_index_to_text"],
+          path_to_id))]
+    path_to_transcript = os.path.join(path_to_id, "enriched_text.txt")
+    text = ""
+    for method, param_tuple in textExtraction_pipeline:
+        text += method(*param_tuple)["text"]
+    if os.path.exists(path_to_id):
+        with open(path_to_transcript, "w") as myTextFile:
+            myTextFile.write(text)
+    # num_of_PDFpages = pdf_to_text("none", path_to_assets, url)["no_of_pages"]
+    # Reading pdata
+    airflow_home = os.getenv('AIRFLOW_HOME', os.path.expanduser('~/airflow'))
+    dag_location = os.path.join(airflow_home, 'dags')
+    print("AIRFLOW_HOME: ", dag_location)
+    filename = os.path.join(dag_location, 'graph_location')
+    f = open(filename, "r")
+    pdata = f.read()
+    f.close()
 
-        # estimating ets:
-        epoch_time = time.mktime(time.strptime(timestr, "%Y%m%d-%H%M%S"))
-        domain = content_meta["subject"][index]
+    # estimating ets:
+    epoch_time = time.mktime(time.strptime(timestr, "%Y%m%d-%H%M%S"))
+    domain = content_meta["subject"][index]
 
-        template = ""
-        plugin_used = []
-        num_of_stages = 0
-        # only for type ecml
-        if type_of_url == "ecml":
-            plugin_used = ecml_index_to_text("parse", path_to_id)["plugin_used"]
-            num_of_stages = ecml_index_to_text("parse", path_to_id)["num_stage"]
+    template = ""
+    plugin_used = []
+    num_of_stages = 0
+    # only for type ecml
+    if type_of_url == "ecml":
+        plugin_used = ecml_index_to_text("parse", path_to_id)["plugin_used"]
+        num_of_stages = ecml_index_to_text("parse", path_to_id)["num_stage"]
 
-        mnt_output_dict = {
-                    'ETS': int(epoch_time),
-                    'content_id': id_name,
-                    'content_type': type_of_url,
-                    'domain': domain,
-                    'medium': language_detection(text),
-                    'duration': duration,
-                    'plugin_used': plugin_used,
-                    'num_of_stages': num_of_stages,
-                    'template': template,
-                    'text': text,
-                    'pdata': pdata,
-                    'commit_id': ""
-                }
+    mnt_output_dict = {
+                'ETS': int(epoch_time),
+                'content_id': id_name,
+                'content_type': type_of_url,
+                'domain': domain,
+                'medium': language_detection(text),
+                'duration': duration,
+                'plugin_used': plugin_used,
+                'num_of_stages': num_of_stages,
+                'template': template,
+                'text': text,
+                'pdata': pdata,
+                'commit_id': ""
+            }
 
-        with open(os.path.join(path_to_id, "ML_content_info.json"), "w") as info:
-            mnt_json_dump = json.dump(
-                mnt_output_dict, info, sort_keys=False, indent=4)
-            print(mnt_json_dump)
-        logging.info("MTT_TRANSCRIPT_PATH_CREATED: {0}".format(path_to_transcript))
-        logging.info("MTT_CONTENT_ID_READ: {0}".format(id_name))
-        logging.info("MTT_STOP_FOR_URL {0}".format(url))
-        return os.path.join(path_to_id, "ML_content_info.json")
-    except BaseException:
-        logging.info("TextEnrichment failed for url:{0} with id:{1}".format(url, id_name))
+    with open(os.path.join(path_to_id, "ML_content_info.json"), "w") as info:
+        mnt_json_dump = json.dump(
+            mnt_output_dict, info, sort_keys=False, indent=4)
+        print(mnt_json_dump)
+    logging.info("MTT_TRANSCRIPT_PATH_CREATED: {0}".format(path_to_transcript))
+    logging.info("MTT_CONTENT_ID_READ: {0}".format(id_name))
+    logging.info("MTT_STOP_FOR_URL {0}".format(url))
+    return os.path.join(path_to_id, "ML_content_info.json")
+    # except BaseException:
+    #     logging.info("TextEnrichment failed for url:{0} with id:{1}".format(url, id_name))
 
 
 def custom_tokenizer(path_to_text_file, path_to_text_tokens_folder):

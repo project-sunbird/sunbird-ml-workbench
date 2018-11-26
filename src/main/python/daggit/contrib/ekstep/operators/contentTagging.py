@@ -4,6 +4,7 @@ import os
 import re
 import glob
 import json
+import requests
 import logging
 import pandas as pd
 import numpy as np
@@ -16,7 +17,8 @@ from ..operators.contentTaggingUtils import multimodal_text_enrichment
 from ..operators.contentTaggingUtils import keyword_extraction_parallel
 from ..operators.contentTaggingUtils import get_level_keywords
 from ..operators.contentTaggingUtils import jaccard_with_phrase
-from ..operators.contentTaggingUtils import save_obj, load_obj
+from ..operators.contentTaggingUtils import save_obj, load_obj, findFiles
+from ..operators.contentTaggingUtils import merge_json
 from ..operators.contentTaggingUtils import strip_word, get_words
 from ..operators.contentTaggingUtils import dictionary_merge, get_sorted_list
 from ..operators.contentTaggingUtils import custom_listPreProc
@@ -27,6 +29,7 @@ from ..operators.contentTaggingUtils import agg_precision_from_dictionary
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+from elasticsearch import Elasticsearch
 
 
 class ContentToText(BaseOperator):
@@ -132,7 +135,8 @@ class KeywordExtraction(BaseOperator):
     @property
     def inputs(self):
         return {"pathTotaxonomy": Pandas_Dataframe(self.node.inputs[0]),
-                "timestamp_folder": File_Txt(self.node.inputs[1])
+                "categoryLookup": ReadDaggitTask_Folderpath(self.node.inputs[1]),
+                "timestamp_folder": File_Txt(self.node.inputs[2])
 
                 }
 
@@ -145,11 +149,12 @@ class KeywordExtraction(BaseOperator):
         assert extract_keywords == "tagme" or extract_keywords == "text_token"
         assert filter_criteria == "none" or filter_criteria == "taxonomy" or filter_criteria == "dbpedia"
         taxonomy = self.inputs["pathTotaxonomy"].read()
+        category_lookup_yaml = self.inputs["categoryLookup"].read_loc()
         timestamp_folder = self.inputs["timestamp_folder"].read()
         r = re.search('(.*)/', timestamp_folder)
         timestr = os.path.split(r.group(1))[1]
         print("****timestamp folder:", timestamp_folder)
-
+        print("****categorylookup yaml:", category_lookup_yaml)
         content_to_text_path = timestamp_folder + "content_to_text"
         print("content_to_text path:", content_to_text_path)
         if not os.path.exists(content_to_text_path):
@@ -178,35 +183,38 @@ class KeywordExtraction(BaseOperator):
             pool.join()
 
 
-# class TransactionEventWriter(BaseOperator):
+class WriteToElasticSearch(BaseOperator):
 
-#     @property
-#     def inputs(self):
-#         return {"timestamp_folder": File_Txt(self.node.inputs[0])
-#                 }
+    @property
+    def inputs(self):
+        return {"timestamp_folder": File_Txt(self.node.inputs[0])
+                }
 
-#     def run(self, unwrap, content_info_json, keyword_info_json):
-#         timestamp_folder = self.inputs["timestamp_folder"].read()
-#         root_path = timestamp_folder + "content_to_text"
-#         if unwrap is True:
-#             for i in os.listdir(root_path):
-#                 if os.path.exists(
-#                     os.path.join(
-#                         root_path,
-#                         i,
-#                         content_info_json)):
-#                     if content_info_json != "none":
-#                         if keyword_info_json != "none":
-#                             with open(os.path.join(root_path, i, content_info_json), "rb") as info:
-#                                 new_json = json.load(info)
-#                                 new_json["transaction_data"]["properties"]["ML_keywords"] = json.load(
-#                                     open(os.path.join(root_path, i, keyword_info_json), "rb"))["ML_keywords"]
-#                             with open(os.path.join(root_path, i, content_info_json), "w") as info:
-#                                 json.dump(new_json, info, sort_keys=True, indent=4)
-#                 else:
-#                     logging.info(
-#                         "Content_info_json not present for id {0}".format(i))
-#                     continue
+    def run(self):
+        timestamp_folder = self.inputs["timestamp_folder"].read()
+        r = re.search('(.*)/', timestamp_folder)
+        timestr = os.path.split(r.group(1))[1]
+        epoch_time = time.mktime(time.strptime(timestr, "%Y%m%d-%H%M%S"))
+        es_request = requests.get('http://localhost:9200')
+        content_to_textpath = timestamp_folder + "/content_to_text"
+        for cid in os.listdir(content_to_textpath):
+            merge_json_list = []
+            json_file = findFiles(content_to_textpath, ["json"])
+            logging.info("json_files are: ", json_file)
+            for file in json_file:
+                if os.path.split(file)[1] in [
+                        "ML_keyword_info.json", "ML_content_info.json"]:
+                    merge_json_list.append(file)
+            autotagging_json = merge_json(merge_json_list)
+            autotagging_json.update({"ETS": epoch_time})
+            elastic_search = Elasticsearch(
+                [{'host': 'localhost', 'port': 9200}])
+            if es_request.status_code == 200:
+                elastic_search.index(
+                    index="auto_tagging",
+                    doc_type='content_id_info',
+                    id=cid,
+                    body=autotagging_json)
 
 
 class CorpusCreation(BaseOperator):

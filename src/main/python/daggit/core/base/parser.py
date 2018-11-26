@@ -1,7 +1,7 @@
 import six
 import yaml
 import os
-from airflow import DAG
+from airflow.models import DAG
 
 
 from datetime import datetime
@@ -10,8 +10,6 @@ from daggit.core.base.config import ORCHESTRATOR_ATTR
 from daggit.core.base.factory import Node
 from daggit.core.base.utils import get_as_list, normalize_path
 from daggit.runtime.airflow_runtime import DaggitPyOp
-
-
 
 
 def create_dag(dag_config_file):

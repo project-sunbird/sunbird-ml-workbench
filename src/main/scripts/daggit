@@ -7,6 +7,7 @@ import argparse
 from subprocess import call
 
 from daggit.core.base.utils import nostdout
+from daggit.core.base.config import ORCHESTRATOR
 
 with nostdout():
     from airflow.models import DagModel
@@ -14,7 +15,6 @@ with nostdout():
     from airflow.utils import db
     from airflow import models
 
-from daggit.core.base.config import ORCHESTRATOR
 
 # improve orchestrator factory and replace if based switching
 def _unpause(dag):
@@ -40,13 +40,15 @@ def init(graph):
         airflow_home = os.getenv('AIRFLOW_HOME', os.path.expanduser('~/airflow'))
         dag_location = os.path.join(airflow_home, 'dags')
         pkgdir = sys.modules['daggit'].__path__[0]
-        print("pkgdir:-", pkgdir)
         airflow_dag_file = pkgdir + '/runtime/airflow_dag.py'
         try:
             os.remove(os.path.join(dag_location,'airflow_dag.py'))
         except OSError:
             pass
-
+        try:
+            os.remove(os.path.join(airflow_home, 'airflow.db'))
+        except OSError:
+            pass
         if not os.path.exists(dag_location):
             os.makedirs(dag_location)
         shutil.copy2(airflow_dag_file, dag_location)
@@ -61,7 +63,6 @@ def init(graph):
         f = open(os.path.join(dag_location, 'graph_location'), "w+")
         f.write(graph_location)
         f.close()
-        print("current_directory: ", os.getcwd())
         db.initdb()
 
 
@@ -72,14 +73,14 @@ def run(dag_id, clear_all, clear_failed):
             call(["airflow", "clear", "-c", dag_id])
         if clear_failed:
             call(["airflow", "clear", "-c", "-f", dag_id])
-
+        print("Running----")
         dbag = models.DagBag()
-        print("dag_id:", dag_id)
         mlwb = dbag.get_dag(dag_id)
-        print("mlwb: ", mlwb)
         #_unpause(mlwb)
-
+        print("mlwb:", mlwb)
+        print("---start running")
         mlwb.run()
+        print("---stop running")
 
 
 if __name__ == '__main__':

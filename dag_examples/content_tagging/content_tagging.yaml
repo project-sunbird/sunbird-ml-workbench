@@ -4,18 +4,19 @@ owner: aleena
 inputs:
   pathTocontentMeta: "inputs/content_tagged_2184.csv"
   pathTotaxonomy: "inputs/RevisedTaxonomy.csv"
+  categoryLookup: "inputs/category_lookup.yaml"
+
 outputs:
   DS_DATA_HOME: /home/DS_DATA_HOME
 
 graph:
-
   - node_name: content_to_text
     inputs: pathTocontentMeta
     outputs: [DS_DATA_HOME, timestamp_folder]
     operation: contentTagging.ContentToText
     arguments:
       range_start: 1
-      range_end: 3
+      range_end: 2
       num_of_processes: 1
       subset_contentMeta_by: youtube
       content_type:
@@ -42,13 +43,17 @@ graph:
           ecml_index_to_text: none
 
   - node_name: keyword_extraction
-    inputs: [pathTotaxonomy, content_to_text.timestamp_folder]
+    inputs: [pathTotaxonomy, categoryLookup, content_to_text.timestamp_folder]
     outputs: [pathTocontentKeywords]
     operation: contentTagging.KeywordExtraction 
     arguments: 
       extract_keywords: tagme
       filter_criteria: none
   
+  - node_name: write_to_elastic_search
+    inputs: [content_to_text.timestamp_folder]
+    outputs: []
+    operation: contentTagging.WriteToElasticSearch
 
   - node_name: corpus_creation
     inputs: [pathTotaxonomy, keyword_extraction.pathTocontentKeywords]
