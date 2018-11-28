@@ -1,7 +1,7 @@
 import difflib 
 import daggit 
 import yaml 
-from daggit.contrib.ekstep.operators.contentTaggingUtils import *
+from daggit.contrib.sunbird.operators.contentTaggingUtils import *
 
 def sentence_similarity(sentence1, sentence2, threshold):       # sentence simil
   sentence = difflib.SequenceMatcher(lambda x: x == " ",

@@ -1,5 +1,5 @@
 experiment_name: House_Prices_Regression_Baseline
-owner: mayankkumar
+owner: sunbird
 
 inputs: 
   train: "data/train.csv"

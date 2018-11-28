@@ -12,5 +12,6 @@ filename = os.path.join(dirname, 'graph_location')
 f = open(filename, "r")
 for index, dag in enumerate(f):
     file = dag.replace('\n', '')
-    dag_name = file[:-5].split("/")[-1] + str(index)
+    dag_name = os.path.basename(file)[:-5] + str(index)
+    # dag_name = file[:-5].split("/")[-1] + str(index)
     globals()[dag_name] = create_dag(file)

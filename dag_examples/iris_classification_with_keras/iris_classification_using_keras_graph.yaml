@@ -1,5 +1,5 @@
 experiment_name: Example1a_Iris_Classification_with_keras
-owner: sanjay
+owner: sunbird
 experiment_dir: 'MLWBdemo1a/experiment/'
 
 inputs:

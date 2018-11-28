@@ -1,19 +1,19 @@
-from contrib.ekstep.TestingUtils import text_reading
-from contrib.ekstep.TestingUtils import sentence_similarity
-from contrib.ekstep.TestingUtils import keyword_extraction
+from contrib.sunbird.TestingUtils import text_reading
+from contrib.sunbird.TestingUtils import sentence_similarity
+from contrib.sunbird.TestingUtils import keyword_extraction
 import unittest
 import sys
 import os
 import yaml
 import pandas as pd
 import daggit
-from daggit.contrib.ekstep.operators.contentTaggingUtils import *
+from daggit.contrib.sunbird.operators.contentTaggingUtils import *
 
 testdir = os.path.dirname(os.path.realpath(__file__))
 srcdir = '../../../../../src/unittest/python/contrib'
 os.chdir(os.path.join(testdir, '../../../'))
 abs_path = os.path.abspath(os.path.join(testdir, srcdir))
-test_case_data_location = abs_path + "/ekstep/test_cases_data/"
+test_case_data_location = abs_path + "/sunbird/test_cases_data/"
 sys.path.insert(0, abs_path)
 
 

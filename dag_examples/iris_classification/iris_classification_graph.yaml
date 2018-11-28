@@ -1,5 +1,5 @@
 experiment_name: Example1_Iris_Classification
-owner: ekstep
+owner: sunbird
   
 inputs:
   raw_data: "inputs/iris.csv"

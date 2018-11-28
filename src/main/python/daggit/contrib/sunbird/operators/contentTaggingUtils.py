@@ -1,3 +1,4 @@
+import nltk
 from nltk.stem import PorterStemmer
 from nltk.stem import WordNetLemmatizer
 from natsort import natsorted
@@ -6,7 +7,8 @@ from google.cloud.vision import types
 from google.cloud import vision
 from google.cloud import translate
 from nltk.corpus import stopwords
-import nltk
+import yaml
+import glob
 from PyPDF2 import PdfFileReader
 import numpy as np
 import pandas as pd
@@ -18,7 +20,6 @@ import urllib.parse
 import urllib
 import shutil
 import string
-import csv
 import zipfile
 import json
 import re
@@ -28,8 +29,8 @@ import requests
 import os
 import logging
 import xml.etree.ElementTree as ET
-
-
+from dateutil.parser import parse
+from SPARQLWrapper import SPARQLWrapper, JSON
 logging.getLogger("requests").setLevel(logging.WARNING)
 
 
@@ -58,6 +59,14 @@ def language_detection(text):
     translate_client = translate.Client()
     result = translate_client.detect_language(text)
     return result["language"]
+
+
+def is_date(string):
+    try:
+        parse(string)
+        return True
+    except ValueError:
+        return False
 
 
 def downloadZipFile(url, directory):
@@ -338,11 +347,12 @@ def strip_word(word, delimitter):
 
 
 def identify_contentType(url):
+    extensions = ['mp3', 'wav', 'jpeg', 'zip', 'jpg', 'mp4', 'webm', 'ecar', 'mp3', 'jpeg', 'jpg', 'wav', 'png']
     if ('youtu.be' in url) or ('youtube' in url):
         return "youtube"
     elif url.endswith('pdf'):
         return "pdf"
-    elif any(url.endswith(x) for x in ('ecar', 'zip', 'mp4', 'webm')):
+    elif any(url.endswith(x) for x in extensions):
         return "ecml"
     else:
         return "unknown"
@@ -829,7 +839,7 @@ def multimodal_text_enrichment(
     path_to_transcript: str
     Path where text is saved
     """
-    type_of_url = content_meta.iloc[index]["content_type"]
+    type_of_url = content_meta.iloc[index]["derived_contentType"]
     id_name = content_meta["identifier"][index]
     downloadField = content_type[type_of_url]["contentDownloadField"]
     url = content_meta[downloadField][index]
@@ -918,7 +928,7 @@ def multimodal_text_enrichment(
     #     logging.info("TextEnrichment failed for url:{0} with id:{1}".format(url, id_name))
 
 
-def custom_tokenizer(path_to_text_file, path_to_text_tokens_folder):
+def custom_tokenizer(path_to_text_file):
     """
     Given a text file uses custom_tokenizer function
     to tokenise and write the tokenised words to a keywords.csv file.
@@ -939,18 +949,8 @@ def custom_tokenizer(path_to_text_file, path_to_text_tokens_folder):
     text = open(path_to_text_file, "r")
     text_file = text.read()
     text_list = clean_text_tokens(text_file)
-    if not os.path.exists(path_to_text_tokens_folder):
-        os.mkdir(path_to_text_tokens_folder)
-        os.chdir(path_to_text_tokens_folder)
-    else:
-        os.chdir(path_to_text_tokens_folder)
-    path = os.path.join(path_to_text_tokens_folder, "keywords.csv")
-    with open(path, 'w') as myfile:
-        wr = csv.writer(myfile)
-        wr.writerow(['KEYWORDS'])
-        for i in text_list:
-            wr.writerows([[i]])
-    return path
+    text_df = pd.DataFrame(text_list, columns=['KEYWORDS'])
+    return text_df
 
 
 def tagme_text(text):
@@ -976,16 +976,31 @@ def tagme_text(text):
     return df
 
 
-def get_tagme_longtext(path_to_text, path_to_tagme):
+def run_tagme(path_to_text):
     file_ = open(path_to_text, "r")
     text = file_.readline()
-    text = text.encode('utf-8').decode('ascii', 'ignore')
     words = text.split(" ")
     index_count = 0
     window_len = 700
     response_list = []
-    if not os.path.exists(path_to_tagme):
-        os.makedirs(path_to_tagme)
+    while index_count < len(words):
+        text = ' '.join(words[index_count:min(
+            (index_count + window_len - 1), len(words))])
+        index_count += window_len
+        response_list.append(tagme_text(text))
+        response_df = pd.concat(response_list)
+        response_df.reset_index(drop=True, inplace=True)
+    return response_df
+
+
+def get_tagme_spots(path_to_text):
+    file_ = open(path_to_text, "r")
+    text = file_.readline()
+    # text = text.encode('utf-8').decode('ascii', 'ignore')
+    words = text.split(" ")
+    index_count = 0
+    window_len = 700
+    response_list = []
     while index_count < len(words):
         text = ' '.join(words[index_count:min(
             (index_count + window_len - 1), len(words))])
@@ -999,52 +1014,117 @@ def get_tagme_longtext(path_to_text, path_to_tagme):
         cleaned_keyword_list = clean_string_list(cleaned_keyword_list)
         unique_cleaned_keyword_list = list(set(cleaned_keyword_list))
         spot = pd.DataFrame(unique_cleaned_keyword_list, columns=['KEYWORDS'])
-        path = os.path.join(path_to_tagme, "keywords.csv")
-        spot.to_csv(path, index=False, encoding='utf-8')
-    return path
+    return spot
 
 
 def text_token_taxonomy_intersection_keywords(
-        taxonomy_keywords_set,
-        path_to_text_token,
-        path_to_text_taxonomy_folder):
+        text_df,
+        taxonomy_keywords_set):
     try:
-        text_token = pd.read_csv(path_to_text_token, sep=',', index_col=None)
-        token = [i.lower() for i in list(text_token['KEYWORDS'])]
+        token = [i.lower() for i in list(text_df['KEYWORDS'])]
         common_words = list(set(taxonomy_keywords_set) & set(token))
-        if not os.path.exists(path_to_text_taxonomy_folder):
-            os.makedirs(path_to_text_taxonomy_folder)
-
-        path = os.path.join(path_to_text_taxonomy_folder, 'keywords.csv')
-        with open(path, 'w') as myfile:
-            wr = csv.writer(myfile)
-            wr.writerow(['KEYWORDS'])
-            for i in common_words:
-                wr.writerows([[i]])
-        return path
+        text_tax_df = pd.DataFrame(common_words, columns=['KEYWORDS'])
+        return text_tax_df
     except BaseException:
         logging.info("Keywords cannot be extracted")
 
 
 def tagme_taxonomy_intersection_keywords(
+        tagme_df,
         taxonomy_keywords_set,
-        path_to_tagme_keys,
-        path_to_tagme_taxonomy_folder):
+        ):
     try:
-        tagme_spots = pd.read_csv(path_to_tagme_keys, sep=',', index_col=None)
-        spots = [i.lower() for i in list(tagme_spots['KEYWORDS'])]
+        spots = [i.lower() for i in list(tagme_df['KEYWORDS'])]
         common_words = list(set(taxonomy_keywords_set) & set(spots))
-        if not os.path.exists(path_to_tagme_taxonomy_folder):
-            os.makedirs(path_to_tagme_taxonomy_folder)
-        path = os.path.join(path_to_tagme_taxonomy_folder, 'keywords.csv')
-        with open(path, 'w') as myfile:
-            wr = csv.writer(myfile)
-            wr.writerow(['KEYWORDS'])
-            for i in common_words:
-                wr.writerows([[i]])
-        return path
+        tagme_tax_df = pd.DataFrame(common_words, columns=['KEYWORDS'])
+        return tagme_tax_df
     except BaseException:
         logging.info("Keywords cannot be extracted")
+
+
+def getTaxonomy(DBpedia_cat):
+    sparql = SPARQLWrapper("http://dbpedia.org/sparql")
+    sparql.setQuery("select ?value where { <http://dbpedia.org/resource/Category:"+DBpedia_cat.replace(" ","_")+"> skos:broader{0,4} ?value }")
+    sparql.setReturnFormat(JSON)
+    try:
+        results = sparql.query().convert()
+        dbpedia_prefix_cat=[]
+        for result in results["results"]["bindings"]:
+            dbpedia_prefix_cat.append(str((result['value']['value'])))
+    except BaseException:
+        dbpedia_prefix_cat = []
+    return(dbpedia_prefix_cat)
+
+
+def checkSubject(dbpedia_prefix_cat, subject):
+    subject_paths = ['http://dbpedia.org/resource/Category:'+i for i in subject]
+    return int(bool(sum([1 if i in dbpedia_prefix_cat else 0 for i in subject_paths ])))
+
+
+def checkSubjectPartial(dbpedia_prefix_cat, subject):
+    subject_paths = ['http://dbpedia.org/resource/Category:'+i for i in subject]
+    return int(bool(sum([int(any([1 if ((i in j) or (j in i)) else 0 for j in dbpedia_prefix_cat])) for i in subject_paths ])))
+
+
+def keyword_filter(tagme_response_df, Path_to_corpus, Path_to_category_lookup, Subject, update_corpus, filter_score_val, num_keywords):
+    corpus_lookup_filename = os.path.join(Path_to_corpus, Subject + ".csv")
+    if not os.path.exists(os.path.dirname(corpus_lookup_filename)):
+        try:
+            os.makedirs(os.path.dirname(corpus_lookup_filename))
+        except OSError as exc:  # Guard against race condition
+            if exc.errno != errno.EEXIST:
+                raise
+    if os.path.isfile(corpus_lookup_filename):
+        lookup_df = pd.read_csv(os.path.join(Path_to_corpus, Subject + ".csv"))
+    else:
+        lookup_df = pd.DataFrame({'KEYWORDS': [], 'dbpedia_score': []})
+        lookup_df.to_csv(corpus_lookup_filename)
+    keyword_df = pd.DataFrame({'KEYWORDS': [], 'dbpedia_score': []})
+    for ind in range(len(tagme_response_df)):
+        keyword = tagme_response_df['spot'][ind]
+
+        if keyword in list(lookup_df['KEYWORDS']):
+            lookup_df = lookup_df[lookup_df['KEYWORDS'] == keyword]
+            relatedness = lookup_df.iloc[0]['dbpedia_score']
+            score_df = pd.DataFrame({'KEYWORDS': [keyword], 'dbpedia_score': [relatedness]})
+        else:
+            with open(Path_to_category_lookup, 'r') as stream:
+                subject_ls = yaml.load(stream)[Subject]
+
+            try:
+                dbpedia_categories = tagme_response_df['dbpedia_categories'][ind]
+                count = 0
+                for cat in dbpedia_categories:
+                    dbpedia_prefix_cat = getTaxonomy(cat)
+                    status = checkSubject(dbpedia_prefix_cat, subject_ls)    # yaml file read
+                    count += status
+
+                relatedness = float(count)/float(len(dbpedia_categories))
+                score_df = pd.DataFrame({'KEYWORDS':[keyword],'dbpedia_score':[relatedness]})
+            except BaseException:
+                pass
+        keyword_df = keyword_df.append(score_df,ignore_index=True)
+
+    # preprocessing
+    keyword_df['KEYWORDS'] = [str(x).lower() for x in list((keyword_df['KEYWORDS'])) if str(x) != 'nan']
+    if update_corpus:
+            corpus_update_df = keyword_df.drop_duplicates('KEYWORDS')
+            corpus_update_df = corpus_update_df.dropna()
+            with open(corpus_lookup_filename, 'a') as f:
+                corpus_update_df.to_csv(f, header=False)
+    if filter_score_val:
+        try:
+            keyword_df = keyword_df[keyword_df['dbpedia_score'] >= float(filter_score_val)]  ### from yaml#filtered_keyword_df
+        except BaseException:
+            print("Error: Invalid filter_score_val. Unable to filter. ")
+    if num_keywords:
+        try:
+            keyword_df = keyword_df.sort_values('dbpedia_score', ascending = [False]).iloc[0:int(num_keywords)]
+        except BaseException:
+            print("Error: Invalid num_keywords. Unable to filter. ")
+    #keyword_relatedness_df.iloc[0:4]['KEYWORDS'].to_csv(Path_to_keywords + "KEYWORDS.csv") 
+
+    return keyword_df
 
 
 def keyword_extraction_parallel(
@@ -1095,16 +1175,22 @@ def keyword_extraction_parallel(
     print("***Extract keywords***:", extract_keywords)
     print("***Filter criteria:***", filter_criteria)
     path_to_id = os.path.join(content_to_text_path, dir)
+    content_info_json_loc = os.path.join(path_to_id, "ML_content_info.json")
+    if os.path.exists(content_info_json_loc):
+        with open(content_info_json_loc, "r") as json_loc:
+            content_info = json.load(json_loc)
+        subject = content_info["domain"]
     path_to_cid_transcript = os.path.join(
-        content_to_text_path, dir, "enriched_text.txt")
-    keywords = os.path.join(content_to_text_path, dir, "keywords")
-    path_to_keywords = os.path.join(
-        keywords, extract_keywords + "_" + filter_criteria)
+        path_to_id, "enriched_text.txt")
     path_to_saved_keywords = ""
+    #keywords = os.path.join(content_to_text_path, dir, "keywords")
+    path_to_keywords = os.path.join(
+        content_to_text_path, dir, "keywords", extract_keywords + "_" + filter_criteria)
     if os.path.isfile(path_to_cid_transcript):
         logging.info("Transcript present for cid: {0}".format(dir))
         try:
             if os.path.getsize(path_to_cid_transcript) > 0:
+                os.makedirs(path_to_keywords)
                 print("Path to transcripts ", path_to_cid_transcript)
                 print("Running keyword extraction for {0}".format(
                     path_to_cid_transcript))
@@ -1113,40 +1199,11 @@ def keyword_extraction_parallel(
                 if extract_keywords == "tagme" and filter_criteria == "none":
                     print("Tagme keyword extraction is running for {0}".format(
                         path_to_cid_transcript))
-                    path_to_saved_keywords = get_tagme_longtext(
-                        path_to_cid_transcript, path_to_keywords)
+                    tagme_df = get_tagme_spots(path_to_cid_transcript)
+                    path_to_saved_keywords = os.path.join(path_to_keywords, "keywords.csv")
+                    tagme_df.to_csv(path_to_saved_keywords, index=False, encoding='utf-8')
                     logging.info(
                         "Path to tagme tokens is {0}".format(path_to_saved_keywords))
-
-                elif extract_keywords == "text_token" and filter_criteria == "none":
-                    print("Text tokens extraction running for {0}".format(
-                        path_to_cid_transcript))
-                    path_to_saved_keywords = custom_tokenizer(
-                        path_to_cid_transcript, path_to_keywords)
-                    print("Path to text tokens is {0}".format(
-                        path_to_saved_keywords))
-
-                elif extract_keywords == "text_token" and filter_criteria == "taxonomy":
-                    print("Text tokens intersection taxonomy running for {0}".format(
-                        path_to_cid_transcript))
-                    if not os.path.exists(
-                        os.path.join(
-                            keywords,
-                            "text_token_none")):
-                        path_to_text_tokens = custom_tokenizer(
-                            path_to_cid_transcript, os.path.join(
-                                keywords, "text_token"))
-                    else:
-                        path_to_text_tokens = os.path.join(keywords, "text_token")
-                    clean_keywords = map(get_words, list(taxonomy["Keywords"]))
-                    clean_keywords = map(clean_string_list, clean_keywords)
-                    flat_list = [item for sublist in list(
-                        clean_keywords) for item in sublist]
-                    taxonomy_keywords_set = set([cleantext(i) for i in flat_list])
-                    path_to_saved_keywords = text_token_taxonomy_intersection_keywords(
-                        taxonomy_keywords_set, path_to_text_tokens, path_to_keywords)
-                    print("Path to text tokens intersection taxonomy is {0}".format(
-                        path_to_saved_keywords))
 
                 elif extract_keywords == "tagme" and filter_criteria == "taxonomy":
                     print("Tagme intersection taxonomy keyword extraction is running for {0}".format(
@@ -1156,11 +1213,39 @@ def keyword_extraction_parallel(
                     flat_list = [item for sublist in list(
                         clean_keywords) for item in sublist]
                     taxonomy_keywords_set = set([cleantext(i) for i in flat_list])
-                    path_to_tagme_keywords = get_tagme_longtext(
-                        path_to_cid_transcript, os.path.join(keywords, "tagme"))
-                    path_to_saved_keywords = tagme_taxonomy_intersection_keywords(
-                        taxonomy_keywords_set, path_to_tagme_keywords, path_to_keywords)
+                    tagme_df = get_tagme_spots(path_to_cid_transcript)
+                    path_to_saved_keywords = os.path.join(path_to_keywords, "keywords.csv")
+                    tagme_taxonomy_df = tagme_taxonomy_intersection_keywords(
+                        tagme_df, taxonomy_keywords_set)
+                    tagme_taxonomy_df.to_csv(path_to_saved_keywords, index=False, encoding='utf-8')
                     print("Path to tagme taxonomy intersection tokens is {0}".format(
+                        path_to_saved_keywords))
+
+                elif extract_keywords == "text_token" and filter_criteria == "none":
+                    print("Text tokens extraction running for {0}".format(
+                        path_to_cid_transcript))
+                    text_df = custom_tokenizer(
+                        path_to_cid_transcript)
+                    path_to_saved_keywords = os.path.join(path_to_keywords, "keywords.csv")
+                    text_df.to_csv(path_to_saved_keywords, index=False, encoding='utf-8')
+                    print("Path to text tokens is {0}".format(
+                        path_to_saved_keywords))
+
+                elif extract_keywords == "text_token" and filter_criteria == "taxonomy":
+                    print("Text tokens intersection taxonomy running for {0}".format(
+                        path_to_cid_transcript))
+                    text_df = custom_tokenizer(
+                        path_to_cid_transcript)
+                    clean_keywords = map(get_words, list(taxonomy["Keywords"]))
+                    clean_keywords = map(clean_string_list, clean_keywords)
+                    flat_list = [item for sublist in list(
+                        clean_keywords) for item in sublist]
+                    taxonomy_keywords_set = set([cleantext(i) for i in flat_list])
+                    text_tax_df = text_token_taxonomy_intersection_keywords(
+                        text_df, taxonomy_keywords_set)
+                    path_to_saved_keywords = os.path.join(path_to_keywords, "keywords.csv")
+                    text_tax_df.to_csv(path_to_saved_keywords, index=False, encoding='utf-8')
+                    print("Path to text tokens intersection taxonomy is {0}".format(
                         path_to_saved_keywords))
 
                 else:
@@ -1471,3 +1556,42 @@ def agg_precision_from_dictionary(predicted_dct, observed_dct, window_len):
                 count += 1
         window[i] = 100.0 * count / len(predicted_val_list)
     return pd.DataFrame(window, columns=['Percent'])
+
+
+def CustomDateFormater(**kwargs):
+    import datetime
+    from datetime import date, timedelta
+    expected_args = ['x','fileloc', 'datepattern']
+    kwargsdict = dict()
+    for key in kwargs.keys():
+        if key in expected_args:
+            kwargsdict[key] = kwargs[key]
+        else:
+            raise Exception("Unexpected Argument")
+    if kwargsdict['x']:
+        x = kwargsdict['x']
+        if x == "today":
+            dateobj = date.today()
+        elif x == "yesterday":
+            dateobj = date.today()-timedelta(1)
+        elif x == "lastrun":
+            list_of_files = glob.glob(kwargsdict['fileloc']+"/*")
+            timestr_files = [file for file in list_of_files if is_date(os.path.split(file)[1])]
+            latest_file = max(timestr_files, key=os.path.getctime).split("/")[-1]
+            dateobj = datetime.datetime.strptime(latest_file, kwargsdict['datepattern'])
+        elif isinstance(x, str):
+            dateobj = datetime.datetime.strptime(x, kwargsdict['datepattern'])
+        elif isinstance(x, datetime.date):
+            dateobj = x
+        return dateobj.strftime('%Y-%m-%dT%H:%M:%S.000+0530')
+    else:
+        raise Exception("Require atleast 1 argument.")
+
+
+def findDate(x_date, DS_DATA_HOME):
+    if x_date in ['today', 'yesterday']:
+        return CustomDateFormater(x=x_date)
+    elif x_date == "lastrun":
+        return CustomDateFormater(x=x_date, fileloc=DS_DATA_HOME, datepattern='%Y%m%d-%H%M%S')
+    else:
+        return CustomDateFormater(x=x_date, datepattern="%d-%m-%Y")

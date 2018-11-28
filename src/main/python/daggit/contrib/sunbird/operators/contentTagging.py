@@ -22,30 +22,83 @@ from ..operators.contentTaggingUtils import merge_json
 from ..operators.contentTaggingUtils import strip_word, get_words
 from ..operators.contentTaggingUtils import dictionary_merge, get_sorted_list
 from ..operators.contentTaggingUtils import custom_listPreProc
-from ..operators.contentTaggingUtils import df_feature_check
+from ..operators.contentTaggingUtils import df_feature_check, identify_contentType
 from ..operators.contentTaggingUtils import precision_from_dictionary
 from ..operators.contentTaggingUtils import agg_precision_from_dictionary
-
+from ..operators.contentTaggingUtils import CustomDateFormater, findDate
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from elasticsearch import Elasticsearch
 
 
-class ContentToText(BaseOperator):
+class ContentmetaCreation(BaseOperator):
 
     @property
     def inputs(self):
-        return {"pathTocontentMeta": Pandas_Dataframe(self.node.inputs[0])
+        return {"DS_DATA_HOME": ReadDaggitTask_Folderpath(
+                self.node.inputs[0]),
+                "pathTotriggerJson": ReadDaggitTask_Folderpath(
+                self.node.inputs[1])
                 }
 
     @property
     def outputs(self):
+        return {"pathTocontentMeta": File_Txt(
+                self.node.outputs[0])}
+
+    def run(self, copy_to, file_name):
+        DS_DATA_HOME = self.inputs["DS_DATA_HOME"].read_loc()
+        pathTotriggerJson = self.inputs["pathTotriggerJson"].read_loc()
+        timestr = time.strftime("%Y%m%d-%H%M%S")
+        contentmeta_creation_path = os.path.join(
+            DS_DATA_HOME, timestr, "contentmeta_creation")
+        with open(pathTotriggerJson) as json_file:
+            data = json.load(json_file)
+
+        data["request"]['filters']['lastUpdatedOn']['min'] = findDate(data["request"]['filters']['lastUpdatedOn']['min'], DS_DATA_HOME)
+        data["request"]['filters']['lastUpdatedOn']['max'] = findDate(data["request"]['filters']['lastUpdatedOn']['max'], DS_DATA_HOME)
+        url = "https://api.ekstep.in/composite/v3/search"
+        headers = {
+            'content-type': "application/json",
+            'authorization': "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiIyMzJkZDA5MDY0MGU0ZGM3YTA5OTZkM2U3OWI3MmY3NCIsImlhdCI6MTUwNjU4NjQyMiwiZXhwIjoxNTM4MTIyNDIyLCJhdWQiOiIiLCJzdWIiOiJhZGFyc2FzQGlsaW1pLmluIn0.42IE6iBXYQDpG7ymDrpnIPapRz1AWvNqGESuo8NgVOg",
+            'cache-control': "no-cache",
+            'postman-token': "6252f362-2e2d-0f90-26b5-87345f599f72"
+            }
+        response = requests.request("POST", url, headers=headers, json=data).json()
+        content_meta = pd.DataFrame(response['result']['content'])
+        if not os.path.exists(contentmeta_creation_path):
+            os.makedirs(contentmeta_creation_path)
+        if not "derived_content_type" in list(content_meta.columns):
+
+            for artifact_url in content_meta["artifactUrl"]:
+                try:
+                    content_meta["derived_contentType"] = identify_contentType(artifact_url)
+                except BaseException:
+                    pass
+        content_meta = content_meta[pd.notnull(content_meta['derived_contentType'])]
+        
+        content_meta.to_csv(os.path.join(contentmeta_creation_path, file_name + ".csv"))
+        if copy_to:
+            try:
+                content_meta.to_csv(os.path.join(copy_to, file_name)+".csv")
+            except IOError:
+                print("Error: Invalid copy_to location")
+        self.outputs["pathTocontentMeta"].write(os.path.join(contentmeta_creation_path, file_name + ".csv"))
+
+
+class ContentToText(BaseOperator):
+
+    @property
+    def inputs(self):
         return {
-            "DS_DATA_HOME": ReadDaggitTask_Folderpath(
-                self.node.outputs[0]),
-            "timestamp_folder": File_Txt(
-                self.node.outputs[1])}
+                "pathTocontentMeta": File_Txt(self.node.inputs[0])
+                }
+
+    @property
+    def outputs(self):
+        return {"timestamp_folder": File_Txt(
+                self.node.outputs[0])}
 
     def run(
             self,
@@ -54,14 +107,13 @@ class ContentToText(BaseOperator):
             num_of_processes,
             subset_contentMeta_by,
             content_type):
-        content_meta = self.inputs["pathTocontentMeta"].read()
-        DS_DATA_HOME = self.outputs["DS_DATA_HOME"].read_loc()
-        print("****DS_DATA_HOME: ", DS_DATA_HOME)
+        path_to_content_meta = self.inputs["pathTocontentMeta"].read()
+        content_meta = pd.read_csv(path_to_content_meta)
         print(self.outputs["timestamp_folder"].location_specify())
         oldwd = os.getcwd()
         contentMeta_mandatory_fields = [
             'artifactUrl',
-            'content_type',
+            'derived_contentType',
             'downloadUrl',
             'gradeLevel',
             'identifier',
@@ -69,9 +121,10 @@ class ContentToText(BaseOperator):
             'language',
             'subject']
         assert df_feature_check(content_meta, contentMeta_mandatory_fields)
-        timestr = time.strftime("%Y%m%d-%H%M%S")
+        path_to_timestamp_folder = os.path.split(os.path.split(path_to_content_meta)[0])[0]
+        timestr = os.path.split(path_to_timestamp_folder)[1]
         content_to_text_path = os.path.join(
-            DS_DATA_HOME, timestr, "content_to_text")
+            path_to_timestamp_folder, "content_to_text")
         # content dump:
         if not os.path.exists(content_to_text_path):
             os.makedirs(content_to_text_path)
@@ -104,7 +157,7 @@ class ContentToText(BaseOperator):
                 range_start, range_end))
         logging.info("time started: {0}".format(start))
         # subset contentMeta:
-        content_meta = content_meta[content_meta["content_type"].isin(
+        content_meta = content_meta[content_meta["derived_contentType"].isin(
             subset_contentMeta_by.split(", "))]
         content_meta.reset_index(drop=True, inplace=True)
         print("Number of processes: ", num_of_processes)
@@ -120,14 +173,8 @@ class ContentToText(BaseOperator):
         print(result)
         os.chdir(oldwd)
         print("Current directory c2t: ", os.getcwd())
-        print(
-            "latest_folder_c2t:", max(
-                glob.glob(
-                    os.path.join(
-                        DS_DATA_HOME, '*/')), key=os.path.getmtime))
-        latest_folders = glob.glob(os.path.join(DS_DATA_HOME, '*/'))
-        self.outputs["timestamp_folder"].write(
-            max(latest_folders, key=os.path.getmtime))
+        print("timestamp_folder path:", path_to_timestamp_folder)
+        self.outputs["timestamp_folder"].write(path_to_timestamp_folder)
 
 
 class KeywordExtraction(BaseOperator):
@@ -149,13 +196,13 @@ class KeywordExtraction(BaseOperator):
         assert extract_keywords == "tagme" or extract_keywords == "text_token"
         assert filter_criteria == "none" or filter_criteria == "taxonomy" or filter_criteria == "dbpedia"
         taxonomy = self.inputs["pathTotaxonomy"].read()
-        category_lookup_yaml = self.inputs["categoryLookup"].read_loc()
+        path_to_category_lookup = self.inputs["categoryLookup"].read_loc()
         timestamp_folder = self.inputs["timestamp_folder"].read()
-        r = re.search('(.*)/', timestamp_folder)
-        timestr = os.path.split(r.group(1))[1]
+        #root_path = os.path.split(timestamp_folder)[0]
+        timestr = os.path.split(timestamp_folder)[1]
         print("****timestamp folder:", timestamp_folder)
-        print("****categorylookup yaml:", category_lookup_yaml)
-        content_to_text_path = timestamp_folder + "content_to_text"
+        print("****categorylookup yaml:", path_to_category_lookup)
+        content_to_text_path = os.path.join(timestamp_folder, "content_to_text")
         print("content_to_text path:", content_to_text_path)
         if not os.path.exists(content_to_text_path):
             logging.info("No such directory as: ", content_to_text_path)
@@ -174,8 +221,8 @@ class KeywordExtraction(BaseOperator):
                     dir for dir in os.listdir(content_to_text_path)])
             print(results)
             print("path to content keywords:", max(glob.glob(
-                os.path.join(timestamp_folder[:-1], 'content_to_text'))))
-            c2t_path = os.path.join(timestamp_folder[:-1], 'content_to_text')
+                os.path.join(timestamp_folder, 'content_to_text'))))
+            c2t_path = os.path.join(timestamp_folder, 'content_to_text')
             self.outputs["path_to_contentKeywords"].write(max(glob.glob(
                 c2t_path), key=os.path.getmtime))
 
@@ -192,11 +239,10 @@ class WriteToElasticSearch(BaseOperator):
 
     def run(self):
         timestamp_folder = self.inputs["timestamp_folder"].read()
-        r = re.search('(.*)/', timestamp_folder)
-        timestr = os.path.split(r.group(1))[1]
+        timestr = os.path.split(timestamp_folder)[1]
         epoch_time = time.mktime(time.strptime(timestr, "%Y%m%d-%H%M%S"))
         es_request = requests.get('http://localhost:9200')
-        content_to_textpath = timestamp_folder + "/content_to_text"
+        content_to_textpath = os.path.join(timestamp_folder, "content_to_text")
         for cid in os.listdir(content_to_textpath):
             merge_json_list = []
             json_file = findFiles(content_to_textpath, ["json"])
@@ -232,12 +278,12 @@ class CorpusCreation(BaseOperator):
                 }
 
     def run(self, keyword_folder_name, update_corpus, word_preprocess):
-        keyword_folder_ls = ["tagme_none", "txt_token_none", "tagme_taxonomy"]
+        keyword_folder_ls = ["tagme_none", "txt_token_none", "tagme_taxonomy", "tagme_dbpedia"]
         if keyword_folder_name in keyword_folder_ls:
             taxonomy = self.inputs["pathTotaxonomy"].read()
             path_to_contentKeys = self.inputs["path_to_contentKeywords"].read()
             keyword_folder = os.path.split(path_to_contentKeys)[0]
-            corpus_creation_folder = keyword_folder + "/corpus_creation"
+            corpus_creation_folder = os.path.join(keyword_folder, "corpus_creation")
             if not os.path.exists(corpus_creation_folder):
                 os.makedirs(corpus_creation_folder)
             root_path = os.path.split(os.path.split(path_to_contentKeys)[0])[0]
@@ -304,7 +350,7 @@ class ContentTaxonomyScoring(BaseOperator):
 
     @property
     def inputs(self):
-        return {"pathTocontentMeta": Pandas_Dataframe(self.node.inputs[0]),
+        return {"pathTocontentMeta": File_Txt(self.node.inputs[0]),
                 "pathTotaxonomy": Pandas_Dataframe(self.node.inputs[1]),
                 "root_path": File_Txt(self.node.inputs[2]),
                 "path_to_corpus": File_Txt(self.node.inputs[3])
@@ -330,17 +376,18 @@ class ContentTaxonomyScoring(BaseOperator):
         contentmeta_level = filter_by["contentMeta"]["alignment_depth"]
         taxonomy_filterby_column = filter_by["taxonomy"]["column"]
         taxonomy_level = filter_by["taxonomy"]["alignment_depth"]
-        content_meta = self.inputs["pathTocontentMeta"].read()
+        content_meta_loc = self.inputs["pathTocontentMeta"].read()
         taxonomy = self.inputs["pathTotaxonomy"].read()
         root_path = self.inputs["root_path"].read()
         corpus_folder = self.inputs["path_to_corpus"].read()
+        content_meta = pd.read_csv(content_meta_loc)
         # check for the presence of corpus folder:
         if not os.path.exists(corpus_folder):
             logging.info("No corpus folder created")
         else:
             vocab_loc = corpus_folder + "/vocab"
             vocabulary = load_obj(vocab_loc)
-        mapping_folder = root_path + "/content_taxonomy_scoring"
+        mapping_folder = os.path.join(root_path, "content_taxonomy_scoring")
 
         if not os.path.exists(mapping_folder):
             os.makedirs(mapping_folder)
@@ -594,9 +641,9 @@ class PredictTag(BaseOperator):
 
         timestamp_folder = self.inputs["path_to_timestampFolder"].read()
         logging.info("PT_START")
-        output = timestamp_folder + "/content_taxonomy_scoring"
+        output = os.path.join(timestamp_folder, "content_taxonomy_scoring")
         print("output:", output)
-        prediction_folder = timestamp_folder + "/prediction"
+        prediction_folder = os.path.join(timestamp_folder, "prediction")
         logging.info("PT_PRED_FOLDER_CREATED: {0}".format(prediction_folder))
         logging.info("PT_WINDOW: {0}". format(window))
         dist_dict_list = [
@@ -632,7 +679,7 @@ class GenerateObservedTag(BaseOperator):
 
     @property
     def inputs(self):
-        return {"pathTocontentMeta": Pandas_Dataframe(self.node.inputs[0]),
+        return {"pathTocontentMeta": File_Txt(self.node.inputs[0]),
                 "pathTotaxonomy": Pandas_Dataframe(self.node.inputs[1]),
                 "path_to_timestampFolder1": File_Txt(self.node.inputs[2])
                 }
@@ -651,7 +698,9 @@ class GenerateObservedTag(BaseOperator):
 
     def run(self, window, level, tax_known_tag, content_known_tag):
 
-        content_meta = self.inputs["pathTocontentMeta"].read()
+        content_meta_loc = self.inputs["pathTocontentMeta"].read()
+        content_meta = pd.read_csv(content_meta_loc)
+        content_meta = content_meta[pd.notnull(content_meta[content_known_tag])]
         taxonomy = self.inputs["pathTotaxonomy"].read()
         timestamp_folder = self.inputs["path_to_timestampFolder1"].read()
         # mapping
@@ -666,11 +715,11 @@ class GenerateObservedTag(BaseOperator):
                              for k, v in level_mapping.items())
         observed_col = dict((k, self.getGradedigits(v))
                             for k, v in observed_col.items())
-        output = timestamp_folder + "/content_taxonomy_scoring"
+        output = os.path.join(timestamp_folder, "content_taxonomy_scoring")
         if not os.path.exists(output):
             logging.info("Taxonomy mapping not performed")
         else:
-            observed_tag_output = timestamp_folder + "/generate_observed_tags"
+            observed_tag_output = os.path.join(timestamp_folder, "generate_observed_tags")
             dist_dict_list = [
                 load_obj(
                     os.path.join(
@@ -741,7 +790,7 @@ class Evaluation(BaseOperator):
         observed_tag = load_obj(path_to_observedtag[:-4])
         predicted_tag_known = load_obj(path_to_predictedtag[:-4])
         evaln_output = os.path.join(os.path.split(timestamp_folder)[
-                                    0] + "/evaluation", timestr)
+                                    0], "evaluation", timestr)  # use os.basepath()
 
         if bool(observed_tag) is False:
             logging.info("Observed tag is empty, No evaluation performed")
