@@ -33,7 +33,7 @@ pydub
 mutagen
 PyPDF2
 speechRecognition
-python-Levenshtein
 plotly
 natsort
 SPARQLWrapper
+elasticsearch

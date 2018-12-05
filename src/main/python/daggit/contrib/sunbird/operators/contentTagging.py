@@ -1,7 +1,6 @@
 import multiprocessing
 import time
 import os
-import re
 import glob
 import json
 import requests
@@ -77,7 +76,7 @@ class ContentmetaCreation(BaseOperator):
                 except BaseException:
                     pass
         content_meta = content_meta[pd.notnull(content_meta['derived_contentType'])]
-        
+
         content_meta.to_csv(os.path.join(contentmeta_creation_path, file_name + ".csv"))
         if copy_to:
             try:
@@ -183,8 +182,8 @@ class KeywordExtraction(BaseOperator):
     def inputs(self):
         return {"pathTotaxonomy": Pandas_Dataframe(self.node.inputs[0]),
                 "categoryLookup": ReadDaggitTask_Folderpath(self.node.inputs[1]),
-                "timestamp_folder": File_Txt(self.node.inputs[2])
-
+                "timestamp_folder": File_Txt(self.node.inputs[2]),
+                "pathTocorpus": ReadDaggitTask_Folderpath(self.node.inputs[3])
                 }
 
     @property
@@ -192,13 +191,13 @@ class KeywordExtraction(BaseOperator):
         return {"path_to_contentKeywords": File_Txt(self.node.outputs[0])
                 }
 
-    def run(self, extract_keywords, filter_criteria):
+    def run(self, extract_keywords, filter_criteria, update_corpus, filter_score_val, num_keywords):
         assert extract_keywords == "tagme" or extract_keywords == "text_token"
         assert filter_criteria == "none" or filter_criteria == "taxonomy" or filter_criteria == "dbpedia"
         taxonomy = self.inputs["pathTotaxonomy"].read()
         path_to_category_lookup = self.inputs["categoryLookup"].read_loc()
+        path_to_corpus = self.inputs["pathTocorpus"].read_loc()
         timestamp_folder = self.inputs["timestamp_folder"].read()
-        #root_path = os.path.split(timestamp_folder)[0]
         timestr = os.path.split(timestamp_folder)[1]
         print("****timestamp folder:", timestamp_folder)
         print("****categorylookup yaml:", path_to_category_lookup)
@@ -210,12 +209,17 @@ class KeywordExtraction(BaseOperator):
             logging.info('------Transcripts to keywords extraction-----')
             pool = multiprocessing.Pool(processes=4)
             keywordExtraction_partial = partial(
-                keyword_extraction_parallel,
-                timestr=timestr,
-                content_to_text_path=content_to_text_path,
-                taxonomy=taxonomy,
-                extract_keywords=extract_keywords,
-                filter_criteria=filter_criteria)
+               keyword_extraction_parallel,
+               timestr=timestr,
+               content_to_text_path=content_to_text_path,
+               taxonomy=taxonomy,
+               extract_keywords=extract_keywords,
+               filter_criteria=filter_criteria,
+               path_to_corpus=path_to_corpus,
+               path_to_category_lookup=path_to_category_lookup,
+               update_corpus=update_corpus,
+               filter_score_val=filter_score_val,
+               num_keywords=num_keywords)
             results = pool.map(
                 keywordExtraction_partial, [
                     dir for dir in os.listdir(content_to_text_path)])
@@ -468,10 +472,12 @@ class ContentTaxonomyScoring(BaseOperator):
                 content_keywords_list,
                 'stem_lem',
                 DELIMITTER)
+            print("*****content keyword list:", content_keywords_list)
             content_meta['Content_keywords'] = content_keywords_list
             content_meta = content_meta.iloc[[i for i, e in enumerate(
-                content_meta['Content_keywords']) if (e != [] and len(e) > 5)]]
+                content_meta['Content_keywords']) if (e != []) and len(e) > 5]]
             content_meta = content_meta.reset_index(drop=True)
+            print("******filtered content meta: ", content_meta)
             print(
                 "contentmeta domains:", set(
                     content_meta[contentmeta_filterby_column]))
@@ -526,10 +532,8 @@ class ContentTaxonomyScoring(BaseOperator):
                             # rewrite the nested for loop:-(optimize the code)
                             for row_ind in range(dist_df.shape[0]):
                                 for col_ind in range(dist_df.shape[1]):
-                                    content_keywords = list(
-                                        map(strip_word, domain_content_df['Content_keywords'][row_ind], DELIMITTER))
-                                    taxonomy_keywords = list(
-                                        map(strip_word, level_domain_taxonomy_df['Keywords'][col_ind], DELIMITTER))
+                                    content_keywords = [strip_word(i, DELIMITTER) for i in domain_content_df['Content_keywords'][row_ind]]
+                                    taxonomy_keywords = [strip_word(i, DELIMITTER) for i in level_domain_taxonomy_df['Keywords'][col_ind]]
                                     jaccard_index = jaccard_with_phrase(
                                         content_keywords, taxonomy_keywords)
                                     dist_df.iloc[row_ind,
@@ -633,8 +637,7 @@ class PredictTag(BaseOperator):
 
     @property  # how to write to a folder?
     def outputs(self):
-        return {"path_to_timestampFolder1": File_Txt(self.node.outputs[0]),
-                "path_to_predictedTags": File_Txt(self.node.outputs[1])
+        return {"path_to_predictedTags": File_Txt(self.node.outputs[0])
                 }
 
     def run(self, window):
@@ -651,14 +654,15 @@ class PredictTag(BaseOperator):
                 os.path.join(
                     output,
                     path_to_runFolder,
-                    "dist_all")) for path_to_runFolder in os.listdir(output) if os.path.exists(
+                    "domain_level_all")) for path_to_runFolder in os.listdir(output) if os.path.exists(
                 os.path.join(
                     output,
                     path_to_runFolder,
-                    "dist_all.pkl"))]
+                    "domain_level_all.pkl"))]
         dist_dict = dictionary_merge(dist_dict_list)
+        print("dist_dict:", dist_dict)
         if bool(dist_dict) is False:
-            logging.info("Dictionary list is empty. No tags to pedict")
+            logging.info("Dictionary list is empty. No tags to predict")
         else:
             if not os.path.exists(prediction_folder):
                 os.makedirs(prediction_folder)
@@ -669,7 +673,6 @@ class PredictTag(BaseOperator):
                 os.path.join(
                     prediction_folder,
                     "predicted_tags.csv"))
-            self.outputs["path_to_timestampFolder1"].write(timestamp_folder)
             self.outputs["path_to_predictedTags"].write(
                 os.path.join(prediction_folder, "predicted_tags.csv"))
         logging.info("PT_END")
@@ -681,12 +684,12 @@ class GenerateObservedTag(BaseOperator):
     def inputs(self):
         return {"pathTocontentMeta": File_Txt(self.node.inputs[0]),
                 "pathTotaxonomy": Pandas_Dataframe(self.node.inputs[1]),
-                "path_to_timestampFolder1": File_Txt(self.node.inputs[2])
+                "path_to_timestampFolder": File_Txt(self.node.inputs[2])
                 }
 
     @property
     def outputs(self):
-        return {"path_to_timestampFolder2": File_Txt(self.node.outputs[0]),
+        return {"path_to_timestampFolder": File_Txt(self.node.outputs[0]),
                 "path_to_observedtag": File_Txt(self.node.outputs[1]),
                 "path_to_predictedtag": File_Txt(self.node.outputs[2])
                 }
@@ -702,7 +705,7 @@ class GenerateObservedTag(BaseOperator):
         content_meta = pd.read_csv(content_meta_loc)
         content_meta = content_meta[pd.notnull(content_meta[content_known_tag])]
         taxonomy = self.inputs["pathTotaxonomy"].read()
-        timestamp_folder = self.inputs["path_to_timestampFolder1"].read()
+        timestamp_folder = self.inputs["path_to_timestampFolder"].read()
         # mapping
         level_mapping = pd.Series(
             taxonomy[tax_known_tag].values, index=list(
@@ -759,7 +762,7 @@ class GenerateObservedTag(BaseOperator):
                     os.path.join(
                         observed_tag_output,
                         "predicted_tags"))
-                self.outputs["path_to_timestampFolder2"].write(
+                self.outputs["path_to_timestampFolder"].write(
                     timestamp_folder)
                 self.outputs["path_to_observedtag"].write(
                     os.path.join(observed_tag_output, "observed_tags.pkl"))
@@ -771,7 +774,7 @@ class Evaluation(BaseOperator):
 
     @property
     def inputs(self):
-        return {"path_to_timestampFolder2": File_Txt(self.node.inputs[0]),
+        return {"path_to_timestampFolder": File_Txt(self.node.inputs[0]),
                 "path_to_observedtag": File_Txt(self.node.inputs[1]),
                 "path_to_predictedtag": File_Txt(self.node.inputs[2])
                 }
@@ -783,7 +786,7 @@ class Evaluation(BaseOperator):
                 }
 
     def run(self, window):
-        timestamp_folder = self.inputs["path_to_timestampFolder2"].read()
+        timestamp_folder = self.inputs["path_to_timestampFolder"].read()
         path_to_observedtag = self.inputs["path_to_observedtag"].read()
         path_to_predictedtag = self.inputs["path_to_predictedtag"].read()
         timestr = time.strftime("%Y%m%d-%H%M%S")

@@ -6,7 +6,8 @@ inputs:
   pathTotaxonomy: inputs/RevisedTaxonomy.csv
   categoryLookup: inputs/category_lookup.yaml
   pathTotriggerJson: inputs/Trigger_node_ip.json
-  
+  pathTocorpus: inputs/corpus
+
 outputs:
   dummy: /home/DS_DATA_HOME
 
@@ -52,12 +53,15 @@ graph:
           ecml_index_to_text: none
 
   - node_name: keyword_extraction
-    inputs: [pathTotaxonomy, categoryLookup, content_to_text.timestamp_folder]
+    inputs: [pathTotaxonomy, categoryLookup, content_to_text.timestamp_folder, pathTocorpus]
     outputs: [pathTocontentKeywords]
     operation: contentTagging.KeywordExtraction 
     arguments: 
       extract_keywords: tagme
-      filter_criteria: none
+      filter_criteria: dbpedia
+      update_corpus: 0
+      filter_score_val: 0.4
+      num_keywords: 5
 
   - node_name: write_to_elastic_search
     inputs: [content_to_text.timestamp_folder]
@@ -69,7 +73,7 @@ graph:
     outputs: [root_path, path_to_corpus]
     operation: contentTagging.CorpusCreation
     arguments:
-      keyword_folder_name: tagme_none
+      keyword_folder_name: tagme_dbpedia
       update_corpus: True
       word_preprocess: 
          delimitter: "_"
@@ -80,7 +84,7 @@ graph:
     outputs: [path_to_timestampFolder, path_to_distMeasure, path_to_domain_level]
     operation: contentTagging.ContentTaxonomyScoring
     arguments:
-      keyword_extract_filter_by: tagme_none
+      keyword_extract_filter_by: tagme_dbpedia
       phrase_split: True
       distanceMeasure: jaccard
       embedding_method: none
@@ -95,14 +99,14 @@ graph:
 
   - node_name: predict_tag
     inputs: [content_taxonomy_scoring.path_to_timestampFolder]
-    outputs: [path_to_timestampFolder1, path_to_predictedTags]
+    outputs: [path_to_predictedTags]
     operation: contentTagging.PredictTag
     arguments:
       window: 5
 
   - node_name: generate_observed_tag
-    inputs: [contentmeta_creation.pathTocontentMeta, pathTotaxonomy, predict_tag.path_to_timestampFolder1, predict_tag.path_to_predictedTags]
-    outputs: [path_to_timestampFolder2, path_to_observedtag, path_to_predictedtag]
+    inputs: [contentmeta_creation.pathTocontentMeta, pathTotaxonomy, content_taxonomy_scoring.path_to_timestampFolder]
+    outputs: [path_to_timestampFolder, path_to_observedtag, path_to_predictedtag]
     operation: contentTagging.GenerateObservedTag
     arguments:
       window: 5
@@ -111,7 +115,7 @@ graph:
       content_known_tag: gradeLevel
 
   - node_name: evaluation
-    inputs: [generate_observed_tag.path_to_timestampFolder2, generate_observed_tag.path_to_observedtag, generate_observed_tag.path_to_predictedtag]
+    inputs: [generate_observed_tag.path_to_timestampFolder, generate_observed_tag.path_to_observedtag, generate_observed_tag.path_to_predictedtag]
     outputs: [path_to_agg_precision, path_to_nonagg_precision]
     operation: contentTagging.Evaluation
     arguments:

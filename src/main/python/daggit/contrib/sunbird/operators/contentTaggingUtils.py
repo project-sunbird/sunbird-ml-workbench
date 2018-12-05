@@ -56,14 +56,28 @@ pun_list = list(string.punctuation)
 
 
 def language_detection(text):
+    """
+    This function will take in an enriched text as input and
+    use google translate API to detect language of the text and returns it
+
+    Parameters
+    ----------
+    arg1: type
+    description
+
+    Returns
+    -------
+    result: type 
+    description
+    """
     translate_client = translate.Client()
     result = translate_client.detect_language(text)
     return result["language"]
 
 
-def is_date(string):
+def is_date(date_string):
     try:
-        parse(string)
+        parse(date_string)
         return True
     except ValueError:
         return False
@@ -159,7 +173,8 @@ def merge_json(merge_json_loc_list):
                     print(merge_dict.get(k))
                     merge_dict.update({k: dictionary.get(k)})
                 except BaseException:
-                    raise Exception("Trying to merge keys with different values")
+                    print("Trying to merge keys with different values")
+                    pass
             else:
                 merge_dict.update({k: dictionary.get(k)})
     return merge_dict
@@ -339,7 +354,7 @@ def strip_word(word, delimitter):
     result: str
     Processed string
     """
-    delimitters = [" ", ",", "_", "-", ".", "/"] + \
+    delimitters = ["___", "__", " ", ",", "_", "-", ".", "/"] + \
         list(set(string.punctuation))
     for lim in delimitters:
         word = word.replace(lim, delimitter)
@@ -347,7 +362,7 @@ def strip_word(word, delimitter):
 
 
 def identify_contentType(url):
-    extensions = ['mp3', 'wav', 'jpeg', 'zip', 'jpg', 'mp4', 'webm', 'ecar', 'mp3', 'jpeg', 'jpg', 'wav', 'png']
+    extensions = ['mp3', 'wav', 'jpeg', 'zip', 'jpg', 'mp4', 'webm', 'ecar', 'wav', 'png']
     if ('youtu.be' in url) or ('youtube' in url):
         return "youtube"
     elif url.endswith('pdf'):
@@ -845,87 +860,87 @@ def multimodal_text_enrichment(
     url = content_meta[downloadField][index]
     logging.info("MTT_START_FOR_URL {0}".format(url))
     # start text extraction pipeline:
-    # try:
-    path_to_id = download_to_local(
-        type_of_url, url, content_to_text_path, id_name)
-    path_to_assets = os.path.join(path_to_id, "assets")
-    path_to_audio = video_to_speech(
-        content_type[type_of_url]["video_to_speech"],
-        path_to_assets)
-    print(path_to_audio)
-    if len(findFiles(path_to_assets, ["mp3"])) > 0:
-        audio = AudioSegment.from_mp3(findFiles(path_to_assets, ["mp3"])[0])
-        duration = round(len(audio) / 1000)
-    else:
-        duration = 0
-    textExtraction_pipeline = [
-        (speech_to_text,
-         (content_type[type_of_url]["speech_to_text"],
-          path_to_assets)),
-        (image_to_text,
-         (content_type[type_of_url]["image_to_text"],
-          path_to_assets)),
-        (pdf_to_text,
-         (content_type[type_of_url]["pdf_to_text"],
-          path_to_assets,
-          url)),
-        (ecml_index_to_text,
-         (content_type[type_of_url]["ecml_index_to_text"],
-          path_to_id))]
-    path_to_transcript = os.path.join(path_to_id, "enriched_text.txt")
-    text = ""
-    for method, param_tuple in textExtraction_pipeline:
-        text += method(*param_tuple)["text"]
-    if os.path.exists(path_to_id):
-        with open(path_to_transcript, "w") as myTextFile:
-            myTextFile.write(text)
-    # num_of_PDFpages = pdf_to_text("none", path_to_assets, url)["no_of_pages"]
-    # Reading pdata
-    airflow_home = os.getenv('AIRFLOW_HOME', os.path.expanduser('~/airflow'))
-    dag_location = os.path.join(airflow_home, 'dags')
-    print("AIRFLOW_HOME: ", dag_location)
-    filename = os.path.join(dag_location, 'graph_location')
-    f = open(filename, "r")
-    pdata = f.read()
-    f.close()
+    try:
+        path_to_id = download_to_local(
+            type_of_url, url, content_to_text_path, id_name)
+        path_to_assets = os.path.join(path_to_id, "assets")
+        path_to_audio = video_to_speech(
+            content_type[type_of_url]["video_to_speech"],
+            path_to_assets)
+        print(path_to_audio)
+        if len(findFiles(path_to_assets, ["mp3"])) > 0:
+            audio = AudioSegment.from_mp3(findFiles(path_to_assets, ["mp3"])[0])
+            duration = round(len(audio) / 1000)
+        else:
+            duration = 0
+        textExtraction_pipeline = [
+            (speech_to_text,
+             (content_type[type_of_url]["speech_to_text"],
+              path_to_assets)),
+            (image_to_text,
+             (content_type[type_of_url]["image_to_text"],
+              path_to_assets)),
+            (pdf_to_text,
+             (content_type[type_of_url]["pdf_to_text"],
+              path_to_assets,
+              url)),
+            (ecml_index_to_text,
+             (content_type[type_of_url]["ecml_index_to_text"],
+              path_to_id))]
+        path_to_transcript = os.path.join(path_to_id, "enriched_text.txt")
+        text = ""
+        for method, param_tuple in textExtraction_pipeline:
+            text += method(*param_tuple)["text"]
+        if os.path.exists(path_to_id):
+            with open(path_to_transcript, "w") as myTextFile:
+                myTextFile.write(text)
+        # num_of_PDFpages = pdf_to_text("none", path_to_assets, url)["no_of_pages"]
+        # Reading pdata
+        airflow_home = os.getenv('AIRFLOW_HOME', os.path.expanduser('~/airflow'))
+        dag_location = os.path.join(airflow_home, 'dags')
+        print("AIRFLOW_HOME: ", dag_location)
+        filename = os.path.join(dag_location, 'graph_location')
+        f = open(filename, "r")
+        pdata = f.read()
+        f.close()
 
-    # estimating ets:
-    epoch_time = time.mktime(time.strptime(timestr, "%Y%m%d-%H%M%S"))
-    domain = content_meta["subject"][index]
+        # estimating ets:
+        epoch_time = time.mktime(time.strptime(timestr, "%Y%m%d-%H%M%S"))
+        domain = content_meta["subject"][index]
 
-    template = ""
-    plugin_used = []
-    num_of_stages = 0
-    # only for type ecml
-    if type_of_url == "ecml":
-        plugin_used = ecml_index_to_text("parse", path_to_id)["plugin_used"]
-        num_of_stages = ecml_index_to_text("parse", path_to_id)["num_stage"]
+        template = ""
+        plugin_used = []
+        num_of_stages = 0
+        # only for type ecml
+        if type_of_url == "ecml":
+            plugin_used = ecml_index_to_text("parse", path_to_id)["plugin_used"]
+            num_of_stages = ecml_index_to_text("parse", path_to_id)["num_stage"]
 
-    mnt_output_dict = {
-                'ETS': int(epoch_time),
-                'content_id': id_name,
-                'content_type': type_of_url,
-                'domain': domain,
-                'medium': language_detection(text),
-                'duration': duration,
-                'plugin_used': plugin_used,
-                'num_of_stages': num_of_stages,
-                'template': template,
-                'text': text,
-                'pdata': pdata,
-                'commit_id': ""
-            }
+        mnt_output_dict = {
+                    'ETS': int(epoch_time),
+                    'content_id': id_name,
+                    'content_type': type_of_url,
+                    'domain': domain,
+                    'medium': language_detection(text),
+                    'duration': duration,
+                    'plugin_used': plugin_used,
+                    'num_of_stages': num_of_stages,
+                    'template': template,
+                    'text': text,
+                    'pdata': pdata,
+                    'commit_id': ""
+                }
 
-    with open(os.path.join(path_to_id, "ML_content_info.json"), "w") as info:
-        mnt_json_dump = json.dump(
-            mnt_output_dict, info, sort_keys=False, indent=4)
-        print(mnt_json_dump)
-    logging.info("MTT_TRANSCRIPT_PATH_CREATED: {0}".format(path_to_transcript))
-    logging.info("MTT_CONTENT_ID_READ: {0}".format(id_name))
-    logging.info("MTT_STOP_FOR_URL {0}".format(url))
-    return os.path.join(path_to_id, "ML_content_info.json")
-    # except BaseException:
-    #     logging.info("TextEnrichment failed for url:{0} with id:{1}".format(url, id_name))
+        with open(os.path.join(path_to_id, "ML_content_info.json"), "w") as info:
+            mnt_json_dump = json.dump(
+                mnt_output_dict, info, sort_keys=False, indent=4)
+            print(mnt_json_dump)
+        logging.info("MTT_TRANSCRIPT_PATH_CREATED: {0}".format(path_to_transcript))
+        logging.info("MTT_CONTENT_ID_READ: {0}".format(id_name))
+        logging.info("MTT_STOP_FOR_URL {0}".format(url))
+        return os.path.join(path_to_id, "ML_content_info.json")
+    except BaseException:
+        logging.info("TextEnrichment failed for url:{0} with id:{1}".format(url, id_name))
 
 
 def custom_tokenizer(path_to_text_file):
@@ -958,6 +973,7 @@ def tagme_text(text):
 
     querystring = {
         "lang": "en",
+        "include_categories": True,
         "gcube-token": "1e1f2881-62ec-4b3e-9036-9efe89347991-843339462",
         "text": text}
 
@@ -1048,7 +1064,7 @@ def getTaxonomy(DBpedia_cat):
     sparql.setReturnFormat(JSON)
     try:
         results = sparql.query().convert()
-        dbpedia_prefix_cat=[]
+        dbpedia_prefix_cat = []
         for result in results["results"]["bindings"]:
             dbpedia_prefix_cat.append(str((result['value']['value'])))
     except BaseException:
@@ -1058,7 +1074,7 @@ def getTaxonomy(DBpedia_cat):
 
 def checkSubject(dbpedia_prefix_cat, subject):
     subject_paths = ['http://dbpedia.org/resource/Category:'+i for i in subject]
-    return int(bool(sum([1 if i in dbpedia_prefix_cat else 0 for i in subject_paths ])))
+    return int(bool(sum([1 if i in dbpedia_prefix_cat else 0 for i in subject_paths])))
 
 
 def checkSubjectPartial(dbpedia_prefix_cat, subject):
@@ -1066,16 +1082,21 @@ def checkSubjectPartial(dbpedia_prefix_cat, subject):
     return int(bool(sum([int(any([1 if ((i in j) or (j in i)) else 0 for j in dbpedia_prefix_cat])) for i in subject_paths ])))
 
 
-def keyword_filter(tagme_response_df, Path_to_corpus, Path_to_category_lookup, Subject, update_corpus, filter_score_val, num_keywords):
-    corpus_lookup_filename = os.path.join(Path_to_corpus, Subject + ".csv")
+def keyword_filter(tagme_response_df, path_to_corpus, path_to_category_lookup, subject, update_corpus, filter_score_val, num_keywords):
+    print("tagme_response_df:", tagme_response_df)
+    print("subject:", subject)
+
+    corpus_lookup_filename = os.path.join(path_to_corpus, subject + ".csv")
+    print("Lookup corpus :"+corpus_lookup_filename)
     if not os.path.exists(os.path.dirname(corpus_lookup_filename)):
         try:
+            print("Creating :", os.path.dirname(corpus_lookup_filename))
             os.makedirs(os.path.dirname(corpus_lookup_filename))
         except OSError as exc:  # Guard against race condition
             if exc.errno != errno.EEXIST:
                 raise
     if os.path.isfile(corpus_lookup_filename):
-        lookup_df = pd.read_csv(os.path.join(Path_to_corpus, Subject + ".csv"))
+        lookup_df = pd.read_csv(os.path.join(path_to_corpus, subject + ".csv"))
     else:
         lookup_df = pd.DataFrame({'KEYWORDS': [], 'dbpedia_score': []})
         lookup_df.to_csv(corpus_lookup_filename)
@@ -1088,19 +1109,20 @@ def keyword_filter(tagme_response_df, Path_to_corpus, Path_to_category_lookup, S
             relatedness = lookup_df.iloc[0]['dbpedia_score']
             score_df = pd.DataFrame({'KEYWORDS': [keyword], 'dbpedia_score': [relatedness]})
         else:
-            with open(Path_to_category_lookup, 'r') as stream:
-                subject_ls = yaml.load(stream)[Subject]
+            with open(path_to_category_lookup, 'r') as stream:
+                subject_ls = yaml.load(stream)[subject]
 
             try:
                 dbpedia_categories = tagme_response_df['dbpedia_categories'][ind]
                 count = 0
                 for cat in dbpedia_categories:
                     dbpedia_prefix_cat = getTaxonomy(cat)
-                    status = checkSubject(dbpedia_prefix_cat, subject_ls)    # yaml file read
+                    status = checkSubject(dbpedia_prefix_cat, subject_ls)
                     count += status
 
                 relatedness = float(count)/float(len(dbpedia_categories))
-                score_df = pd.DataFrame({'KEYWORDS':[keyword],'dbpedia_score':[relatedness]})
+                score_df = pd.DataFrame({'KEYWORDS': [keyword], 'dbpedia_score': [relatedness]})
+                print("score_df:", score_df)
             except BaseException:
                 pass
         keyword_df = keyword_df.append(score_df,ignore_index=True)
@@ -1119,11 +1141,10 @@ def keyword_filter(tagme_response_df, Path_to_corpus, Path_to_category_lookup, S
             print("Error: Invalid filter_score_val. Unable to filter. ")
     if num_keywords:
         try:
-            keyword_df = keyword_df.sort_values('dbpedia_score', ascending = [False]).iloc[0:int(num_keywords)]
+            keyword_df = keyword_df.sort_values('dbpedia_score', ascending=[False]).iloc[0:int(num_keywords)]
         except BaseException:
             print("Error: Invalid num_keywords. Unable to filter. ")
-    #keyword_relatedness_df.iloc[0:4]['KEYWORDS'].to_csv(Path_to_keywords + "KEYWORDS.csv") 
-
+    #keyword_relatedness_df.iloc[0:4]['KEYWORDS'].to_csv(Path_to_keywords + "KEYWORDS.csv")
     return keyword_df
 
 
@@ -1133,7 +1154,12 @@ def keyword_extraction_parallel(
         content_to_text_path,
         taxonomy,
         extract_keywords,
-        filter_criteria):
+        filter_criteria,
+        path_to_corpus,
+        path_to_category_lookup,
+        update_corpus,
+        filter_score_val,
+        num_keywords):
     """
     A custom function to parallelly extract keywords
     for all the Content texts in a folder.
@@ -1183,7 +1209,6 @@ def keyword_extraction_parallel(
     path_to_cid_transcript = os.path.join(
         path_to_id, "enriched_text.txt")
     path_to_saved_keywords = ""
-    #keywords = os.path.join(content_to_text_path, dir, "keywords")
     path_to_keywords = os.path.join(
         content_to_text_path, dir, "keywords", extract_keywords + "_" + filter_criteria)
     if os.path.isfile(path_to_cid_transcript):
@@ -1196,7 +1221,16 @@ def keyword_extraction_parallel(
                     path_to_cid_transcript))
                 print("---------------------------------------------")
 
-                if extract_keywords == "tagme" and filter_criteria == "none":
+                if extract_keywords == "tagme" and filter_criteria == "dbpedia":
+                    print("Tagme keyword extraction is running for {0}".format(
+                        path_to_cid_transcript))
+                    tagme_response_df = run_tagme(path_to_cid_transcript)
+                    keyword_filter_df = keyword_filter(tagme_response_df, path_to_corpus, path_to_category_lookup, subject, update_corpus,filter_score_val, num_keywords)
+                    path_to_saved_keywords = os.path.join(path_to_keywords, "keywords.csv")
+                    print("keyword_filter_df:", keyword_filter_df)
+                    keyword_filter_df.to_csv(path_to_saved_keywords, index=False, encoding='utf-8')
+
+                elif extract_keywords == "tagme" and filter_criteria == "none":
                     print("Tagme keyword extraction is running for {0}".format(
                         path_to_cid_transcript))
                     tagme_df = get_tagme_spots(path_to_cid_transcript)
@@ -1262,9 +1296,9 @@ def keyword_extraction_parallel(
         print("Transcripts doesnt exist for {0}".format(
             path_to_cid_transcript))
     if path_to_saved_keywords:
-        keywords_list = list(pd.read_csv(path_to_saved_keywords)["KEYWORDS"])
+        keywords_dpediaScore = pd.read_csv(path_to_saved_keywords).to_json(orient='records')
     else:
-        keywords_list = []
+        keywords_dpediaScore = []
     # Reading pdata:
     airflow_home = os.getenv('AIRFLOW_HOME', os.path.expanduser('~/airflow'))
     dag_location = os.path.join(airflow_home, 'dags')
@@ -1276,7 +1310,7 @@ def keyword_extraction_parallel(
     # estimating ets:
     epoch_time = time.mktime(time.strptime(timestr, "%Y%m%d-%H%M%S"))
     kep_output_dict = {
-                        'keywords': keywords_list,
+                        'keywords': keywords_dpediaScore,
                         'content_id': dir,
                         "pdata": pdata,
                         "commit_id": "",
@@ -1530,8 +1564,9 @@ def precision_from_dictionary(predicted_df, observed_df, window_len):
         count = 0
         for cid in predicted_df.index:
             try:
-                if (observed_df.loc[cid].values[0]) in list(
-                        predicted_df.loc[cid][0:ind]):
+                obs_tags = observed_df.loc[cid].values[0].replace("'", "").split(",")
+                pred_tags = list(predicted_df.loc[cid][0:ind])
+                if bool(set(obs_tags) & set(pred_tags)):
                     count += 1
             except BaseException:
                 print(str(cid) + " metadata not available")
