@@ -77,7 +77,7 @@ class ContentmetaCreation(BaseOperator):
                     pass
         content_meta = content_meta[pd.notnull(content_meta['derived_contentType'])]
 
-        content_meta.to_csv(os.path.join(contentmeta_creation_path, file_name + ".csv"))
+        content_meta.to_csv(os.path.join(contentmeta_creation_path, file_name  +".csv"))
         if copy_to:
             try:
                 content_meta.to_csv(os.path.join(copy_to, file_name)+".csv")
@@ -247,9 +247,10 @@ class WriteToElasticSearch(BaseOperator):
         epoch_time = time.mktime(time.strptime(timestr, "%Y%m%d-%H%M%S"))
         es_request = requests.get('http://localhost:9200')
         content_to_textpath = os.path.join(timestamp_folder, "content_to_text")
-        for cid in os.listdir(content_to_textpath):
+        cid_name = [i for i in os.listdir(content_to_textpath) if i in ['.DS_Store']]
+        for cid in cid_name:
             merge_json_list = []
-            json_file = findFiles(content_to_textpath, ["json"])
+            json_file = findFiles(os.path.join(content_to_textpath, cid), ["json"])
             logging.info("json_files are: ", json_file)
             for file in json_file:
                 if os.path.split(file)[1] in [
@@ -372,6 +373,7 @@ class ContentTaxonomyScoring(BaseOperator):
             self,
             keyword_extract_filter_by,
             phrase_split,
+            min_words,
             distanceMeasure,
             embedding_method,
             delimitter,
@@ -475,7 +477,7 @@ class ContentTaxonomyScoring(BaseOperator):
             print("*****content keyword list:", content_keywords_list)
             content_meta['Content_keywords'] = content_keywords_list
             content_meta = content_meta.iloc[[i for i, e in enumerate(
-                content_meta['Content_keywords']) if (e != []) and len(e) > 5]]
+                content_meta['Content_keywords']) if (e != []) and len(e) > min_words]]
             content_meta = content_meta.reset_index(drop=True)
             print("******filtered content meta: ", content_meta)
             print(

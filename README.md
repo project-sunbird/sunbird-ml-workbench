@@ -21,18 +21,18 @@ If your solution has a long standing application, it is inevitable that the solu
 ## Getting started
 
 ### Requirements
-- python and pip (python 3 is not currently supported)
+- python and pip (supports python 3.6)
 - virtualenv (run `pip install virtualenv` or visit https://virtualenv.pypa.io/en/stable/installation/)
 
 ### Installation
 #### Installation from binary
 1. The binary file is present at the following location `bin/`
-2. Install - `pip install  ML-Workbench/bin/mlworkbench-0.0.1.tar.gz`
+2. Install - `pip install  ML-Workbench/bin/daggit-0.5.0.tar.gz`
 #### Installation after build
-1. Clone the repository or download the zipped file from `https://github.com/ekstep/ML-Workbench/tree/v0.0.2-daggit`
+1. Clone the repository or download the zipped file from `https://github.com/ekstep/ML-Workbench.git`
 2. Change directory into ML-Workbench
 3. Run `bash build.sh`
-4. Install - `pip install  bin/mlworkbench-0.0.1.tar.gz`
+4. Install - `pip install  bin/daggit-0.5.0.tar.gz`
 
 ### DAG Execution
 #### Inititalize a DAG
@@ -45,7 +45,7 @@ If your solution has a long standing application, it is inevitable that the solu
 
 ## License
 
-[AGPL v3 or later](LICENCE)
+[MIT License](LICENSE)
 
 
 

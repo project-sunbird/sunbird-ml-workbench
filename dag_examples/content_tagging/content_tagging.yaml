@@ -25,8 +25,8 @@ graph:
     outputs: [timestamp_folder]
     operation: contentTagging.ContentToText
     arguments:
-      range_start: 1
-      range_end: 2
+      range_start: 4
+      range_end: 10
       num_of_processes: 1
       subset_contentMeta_by: youtube
       content_type:
@@ -58,7 +58,7 @@ graph:
     operation: contentTagging.KeywordExtraction 
     arguments: 
       extract_keywords: tagme
-      filter_criteria: dbpedia
+      filter_criteria: none
       update_corpus: 0
       filter_score_val: 0.4
       num_keywords: 5
@@ -73,7 +73,7 @@ graph:
     outputs: [root_path, path_to_corpus]
     operation: contentTagging.CorpusCreation
     arguments:
-      keyword_folder_name: tagme_dbpedia
+      keyword_folder_name: tagme_none
       update_corpus: True
       word_preprocess: 
          delimitter: "_"
@@ -84,8 +84,9 @@ graph:
     outputs: [path_to_timestampFolder, path_to_distMeasure, path_to_domain_level]
     operation: contentTagging.ContentTaxonomyScoring
     arguments:
-      keyword_extract_filter_by: tagme_dbpedia
+      keyword_extract_filter_by: tagme_none
       phrase_split: True
+      min_words: 5
       distanceMeasure: jaccard
       embedding_method: none
       delimitter: "_"

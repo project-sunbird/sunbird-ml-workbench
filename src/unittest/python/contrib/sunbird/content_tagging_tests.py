@@ -6,7 +6,6 @@ import sys
 import os
 import yaml
 import pandas as pd
-import daggit
 from daggit.contrib.sunbird.operators.contentTaggingUtils import *
 
 testdir = os.path.dirname(os.path.realpath(__file__))
@@ -75,24 +74,22 @@ class UnitTests(unittest.TestCase):
         assert sentence_similarity(
             case2_actual_text, case2_expected_text, .70) == 1
 
-    # @staticmethod
-    # def test_keyword_extraction():
-    #     eng_text_actual_keywords = pd.read_csv(
-    #         test_case_data_location +
-    #         "keyword_extraction/" +
-    #         "eng_text_actual_keywords.csv")['KEYWORDS']
-    #     assert keyword_extraction(
-    #         test_case_data_location +
-    #         "keyword_extraction/" +
-    #         "empty.txt",
-    #         test_case_data_location,
-    #         list(eng_text_actual_keywords)) == "Text is not available"
-    #     assert keyword_extraction(
-    #         test_case_data_location +
-    #         "keyword_extraction/" +
-    #         "english.txt",
-    #         test_case_data_location,
-    #         list(eng_text_actual_keywords)) == 1
+    @staticmethod
+    def test_keyword_extraction():
+        eng_text_actual_keywords = pd.read_csv(
+            test_case_data_location +
+            "keyword_extraction/" +
+            "eng_text_actual_keywords.csv")['KEYWORDS']
+        assert keyword_extraction(
+            test_case_data_location +
+            "keyword_extraction/" +
+            "empty.txt",
+            list(eng_text_actual_keywords)) == "Text is not available"
+        assert keyword_extraction(
+            test_case_data_location +
+            "keyword_extraction/" +
+            "english.txt",
+            list(eng_text_actual_keywords)) == 1
 
     @staticmethod
     def test_jaccard_evaluation():

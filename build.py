@@ -15,8 +15,9 @@ use_plugin('python.integrationtest')
 default_task = "publish"
 
 name = "daggit"
-version = "0.0.2"
+version = "0.5.0"
 license = "MIT License"
+
 
 @init
 def initialize(project):

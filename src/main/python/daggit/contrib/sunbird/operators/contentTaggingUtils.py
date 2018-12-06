@@ -159,7 +159,7 @@ def merge_json(merge_json_loc_list):
     ignore_list = ["ETS"]
     dict_list = []
     for file in merge_json_loc_list:
-        with open(file, "rb") as info:
+        with open(file, "r", encoding="UTF-8") as info:
             new_json = json.load(info)
             [new_json.pop(ignore) for ignore in ignore_list if ignore in new_json.keys()]
         dict_list.append(new_json)
@@ -1079,7 +1079,7 @@ def checkSubject(dbpedia_prefix_cat, subject):
 
 def checkSubjectPartial(dbpedia_prefix_cat, subject):
     subject_paths = ['http://dbpedia.org/resource/Category:'+i for i in subject]
-    return int(bool(sum([int(any([1 if ((i in j) or (j in i)) else 0 for j in dbpedia_prefix_cat])) for i in subject_paths ])))
+    return int(bool(sum([int(any([1 if ((i in j) or (j in i)) else 0 for j in dbpedia_prefix_cat])) for i in subject_paths])))
 
 
 def keyword_filter(tagme_response_df, path_to_corpus, path_to_category_lookup, subject, update_corpus, filter_score_val, num_keywords):
@@ -1225,7 +1225,7 @@ def keyword_extraction_parallel(
                     print("Tagme keyword extraction is running for {0}".format(
                         path_to_cid_transcript))
                     tagme_response_df = run_tagme(path_to_cid_transcript)
-                    keyword_filter_df = keyword_filter(tagme_response_df, path_to_corpus, path_to_category_lookup, subject, update_corpus,filter_score_val, num_keywords)
+                    keyword_filter_df = keyword_filter(tagme_response_df, path_to_corpus, path_to_category_lookup, subject, update_corpus, filter_score_val, num_keywords)
                     path_to_saved_keywords = os.path.join(path_to_keywords, "keywords.csv")
                     print("keyword_filter_df:", keyword_filter_df)
                     keyword_filter_df.to_csv(path_to_saved_keywords, index=False, encoding='utf-8')
