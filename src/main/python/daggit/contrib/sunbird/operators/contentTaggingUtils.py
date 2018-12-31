@@ -7,6 +7,10 @@ from google.cloud.vision import types
 from google.cloud import vision
 from google.cloud import translate
 from nltk.corpus import stopwords
+from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
+from pdfminer.converter import HTMLConverter, TextConverter, XMLConverter
+from pdfminer.layout import LAParams
+from pdfminer.pdfpage import PDFPage
 import yaml
 import glob
 from PyPDF2 import PdfFileReader
@@ -33,23 +37,8 @@ from dateutil.parser import parse
 from SPARQLWrapper import SPARQLWrapper, JSON
 logging.getLogger("requests").setLevel(logging.WARNING)
 
-
 nltk.download("stopwords")
 stopwords = stopwords.words('english')
-
-
-GOOGLE_APPLICATION_CREDENTIALS = r"""{
-  "type": "service_account",
-  "project_id": "machinelearningapi-175409",
-  "private_key_id": "27cc5d0e439a6eeef7dd2a7c35c00d3dc4acd953",
-  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCSFKC2+dMG6qhz\nx0smAFQGMXCWtiuti75G0Gurn3ciG/wEKsUWgd/dquFBJYB4ZOjOsyq0S03NRzFH\n/zwENFUlpitBMNbLoVCuL3x8rU5BKTN8xAu0RRsj/kmV/+zgiChVPgpstVQppNtf\nuc5+cPYJmUwrQ6t96zqhjppt0VhDiOtfIfCfXi5LK6Wj1T3i2AQL9Ekuaw1o2QDF\ncQ+EGb7yUkCy1MYGZ7KWtx7MhYIARL7/91Y1ry1mE00n48pmmMe6KPuC/Z0RY/X3\nrxFl6YScMm0AlP/r6gYmOHFI/d/SkJtDB4LWAmIiG80iK5X2pnErMt5ezyGqhFIk\nGhUizhFfAgMBAAECggEAAQbuXMeA4zNNFMVmNGJ0uljapCVTOilnimKHXeEbq1Lb\nC+MQDWvZvDkqC2ixZWoWef5DzJmWa5S387kz8SugJ7hkrUnK4Swpnlxs2aSaeCmZ\nNtB8fUauEQp1RJmthq9Px+THsD6We5hMs5oewBOeM8EpeZbVKyU3S1wE4cTIV5CC\ngmcwz3y+yttplREeAp7So9V0R5FpJ7P0qjal3Ngyu5aR6pgObNzhjXKeed6aULwc\neZIDlCwJhxetLqyhsGHHvFPQas6Y5mnET5mA4KRLV3u9KBh5KFc2f93nk7nqPeWz\nf0AQH9avBvTFT/RLBGRH4jNGaMovce0+AI9QLORzcQKBgQDEICcztYPIVjWvZ0Rs\ncBmhuy7yD1Rh7pZisC4A5iwoG7JH8sBXJm33bMWmRlztVDSLxi0GTS4ha7cGTSxG\nVJBKCUwVMWKDQQXQs9SKlUnTF94ozRzyozq9MSrJJcsXs9dE0++cTpT54eD6n8dU\nvLmPkrJ4j4u7SftgJQiQi9oUvQKBgQC+rUuQeinPpAXOKXsPPSOF/Z+kn8SS/kG8\nnkRqcsCnPOZxXUArBMmTahn/bUI6T+PzlXRbQSzEF3N1U++YquTqxACrwkiBv9Ak\ny7XugZzBcCmv4bDYgspOo0emKyl5uAvmQjceYgVANTsC5pD7hQERNGKvl8MA9VZn\nNlSA2iTWSwKBgQC/YRy/4Z0RzcYfPibPpeftIOnjfL/7vER1UrPhXrmx/azPdnrn\nz/E4oqSP51Ngp22LAzwGTSP5qtFzTbUpf/U4ua/LcmBN8hJJoGGDRcA/Q6geqmBY\nCJ4V5bd5hu6SV4R1flXvceL/n8HY7jclYe+0wRJ0gKZ6gOvR2vFrk3ygBQKBgBeg\nr8Fqce3p/FIsr7QWtmUvJW4n4hr46LpvvjiWmarfkAqyLHZoNHZQ6oHNTyyco7mW\nZoG8VMjDwynhycnYO1+gBBlEjOmPFELK/3NbmkoaFQBXbiuWIW2XLBS6Onx7wvW4\ndM4OBWqMbhCQ85xHQfeYzzXFD4P54sgNYnFJFtF7AoGAbMlWoReAAnjfB78chUZU\n8HWcSXi8ZLhR/uaZY7S3yJwA2Kz7Wa05WJ6hhT6MWHojClH36ZZb8jms/ddFKEuG\nTEaLGEL3eoniYtzg7wk34u9H6+0OBhXdYJbXcnapeUR4FYhOEw/9AA3dNhD2/ne+\npVGBX9PagFWhBI1TC75klnM=\n-----END PRIVATE KEY-----\n",
-  "client_email": "machinelearningapi@machinelearningapi-175409.iam.gserviceaccount.com",
-  "client_id": "107107468801573946683",
-  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-  "token_uri": "https://accounts.google.com/o/oauth2/token",
-  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/machinelearningapi%40machinelearningapi-175409.iam.gserviceaccount.com"
-}"""
 
 
 pun_list = list(string.punctuation)
@@ -67,7 +56,7 @@ def language_detection(text):
 
     Returns
     -------
-    result: type 
+    result: type
     description
     """
     translate_client = translate.Client()
@@ -229,14 +218,17 @@ def ekstep_ecar_unzip(download_location, copy_location):
 def download_from_downloadUrl(url_to_download, path_to_folder, file_name):
     download_dir = os.path.join(path_to_folder, 'temp' + file_name)
     status = downloadZipFile(url_to_download, download_dir)
-    if status:
-        unzip_files(download_dir)
-        ekstep_ecar_unzip(
-            download_dir, os.path.join(
-                path_to_folder, file_name))
-        shutil.rmtree(download_dir)
-        path_to_file = os.path.join(path_to_folder, file_name)
-        return path_to_file
+    try:
+        if status:
+            unzip_files(download_dir)
+            ekstep_ecar_unzip(
+                download_dir, os.path.join(
+                    path_to_folder, file_name))
+            shutil.rmtree(download_dir)
+            path_to_file = os.path.join(path_to_folder, file_name)
+            return path_to_file
+    except BaseException:
+        print("Unavailable for download")
 
 
 def df_feature_check(df, mandatory_fields):
@@ -503,7 +495,7 @@ def audio_split(path_to_audiofile, path_to_split_audio):
         return os.path.join(path_to_split_audio, id)
 
 
-def getTexts(AUDIO_FILE, lan):
+def getTexts(AUDIO_FILE, lan, GOOGLE_APPLICATION_CREDENTIALS):
     """
     Takes in an audiofile and return text of the given audio input
     Parameters
@@ -560,13 +552,13 @@ def translate_english(text):
     return translation['translatedText']
 
 
-def audio_to_text(path_to_audio_split_folder):
+def audio_to_text(path_to_audio_split_folder, GOOGLE_APPLICATION_CREDENTIALS):
     text = ""
     for i in natsorted(os.listdir(path_to_audio_split_folder), reverse=False):
         if i[-4:] == ".mp3":
             try:
                 text += getTexts(os.path.join(path_to_audio_split_folder,
-                                              i), 'en-IN')['text']
+                                              i), 'en-IN', GOOGLE_APPLICATION_CREDENTIALS)['text']
             except LookupError:
                 continue
     return text
@@ -580,9 +572,9 @@ def text_conversion(path_to_audio_split_folder, path_to_text_folder):
 
     path_ = os.path.join(path_to_text_folder, "enriched_text.txt")
     print("type of audio to text: ", type(
-        audio_to_text(path_to_audio_split_folder)))
+        audio_to_text(path_to_audio_split_folder, GOOGLE_APPLICATION_CREDENTIALS)))
     with open(path_, "w") as myTextFile:
-        myTextFile.write(audio_to_text(path_to_audio_split_folder))
+        myTextFile.write(audio_to_text(path_to_audio_split_folder, GOOGLE_APPLICATION_CREDENTIALS))
 
     logging.info("TC_TRANSCRIPT_PATH_CREATED: {0}".format(path_))
     logging.info("TC_STOP for audio split folder: {0}". format(
@@ -603,7 +595,6 @@ def download_to_local(method, url_to_download, path_to_save, id_name):
     if method == "ecml":
         logging.info("DTL_ECAR_URL: {0}".format(url_to_download))
         try:
-            logging.info("DTL_FOR_URL".format(url_to_download))
             path_to_id = download_from_downloadUrl(
                 url_to_download, path_to_save, id_name)
         except RuntimeError:
@@ -629,10 +620,9 @@ def download_to_local(method, url_to_download, path_to_save, id_name):
     if method == "pdf":
         logging.info("DTL_PDF_URL: {0}".format(url_to_download))
         try:
-            logging.info("DTL_FOR_URL".format(url_to_download))
             path_to_id = download_from_downloadUrl(
                 url_to_download, path_to_save, id_name)
-        except RuntimeError:
+        except BaseException:
             logging.info("Skipped url: {0}".format(url_to_download))
 
     else:
@@ -667,7 +657,7 @@ def video_to_speech(method, path_to_assets):
     return path_to_assets
 
 
-def speech_to_text(method, path_to_assets):
+def speech_to_text(method, path_to_assets, GOOGLE_APPLICATION_CREDENTIALS):
     logging.info("STT_START")
     text = ""
     if not os.path.exists(path_to_assets):
@@ -675,17 +665,20 @@ def speech_to_text(method, path_to_assets):
     else:
         audio_names = findFiles(path_to_assets, ['mp3'])
         if method == "googleAT" and len(audio_names) > 0:
-            for i in audio_names:
-                logging.info(
-                    "STT_AUDIO_FILEPATH: {0}".format(
+            try:
+                for i in audio_names:
+                    logging.info(
+                        "STT_AUDIO_FILEPATH: {0}".format(
+                            os.path.join(
+                                path_to_assets, i)))
+                    path_to_split = audio_split(
                         os.path.join(
-                            path_to_assets, i)))
-                path_to_split = audio_split(
-                    os.path.join(
-                        path_to_assets, i), os.path.join(
-                        path_to_assets, "audio_split"))
-                logging.info("STT_AUDIO_SPLIT: {0}".format(path_to_split))
-                text += audio_to_text(path_to_split)
+                            path_to_assets, i), os.path.join(
+                            path_to_assets, "audio_split"))
+                    logging.info("STT_AUDIO_SPLIT: {0}".format(path_to_split))
+                    text += audio_to_text(path_to_split, GOOGLE_APPLICATION_CREDENTIALS)
+            except BaseException:
+                text = ""
         elif method == "none":
             logging.info("STT_NOT_PERFORMED")
         else:
@@ -700,17 +693,20 @@ def image_to_text(method, path_to_assets):
     image_text = ""
     image_names = findFiles(path_to_assets, ['png', 'gif', 'jpg'])
     if method == "googleVision" and len(image_names) > 0:
-        logging.info('...detected {0} video files'.format(
-            str(len(image_names))))
-        logging.info('...image file processing started')
-        for file in image_names:
-            try:
-                image_text += getImgTags(file)
-            except BaseException:
-                print('........ Error: could not process file')
-        print("Text: ", image_text)
-        text = list(str(image_text.lower()).split("\n"))
-        image_text = ' '.join(list(set(text)))
+        try:
+            logging.info('...detected {0} video files'.format(
+                str(len(image_names))))
+            logging.info('...image file processing started')
+            for file in image_names:
+                try:
+                    image_text += getImgTags(file)
+                except BaseException:
+                    print('........ Error: could not process file')
+            print("Text: ", image_text)
+            text = list(str(image_text.lower()).split("\n"))
+            image_text = ' '.join(list(set(text)))
+        except BaseException:
+            image_text = ""
     if method == "none":
         logging.info("ITT_NOT_PERFORMED")
     logging.info("ITT_STOP")
@@ -718,13 +714,89 @@ def image_to_text(method, path_to_assets):
     return text_dict
 
 
+def convert_pdf_to_txt(path_to_pdf_file):
+    rsrcmgr = PDFResourceManager()
+    retstr = io.StringIO()
+    codec = 'utf-8'
+    laparams = LAParams()
+    device = TextConverter(rsrcmgr, retstr, codec=codec, laparams=laparams)
+    fp = open(path_to_pdf_file, 'rb')
+    interpreter = PDFPageInterpreter(rsrcmgr, device)
+    password = ""
+    maxpages = 0
+    caching = True
+    pagenos = set()
+    for page in PDFPage.get_pages(fp, pagenos, maxpages=maxpages, password=password, caching=caching, check_extractable=True):
+        interpreter.process_page(page)
+    text = retstr.getvalue()
+    fp.close()
+    device.close()
+    retstr.close()
+    return text
+
+
+# def pdf_to_text(method, path_to_assets, pdf_url):
+#     text = ""
+#     number_of_pages = 0
+#     logging.info("PTT_START")
+#     if method == "PyPDF2":
+#         logging.info("PTT_METHOD: {0}".format(method))
+#         pdf_names = findFiles(path_to_assets, ['.pdf'])
+#         text = ""
+#         for j in range(0, len(pdf_names) + 1):
+#             if (len(pdf_names) == 0 and pdf_url.endswith('pdf')):
+#                 r = requests.get(pdf_url)
+#                 f = io.BytesIO(r.content)
+#                 read_pdf = PdfFileReader(f)
+#                 number_of_pages = read_pdf.getNumPages()
+#             elif j < (len(pdf_names)):
+#                 pdf_files = pdf_names[j]
+#                 text = ""
+#                 text = convert_pdf_to_txt(pdf_files)
+#                 number_of_pages = 0
+#                 # f = open(pdf_files, 'rb')
+#                 # read_pdf = PdfFileReader(f)
+#                 # number_of_pages = read_pdf.getNumPages()
+#             else:
+#                 number_of_pages = 0
+#             if number_of_pages > 0:
+#                 for i in range(number_of_pages):
+#                     page = read_pdf.getPage(i)
+#                     page_content = page.extractText()
+#                     text += page_content
+#         processed_txt = cleantext(text)
+#         text = ''.join([i for i in processed_txt if not i.isdigit()])
+#         text = ' '.join(text.split())
+#     if method == "none":
+#         logging.info("PDF_NOT_PERFORMED")
+
+#     logging.info("PTT_STOP")
+#     text_dict = {"text": text, "no_of_pages": number_of_pages}
+#     return text_dict
+
+
 def pdf_to_text(method, path_to_assets, pdf_url):
     text = ""
     number_of_pages = 0
     logging.info("PTT_START")
+    pdf_names = findFiles(path_to_assets, ['.pdf'])
     if method == "PyPDF2":
         logging.info("PTT_METHOD: {0}".format(method))
-        pdf_names = findFiles(path_to_assets, ['.pdf'])
+        for j in range(0, len(pdf_names) + 1):
+            if (len(pdf_names) == 0 and pdf_url.endswith('pdf')):
+                r = requests.get(pdf_url)
+                f = io.BytesIO(r.content)
+                read_pdf = PdfFileReader(f)
+                number_of_pages = read_pdf.getNumPages()
+            elif j < (len(pdf_names)):
+                pdf_files = pdf_names[j]
+                f = open(pdf_files, 'rb')
+                read_pdf = PdfFileReader(f)
+                number_of_pages = read_pdf.getNumPages()
+            else:
+                number_of_pages = 0
+    if method == "pdfminer":
+        logging.info("PTT_METHOD: {0}".format(method))
         text = ""
         for j in range(0, len(pdf_names) + 1):
             if (len(pdf_names) == 0 and pdf_url.endswith('pdf')):
@@ -735,22 +807,20 @@ def pdf_to_text(method, path_to_assets, pdf_url):
             elif j < (len(pdf_names)):
                 pdf_files = pdf_names[j]
                 text = ""
-                f = open(pdf_files, 'rb')
-                read_pdf = PdfFileReader(f)
-                number_of_pages = read_pdf.getNumPages()
+                text = convert_pdf_to_txt(pdf_files)
+                number_of_pages = 0
             else:
                 number_of_pages = 0
-            if number_of_pages > 0:
-                for i in range(number_of_pages):
-                    page = read_pdf.getPage(i)
-                    page_content = page.extractText()
-                    text += page_content
-        processed_txt = cleantext(text)
-        text = ''.join([i for i in processed_txt if not i.isdigit()])
-        text = ' '.join(text.split())
     if method == "none":
         logging.info("PDF_NOT_PERFORMED")
-
+    if number_of_pages > 0:
+        for i in range(number_of_pages):
+            page = read_pdf.getPage(i)
+            page_content = page.extractText()
+            text += page_content
+    processed_txt = cleantext(text)
+    text = ''.join([i for i in processed_txt if not i.isdigit()])
+    text = ' '.join(text.split())
     logging.info("PTT_STOP")
     text_dict = {"text": text, "no_of_pages": number_of_pages}
     return text_dict
@@ -827,7 +897,8 @@ def multimodal_text_enrichment(
         timestr,
         content_meta,
         content_type,
-        content_to_text_path):
+        content_to_text_path,
+        GOOGLE_APPLICATION_CREDENTIALS):
     """
     index, content_meta, content_type, content_to_text_path
     A custom function to extract text from a given
@@ -858,89 +929,95 @@ def multimodal_text_enrichment(
     id_name = content_meta["identifier"][index]
     downloadField = content_type[type_of_url]["contentDownloadField"]
     url = content_meta[downloadField][index]
+    logging.info("MTT_START_FOR_INDEX {0}".format(index))
+    logging.info("MTT_START_FOR_CID {0}".format(id_name))
     logging.info("MTT_START_FOR_URL {0}".format(url))
     # start text extraction pipeline:
-    try:
-        path_to_id = download_to_local(
-            type_of_url, url, content_to_text_path, id_name)
-        path_to_assets = os.path.join(path_to_id, "assets")
+    # try:
+    path_to_id = download_to_local(
+        type_of_url, url, content_to_text_path, id_name)
+    path_to_assets = os.path.join(path_to_id, "assets")
+    if type_of_url != "pdf":
         path_to_audio = video_to_speech(
             content_type[type_of_url]["video_to_speech"],
             path_to_assets)
         print(path_to_audio)
-        if len(findFiles(path_to_assets, ["mp3"])) > 0:
-            audio = AudioSegment.from_mp3(findFiles(path_to_assets, ["mp3"])[0])
-            duration = round(len(audio) / 1000)
-        else:
-            duration = 0
-        textExtraction_pipeline = [
-            (speech_to_text,
-             (content_type[type_of_url]["speech_to_text"],
-              path_to_assets)),
-            (image_to_text,
-             (content_type[type_of_url]["image_to_text"],
-              path_to_assets)),
-            (pdf_to_text,
-             (content_type[type_of_url]["pdf_to_text"],
-              path_to_assets,
-              url)),
-            (ecml_index_to_text,
-             (content_type[type_of_url]["ecml_index_to_text"],
-              path_to_id))]
-        path_to_transcript = os.path.join(path_to_id, "enriched_text.txt")
-        text = ""
-        for method, param_tuple in textExtraction_pipeline:
-            text += method(*param_tuple)["text"]
-        if os.path.exists(path_to_id):
-            with open(path_to_transcript, "w") as myTextFile:
-                myTextFile.write(text)
-        # num_of_PDFpages = pdf_to_text("none", path_to_assets, url)["no_of_pages"]
-        # Reading pdata
-        airflow_home = os.getenv('AIRFLOW_HOME', os.path.expanduser('~/airflow'))
-        dag_location = os.path.join(airflow_home, 'dags')
-        print("AIRFLOW_HOME: ", dag_location)
-        filename = os.path.join(dag_location, 'graph_location')
-        f = open(filename, "r")
-        pdata = f.read()
-        f.close()
+    if len(findFiles(path_to_assets, ["mp3"])) > 0:
+        audio = AudioSegment.from_mp3(findFiles(path_to_assets, ["mp3"])[0])
+        duration = round(len(audio) / 1000)
+    else:
+        duration = 0
+    textExtraction_pipeline = [
+        (speech_to_text,
+         (content_type[type_of_url]["speech_to_text"],
+          path_to_assets, GOOGLE_APPLICATION_CREDENTIALS)),
+        (image_to_text,
+         (content_type[type_of_url]["image_to_text"],
+          path_to_assets)),
+        (pdf_to_text,
+         (content_type[type_of_url]["pdf_to_text"],
+          path_to_assets,
+          url)),
+        (ecml_index_to_text,
+         (content_type[type_of_url]["ecml_index_to_text"],
+          path_to_id))]
+    path_to_transcript = os.path.join(path_to_id, "enriched_text.txt")
+    text = ""
+    for method, param_tuple in textExtraction_pipeline:
+        text += method(*param_tuple)["text"]
+    # Adding description and title to the text only for PDF content
+    if type_of_url == "pdf":
+        text += content_meta["name"].iloc[index] + " " + content_meta["description"].iloc[index]
+    if os.path.exists(path_to_id) and text:
+        with open(path_to_transcript, "w") as myTextFile:
+            myTextFile.write(text)
+    # num_of_PDFpages = pdf_to_text("none", path_to_assets, url)["no_of_pages"]
+    # Reading pdata
+    airflow_home = os.getenv('AIRFLOW_HOME', os.path.expanduser('~/airflow'))
+    dag_location = os.path.join(airflow_home, 'dags')
+    print("AIRFLOW_HOME: ", dag_location)
+    filename = os.path.join(dag_location, 'graph_location')
+    f = open(filename, "r")
+    pdata = f.read()
+    f.close()
 
-        # estimating ets:
-        epoch_time = time.mktime(time.strptime(timestr, "%Y%m%d-%H%M%S"))
-        domain = content_meta["subject"][index]
+    # estimating ets:
+    epoch_time = time.mktime(time.strptime(timestr, "%Y%m%d-%H%M%S"))
+    domain = content_meta["subject"][index]
 
-        template = ""
-        plugin_used = []
-        num_of_stages = 0
-        # only for type ecml
-        if type_of_url == "ecml":
-            plugin_used = ecml_index_to_text("parse", path_to_id)["plugin_used"]
-            num_of_stages = ecml_index_to_text("parse", path_to_id)["num_stage"]
+    template = ""
+    plugin_used = []
+    num_of_stages = 0
+    # only for type ecml
+    if type_of_url == "ecml":
+        plugin_used = ecml_index_to_text("parse", path_to_id)["plugin_used"]
+        num_of_stages = ecml_index_to_text("parse", path_to_id)["num_stage"]
 
-        mnt_output_dict = {
-                    'ETS': int(epoch_time),
-                    'content_id': id_name,
-                    'content_type': type_of_url,
-                    'domain': domain,
-                    'medium': language_detection(text),
-                    'duration': duration,
-                    'plugin_used': plugin_used,
-                    'num_of_stages': num_of_stages,
-                    'template': template,
-                    'text': text,
-                    'pdata': pdata,
-                    'commit_id': ""
-                }
+    mnt_output_dict = {
+                'ETS': int(epoch_time),
+                'content_id': id_name,
+                'content_type': type_of_url,
+                'domain': domain,
+                'medium': language_detection(text),
+                'duration': duration,
+                'plugin_used': plugin_used,
+                'num_of_stages': num_of_stages,
+                'template': template,
+                'text': text,
+                'pdata': pdata,
+                'commit_id': ""
+            }
 
-        with open(os.path.join(path_to_id, "ML_content_info.json"), "w") as info:
-            mnt_json_dump = json.dump(
-                mnt_output_dict, info, sort_keys=False, indent=4)
-            print(mnt_json_dump)
-        logging.info("MTT_TRANSCRIPT_PATH_CREATED: {0}".format(path_to_transcript))
-        logging.info("MTT_CONTENT_ID_READ: {0}".format(id_name))
-        logging.info("MTT_STOP_FOR_URL {0}".format(url))
-        return os.path.join(path_to_id, "ML_content_info.json")
-    except BaseException:
-        logging.info("TextEnrichment failed for url:{0} with id:{1}".format(url, id_name))
+    with open(os.path.join(path_to_id, "ML_content_info.json"), "w") as info:
+        mnt_json_dump = json.dump(
+            mnt_output_dict, info, sort_keys=False, indent=4)
+        print(mnt_json_dump)
+    logging.info("MTT_TRANSCRIPT_PATH_CREATED: {0}".format(path_to_transcript))
+    logging.info("MTT_CONTENT_ID_READ: {0}".format(id_name))
+    logging.info("MTT_STOP_FOR_URL {0}".format(url))
+    #return os.path.join(path_to_id, "ML_content_info.json")
+    # except BaseException:
+    #     logging.info("TextEnrichment failed for url:{0} with id:{1}".format(url, id_name))
 
 
 def custom_tokenizer(path_to_text_file):
@@ -1003,7 +1080,8 @@ def run_tagme(path_to_text):
         text = ' '.join(words[index_count:min(
             (index_count + window_len - 1), len(words))])
         index_count += window_len
-        response_list.append(tagme_text(text))
+        if text:
+            response_list.append(tagme_text(text))
         response_df = pd.concat(response_list)
         response_df.reset_index(drop=True, inplace=True)
     return response_df
@@ -1029,7 +1107,7 @@ def get_tagme_spots(path_to_text):
             set(response_df['spot'])) if str(x) != 'nan']
         cleaned_keyword_list = clean_string_list(cleaned_keyword_list)
         unique_cleaned_keyword_list = list(set(cleaned_keyword_list))
-        spot = pd.DataFrame(unique_cleaned_keyword_list, columns=['KEYWORDS'])
+        spot = pd.DataFrame(unique_cleaned_keyword_list, columns=['keyword'])
     return spot
 
 
@@ -1037,9 +1115,9 @@ def text_token_taxonomy_intersection_keywords(
         text_df,
         taxonomy_keywords_set):
     try:
-        token = [i.lower() for i in list(text_df['KEYWORDS'])]
+        token = [i.lower() for i in list(text_df['keyword'])]
         common_words = list(set(taxonomy_keywords_set) & set(token))
-        text_tax_df = pd.DataFrame(common_words, columns=['KEYWORDS'])
+        text_tax_df = pd.DataFrame(common_words, columns=['keyword'])
         return text_tax_df
     except BaseException:
         logging.info("Keywords cannot be extracted")
@@ -1050,9 +1128,9 @@ def tagme_taxonomy_intersection_keywords(
         taxonomy_keywords_set,
         ):
     try:
-        spots = [i.lower() for i in list(tagme_df['KEYWORDS'])]
+        spots = [i.lower() for i in list(tagme_df['keyword'])]
         common_words = list(set(taxonomy_keywords_set) & set(spots))
-        tagme_tax_df = pd.DataFrame(common_words, columns=['KEYWORDS'])
+        tagme_tax_df = pd.DataFrame(common_words, columns=['keyword'])
         return tagme_tax_df
     except BaseException:
         logging.info("Keywords cannot be extracted")
@@ -1098,42 +1176,43 @@ def keyword_filter(tagme_response_df, path_to_corpus, path_to_category_lookup, s
     if os.path.isfile(corpus_lookup_filename):
         lookup_df = pd.read_csv(os.path.join(path_to_corpus, subject + ".csv"))
     else:
-        lookup_df = pd.DataFrame({'KEYWORDS': [], 'dbpedia_score': []})
+        lookup_df = pd.DataFrame({'keyword': [], 'dbpedia_score': []})
         lookup_df.to_csv(corpus_lookup_filename)
-    keyword_df = pd.DataFrame({'KEYWORDS': [], 'dbpedia_score': []})
+    keyword_df = pd.DataFrame({'keyword': [], 'dbpedia_score': []})
     for ind in range(len(tagme_response_df)):
         keyword = tagme_response_df['spot'][ind]
 
-        if keyword in list(lookup_df['KEYWORDS']):
-            lookup_df = lookup_df[lookup_df['KEYWORDS'] == keyword]
+        if keyword in list(lookup_df['keyword']):
+            lookup_df = lookup_df[lookup_df['keyword'] == keyword]
             relatedness = lookup_df.iloc[0]['dbpedia_score']
-            score_df = pd.DataFrame({'KEYWORDS': [keyword], 'dbpedia_score': [relatedness]})
+            score_df = pd.DataFrame({'keyword': [keyword], 'dbpedia_score': [relatedness]})
         else:
             with open(path_to_category_lookup, 'r') as stream:
                 subject_ls = yaml.load(stream)[subject]
-
+            dbpedia_categories = tagme_response_df['dbpedia_categories'][ind]
+            count = 0
             try:
-                dbpedia_categories = tagme_response_df['dbpedia_categories'][ind]
-                count = 0
                 for cat in dbpedia_categories:
                     dbpedia_prefix_cat = getTaxonomy(cat)
                     status = checkSubject(dbpedia_prefix_cat, subject_ls)
                     count += status
-
-                relatedness = float(count)/float(len(dbpedia_categories))
-                score_df = pd.DataFrame({'KEYWORDS': [keyword], 'dbpedia_score': [relatedness]})
-                print("score_df:", score_df)
-            except BaseException:
-                pass
+                if len(dbpedia_categories) > 0:
+                    relatedness = float(count)/float(len(dbpedia_categories))
+                else:
+                    relatedness = 0
+            except:
+                relatedness = 0
+            score_df = pd.DataFrame({'keyword': [keyword], 'dbpedia_score': [relatedness]})
+            print("score_df:", score_df)
         keyword_df = keyword_df.append(score_df,ignore_index=True)
 
     # preprocessing
-    keyword_df['KEYWORDS'] = [str(x).lower() for x in list((keyword_df['KEYWORDS'])) if str(x) != 'nan']
+    keyword_df['keyword'] = [str(x).lower() for x in list((keyword_df['keyword'])) if str(x) != 'nan']
     if update_corpus:
-            corpus_update_df = keyword_df.drop_duplicates('KEYWORDS')
+            corpus_update_df = keyword_df.drop_duplicates('keyword')
             corpus_update_df = corpus_update_df.dropna()
             with open(corpus_lookup_filename, 'a') as f:
-                corpus_update_df.to_csv(f, header=False)
+                corpus_update_df.to_csv(f, header=False, index=False)
     if filter_score_val:
         try:
             keyword_df = keyword_df[keyword_df['dbpedia_score'] >= float(filter_score_val)]  ### from yaml#filtered_keyword_df
@@ -1206,6 +1285,9 @@ def keyword_extraction_parallel(
         with open(content_info_json_loc, "r") as json_loc:
             content_info = json.load(json_loc)
         subject = content_info["domain"]
+    else:
+        subject = "none"
+    logging.info("Subject of the id: {0}".format(subject))
     path_to_cid_transcript = os.path.join(
         path_to_id, "enriched_text.txt")
     path_to_saved_keywords = ""
@@ -1471,7 +1553,7 @@ def WordtoPhraseMatch(wordlist, phraselist, DELIMITTER):
         for word in wordlist:
             if word in items:
                 word_count += 1
-                partial_match_list.append((word, '_'.join(items)))
+                partial_match_list.append((word, DELIMITTER.join(items)))
                 wordlist_dynamic.remove(word)
         match_count += int(bool(word_count))
     return partial_match_list, match_count

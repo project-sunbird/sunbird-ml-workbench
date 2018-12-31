@@ -26,7 +26,7 @@ def keyword_extraction(path_to_text, expected_output):
         return "Text is not available"
     else:
         tagme_df = get_tagme_spots(path_to_text)
-        actual_output = list(tagme_df["KEYWORDS"])
+        actual_output = list(tagme_df["keyword"])
         intersection_lists_output = intersection_lists(actual_output, expected_output, 0.8)
         return intersection_lists_output
 

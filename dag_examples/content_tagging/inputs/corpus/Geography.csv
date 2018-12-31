@@ -1,4 +1,4 @@
-KEYWORDS,dbpedia_score
+keyword,dbpedia_score
 luchi,0.4
 bandanna,0.3333333333
 eastern_part,1
@@ -1236,7 +1236,7 @@ durgapur,0.5
 barauni,1
 masjid,1
 north_eastern_council,0.8
-wale,0.05263157895
+wale,0.052631579
 ajay,0
 pinworm,1
 afghan,1
@@ -1559,13 +1559,13 @@ leed,1
 condiment,1
 grass_skirt,0
 bell_jar,0.6
-raven,0.08333333333
+raven,0.0833333333
 narmada_river,1
 slide,0.3333333333
 mantra,0.8571428571
 mason,0.3333333333
 azad_hind_fauj,0.8333333333
-blink,0.09090909091
+blink,0.0909090909
 tipu_sultan,0.7
 interlink,0.25
 chir_pine,0.5555555556
@@ -1782,7 +1782,7 @@ river_basin,1
 indira_point,1
 despot,1
 iceland,0.8235294118
-tummi,0.05882352941
+tummi,0.0588235294
 fatehpur_sikri,0.7894736842
 gulbarga_district,1
 helen,0.7777777778
@@ -1865,7 +1865,7 @@ majuli,1
 kendujhar_district,0.5
 free_trade,0.625
 gangu,1
-abandon,0.07692307692
+abandon,0.0769230769
 mahalwari,1
 nasal,1
 tropic_of_capricorn,0.375
@@ -1981,7 +1981,7 @@ hoard,1
 victim,0.3333333333
 fifa,0.5
 pre_modern,1
-creed,0.07142857143
+creed,0.0714285714
 alvar,1
 sarat_chandra_chattopadhyay,0.5
 sure,0
@@ -2068,7 +2068,7 @@ _wheel",1
 blood_test,0
 cardio_vascular,0.5
 follow,0.5
-recess,0.07692307692
+recess,0.0769230769
 amatya,0.5
 sangam,1
 mian,1
@@ -2088,7 +2088,7 @@ valium,0.3333333333
 green_bin,0.5
 weather_forecast,1
 trail,1
-amherst,0.05555555556
+amherst,0.0555555556
 m_w,0.6
 ridley,0.3571428571
 kare,0.2
@@ -3028,7 +3028,7 @@ right_to_health,1
 ugc,0.6
 secret,0
 sportsperson,1
-camil,0.09090909091
+camil,0.0909090909
 pace,0.4705882353
 hilsa,0.6666666667
 oppress,0.8
@@ -3091,7 +3091,7 @@ antarctica,1
 statement,0.5
 banarasi,1
 kite,0.8
-snowman,0.09090909091
+snowman,0.0909090909
 hate,0.75
 odd_number,0.3333333333
 dr__ambedkar,0.5862068966
@@ -3277,7 +3277,7 @@ globul,1
 pat_bagley,0.2857142857
 snow_fox,0.3636363636
 grain_product,0.5
-can,0.08333333333
+can,0.0833333333
 vote_bank,1
 ulama,0.6
 morton,0.6666666667
@@ -3792,7 +3792,7 @@ john_wayne,0.2978723404
 exotherm,1
 panic,1
 m__jackson,0.28
-jackson,0.08108108108
+jackson,0.0810810811
 south_west_monsoon,1
 surangam,1
 grameen_bank,0.4615384615
@@ -3971,7 +3971,7 @@ flower_pot,1
 sour_milk,0.5
 bare,0
 conic,0
-bob,0.03703703704
+bob,0.037037037
 eustachian_tube,1
 unesco,0.6
 arjun,0.3333333333
@@ -4851,7 +4851,7 @@ hot_wet,1
 wet_forest,1
 nant,0.25
 stori,0.5
-my_life,0.08333333333
+my_life,0.0833333333
 philip,0.4615384615
 veit,0.5
 carpet,1
@@ -5279,7 +5279,7 @@ state_list,1
 subject,1
 heartbeat,0.1666666667
 garo,1
-friday,0.07692307692
+friday,0.0769230769
 plowman,0.6666666667
 pile,1
 marshland,1
@@ -5377,7 +5377,7 @@ lung,0
 ascorb,0.1111111111
 scoliodon,1
 haidar_ali,0.625
-aladdin,0.04545454545
+aladdin,0.0454545455
 rajkot,1
 learn,1
 loami,0.4
@@ -5697,7 +5697,7 @@ landlord,1
 glori,0.25
 alkali,0
 ballad,0.6666666667
-blub,0.09090909091
+blub,0.0909090909
 noamundi,1
 afghanistan,0.8888888889
 khilafat,0.7142857143
@@ -5751,7 +5751,7 @@ pool,0.6666666667
 derozio,0.5714285714
 booth,0
 munda,1
-sulphur_acid,0.09090909091
+sulphur_acid,0.0909090909
 pelican,0.4444444444
 vetti,1
 bombay_duck,0.3333333333
@@ -5957,7 +5957,7 @@ appendix,1
 bhujangasana,1
 parapodium,0
 ice_sheet,1
-nana,0.07692307692
+nana,0.0769230769
 stalk,0
 catholic,0.3333333333
 jaisi,1
@@ -6666,10 +6666,10 @@ select,1
 fish_tale,0.4285714286
 common_era,1
 camphor,0.5
-the_dream,0.07692307692
+the_dream,0.0769230769
 side_grip,0
 film_star,0.6666666667
-chara,0.05263157895
+chara,0.052631579
 prabhat,0.3333333333
 railway_network,0
 ireland,1
@@ -7089,7 +7089,7 @@ rise,0.125
 mansarowar_lake,0.8333333333
 tyranni,0
 archaebacteria,1
-coil,0.09090909091
+coil,0.0909090909
 hawk,0.3333333333
 vault,1
 major,1
@@ -7100,7 +7100,7 @@ egyptian,1
 common_wealth,0.1666666667
 calm,1
 parasit,1
-reaper,0.09090909091
+reaper,0.0909090909
 peruvian,1
 bandh,1
 bouquet,0.6666666667
@@ -7995,7 +7995,7 @@ behaviour,1
 appam,1
 shanti,0
 hembram,1
-rebel,0.09090909091
+rebel,0.0909090909
 russian_orthodox_christian,0.7
 orthodox_christian,0.7
 resistor,0
@@ -8472,7 +8472,7 @@ odour,1
 jal,0.4
 dead_leaf,0.25
 leaf,0.8
-hire,0.07692307692
+hire,0.0769230769
 purchas,0.3333333333
 bronz,0
 flower_petal,0.75
@@ -8737,7 +8737,7 @@ street_light,0.8
 relief,1
 sachar_committe,0.6
 uranium,0.3333333333
-taxol,0.08333333333
+taxol,0.0833333333
 boon,0
 plate,1
 rani_lakshmibai,1
@@ -9135,7 +9135,7 @@ chime,0
 tabular,1
 walnut,0.5
 coup,0.75
-chuck,0.08333333333
+chuck,0.0833333333
 tall,1
 eyestrain,1
 biotic,1
@@ -10084,7 +10084,7 @@ convent,1
 plant,1
 spirogyra,0
 japan,0.5833333333
-today,0.06666666667
+today,0.0666666667
 food_web,1
 sorghum,0.4
 sub,0.4
@@ -10563,7 +10563,7 @@ mosquito,0.375
 bud,0
 hydra,0.3333333333
 tong,0.4
-convers,0.07692307692
+convers,0.0769230769
 side,1
 polit,0.2
 prison,1
@@ -10593,4 +10593,539 @@ upper_arm,0
 support,1
 swing,1
 palamau,0.6666666667
-konkan,1
+konkan,0
+agricultural,1
+hello,0
+everyone,0
+so today,0
+will,0
+ganga river,0.2857142857
+river system,0.8571428571
+one,0.3333333333
+india,0.5714285714
+tributaries,0.75
+night,0.6666666667
+i am,0.125
+am,0
+bhumika,0
+saini,0
+engineering,0.5
+nit jaipur,0
+you,0
+can,0.5
+follow me,0
+link,0.2
+courses,0.6666666667
+free,0
+free of cost,0
+if,0
+course,1
+contributor,0.25
+first,0.25
+we,0.2857142857
+ll,0
+conferences,1
+five continents,1
+continents,1
+next,0
+flight,0
+now,0
+bhagirathi,0.375
+alaknanda,0
+source stream,1
+river ganga,0.2857142857
+rises,1
+foot,0.25
+gangotri glacier,0
+at home,0.3333333333
+home,0
+switch,0.6666666667
+gomukh,0
+right now,0
+centres,0
+banks,0.8888888889
+haridwar,0.2857142857
+rishikesh,0.25
+kanpur,0
+kannauj,0
+allahabad,0.1428571429
+varanasi,0
+patna,0
+ghazipur,0
+bhagalpur,0
+mirzapur,0
+buxar,0
+towns,1
+uttarakhand,0
+up,0.25
+bihar,0.3333333333
+region,0
+ok now,0
+measure,1
+marriages,0.5
+other one,0
+car battery,0
+farakka barrage,0.2
+west bengal,0.4
+prayag,0.1428571429
+inn,0
+upper course,1
+ganga,0.2857142857
+waterfall,1
+head,1
+stream,1
+write,1
+joins,0
+vishnuprayag,0
+confluence,1
+dolly,0
+mandakini,0
+like it is,0
+nandprayag,0
+month,0
+current,1
+pindar river,0
+glacier,1
+ok,0
+rudraprayag,0
+light show,0.6666666667
+conference,1
+devprayag,0
+order,0.8
+five,0
+left bank,1
+ramganga,0
+gomti,0
+agra,0
+rapti river,0
+sand,1
+budhi gandak,0
+kashif,0
+right bank,1
+yamuna river,0.25
+tree,1
+listen,0
+sone river,0
+father,0.6666666667
+arihant,0
+north pole,1
+holy,0.3333333333
+image,0.8
+this one,0
+ram,0
+kakkar,0.25
+repeat,0
+cochin,0
+dehradun,0
+me,0.6666666667
+light,0
+stone,1
+join,0
+two rivers,0.7272727273
+rihan,0
+not cool,0
+coded,1
+second,0.0909090909
+solution,0
+feet,0.25
+struct,0
+open,0.5
+relation,0
+right,0
+leg,0
+satopanth lake,0.3333333333
+alaknanda river,0
+bhagirathi river,0.375
+body,1
+show,0
+sweets,0
+pinda,0
+gangadhar,0
+hd,0.375
+messages,0
+rains,0
+ready,0
+steady,0
+po,0
+di district,0
+chamoli district,0
+badrinath,0.1666666667
+natural spring,1
+is it,0
+lying,0.7142857143
+remember,1
+satopanth glacier,0
+cos,0
+2nd,0
+uttarkashi district,0
+high school,1
+upper,0
+catchment area,0.875
+altitude,1
+right here,0
+yes,0
+attachment,0.5
+river,1
+spectacular,0
+gorgeous,0
+cutting,1
+school,0
+himalayan,0.25
+ranges,1
+middle course,1
+gangotri,0.0833333333
+uttarkashi,0
+settlement,1
+this river,0
+tehri dam,0
+keep,0.3333333333
+key,0.5
+points,0
+files,0.3333333333
+data,0.3333333333
+on this day,0
+day,0.5
+after the fact,0
+fact is,0
+type,0.6
+southwestern,0
+kumaon,0
+kumaon region,0
+flowing,0
+corbett national park,0
+lion,0
+doon valley,0
+prone,0.6666666667
+kurnool,0
+origin,0
+meeting,0.3125
+city,1
+bareilly,0
+pan,1
+next one,0
+this is this,0
+taal,0
+pilibhit,0
+believe,0.9090909091
+believe it,0
+northernmost,0.5
+district,1
+linkedin,0.3333333333
+beaten up,0.6666666667
+nice,0.3333333333
+raining,0
+u p,0
+today,0.0666666667
+societies,0.7
+lucknow,0
+imambara,0
+capital city,0
+up it,0
+gomti river,0
+lakhimpur kheri,0
+sultanpur,0
+jaunpur,0
+cities,1
+visa,0.6666666667
+cuts,0.3333333333
+jaunpur city,0
+equal,0
+bit,0.25
+so you,0
+northern,1
+end,0
+pilibhit district,0
+this way,0
+way,0
+river gomti,0
+gazipur,0
+play store,0
+tributary,0.75
+perennial river,1
+tibetan plateau,0.6666666667
+lake mansarovar,0.1666666667
+himalayas,0.25
+nepal,0.4545454545
+sharda river,0
+fish,0.6666666667
+anderson,0
+antecedent,0
+joint,0.375
+exam,0.5
+date,0
+oil,0.4
+chapra,0
+sim,1
+love nepal,0
+net,0.5
+sharda,0
+acid,0
+hair,0
+diseases,0.7142857143
+eating,0.75
+somewhere,0
+tissue,0
+present,1
+small,0
+srs,0.25
+great himalayas,0
+pithoragarh district,0
+as river,0
+mahakali,0
+relevant,1
+borders,1
+enters,0
+plains,0.2857142857
+maa,0
+kali,0.2857142857
+same river,0
+nona,0
+life,0.5
+brahma,0
+garden,1
+till,0.5
+all you,0
+wave,1
+ghagra,0
+asha,0
+rupees,0
+lesson,0
+thank you,0
+development,1
+india,0.5714285714
+indian agriculture,0
+agriculture,1
+backbone,0
+indian economy,0.5
+majority,1
+engaged,0.8333333333
+agricultural activities,1
+food,1
+employment,1
+well,1
+raw,0.25
+raw materials,0.5
+industries,0
+physical,1
+diversities,0
+led,0.2857142857
+diversity,0.6666666667
+change,0.25
+pattern,0.6666666667
+time,0.1666666667
+time and space,0.3333333333
+space,0.5
+independence,1
+progressive,1
+scene,0
+agriculture in india,0
+little,0
+now listen,0
+group,0.5
+students,1
+aspects,0.25
+commendable,0
+input,0.5
+process,0.3333333333
+output,1
+trade,0
+why,0
+you,0
+so sad,0
+i am,0
+am,1
+my parents,0
+we don't have,0
+sufficient,0.1666666667
+money,0.5
+cultivate,1
+land,1
+suffering,0.7777777778
+loss,1
+worry,1
+can,0
+loan,0
+bank,0.25
+managing,1
+easy,0
+job,1
+remind,0
+high,0.5
+interest,0.6666666667
+main,0
+year before,0
+we,0.2857142857
+taken,1
+money lender,0.3333333333
+first,0
+charge,1
+sleeping,0.8333333333
+hybrid,0
+non institutional,0
+like money,0
+money lenders,0.3333333333
+traders,0
+landlords,1
+national banks,0
+commercial banks,0
+cooperative banks,0
+visible,0
+government,1
+recognised,1
+institutions,0
+us,0
+types of loans,0
+short,0.5
+medium,1
+requirement,0
+repair,0.5
+proper,1
+lawrence,0
+rain,0
+lead,0.3333333333
+production,0
+think,0.6
+scientific,0
+irrigation system,1
+sprinkler,1
+drip irrigation,0.8
+overcome,0
+lost,0.0588235294
+kind,0.6666666667
+quality,0.75
+soil,1
+soil water,1
+temperature,0.3333333333
+humidity,0.75
+affects,1
+agricultural crops,1
+topographical,1
+climatic,1
+condition,0.7142857143
+himalayan states,0.25
+apple,0
+age,0.3333333333
+karnataka,0
+kerala,0
+tamilnadu,0.25
+popular,1
+spices,0
+coffee,0.2
+father,0.6666666667
+testing,0.3333333333
+lab,0
+help,0.0625
+understand,1
+fertilizers,1
+crops,1
+high yielding,1
+varieties,0
+irrigation,1
+modern technology,0.5
+technology,0.5
+machines,0.5
+flag,0.3333333333
+leveler,0
+sprayer,0
+pump,0
+dealers,0
+plantar,0.3333333333
+packers,0
+speedy,0
+work,0.1666666667
+parents,1
+practice,0.3333333333
+rent,1
+play,1
+line,0
+do you know,0
+current,0
+ministers,0.5
+hairstyle,0
+schemes,0
+green revolution,0.25
+comprehensible,0
+programme,1
+right,1
+fair,1
+compensation,1
+transparency,0.5
+land acquisition,1
+acquisition,0.3333333333
+rehabilitation,0.6666666667
+resettlement,1
+act,1
+crop insurance,1
+disasters,1
+scheme,0.3333333333
+kisan credit card,0.3333333333
+personal accident,0
+accident insurance,0
+zaira,0.1666666667
+initiated,1
+weather,1
+bulletin,0
+channel,0.6666666667
+helpline,0.3333333333
+number,0.6666666667
+farmers,1
+information,0.5
+fun,1
+fixed,1
+minimum,1
+support price,1
+remunerative,0
+procurement,0.25
+check,0.4
+exploited,0.5
+middle man,0
+silver,0
+rate,0.3333333333
+i will,0
+share,0
+discussion,0.5
+solution,0
+problem,0.8333333333
+you are,0
+we are,0
+happy you,0
+reason,0.8
+financial,0
+geographical,1
+awareness,0.25
+indian,0.4285714286
+diversify,0.5
+cropping,0.75
+will,0.3333333333
+income,0
+reduce,0.5
+environmental degradation,0.5
+do,0.4
+composite,0.5
+sustainable,0.8
+planning,0.75
+execution,0.8
+development of agriculture,0.4444444444
+chapter,0.3333333333
+episodes,0
+economic,0.3333333333
+economic activity,0.75
+factors,0.3333333333
+influence,0.2941176471
+types,0
+world,1
+sure,0
+episode,0.4
+content,0
+textbook,0.5
+to go beyond,0
+go,0
+learn,1
+reading,0.8
+map,1
+hope,1
+one day,0
+producer,1
+supplier,0
+products,0.25
+world market,0.75

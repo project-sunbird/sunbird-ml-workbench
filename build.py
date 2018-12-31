@@ -34,7 +34,7 @@ def initialize(project):
     project.set_property_if_unset("flake8_include_scripts", True)
     project.set_property_if_unset("flake8_max_complexity", None)
     project.set_property_if_unset("flake8_verbose_output", False)
-
+    project.set_property_if_unset("coverage_break_build", False)
     project.set_property("sphinx_config_path", "docs/source/")
     project.set_property("sphinx_source_dir", "docs/source/")
     project.set_property("sphinx_output_dir", "docs/_build")

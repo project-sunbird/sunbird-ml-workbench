@@ -1,4 +1,4 @@
-KEYWORDS,dbpedia_score
+keyword,dbpedia_score
 luchi,0
 bandanna,0
 eastern_part,0
@@ -262,7 +262,7 @@ wolfgang,0
 pellet,0
 tao,0
 mountain_peak,0
-milch,0.07692307692
+milch,0.0769230769
 sarojini_naidu,0
 trivandrum,0
 cntl,0
@@ -2217,7 +2217,7 @@ mahar_regiment,0
 tamil_eelam,0
 richter_scale,0
 hartal,0
-beirut,0.04545454545
+beirut,0.0454545455
 pour,1
 subgroup,1
 zoroastrian,0
@@ -2419,7 +2419,7 @@ dustbin,0
 bedsheet,0
 activist,0
 alai_darwaza,0
-ishwarchandra_vidyasagar,0.07142857143
+ishwarchandra_vidyasagar,0.0714285714
 bair,0
 greek_orthodox_church,0
 somali,1
@@ -2441,7 +2441,7 @@ wardha,0
 wall_street,0
 nth_root,1
 be_bear,1
-alessandro_volta,0.05882352941
+alessandro_volta,0.0588235294
 bharti,0
 patrick,0
 makarasana,0
@@ -2473,7 +2473,7 @@ jewel,0
 abort,0.1666666667
 whiffwhaff,0
 butter,0
-belief,0.09090909091
+belief,0.0909090909
 runner,0
 birsa,0
 babasaheb_ambedkar,0
@@ -2573,7 +2573,7 @@ blue_green_alga,0
 green_alga,0
 udaiyar,0
 jama,0
-sangram_shah,0.09090909091
+sangram_shah,0.0909090909
 chandni_chowk,0
 streptomycin,0
 peepal,0
@@ -3509,7 +3509,7 @@ nizam,0
 ethno,0.25
 kalium,0
 ril,0
-j_j__thomson,0.07692307692
+j_j__thomson,0.0769230769
 gym,0
 ahmad_shah,0
 mil,0.25
@@ -4158,7 +4158,7 @@ dera_baba_nanak,0
 ph_paper,0.3333333333
 khizr_khan,0
 ambabai,0
-cartesian,0.08333333333
+cartesian,0.0833333333
 ahom,0
 repel,0
 ant,0
@@ -4401,7 +4401,7 @@ coastal_area,0
 kakinada,0
 koran,0
 ascend,0.5
-gautama,0.05882352941
+gautama,0.0588235294
 bile,0
 reflex_arc,0
 gobar,0
@@ -5197,7 +5197,7 @@ matlab,0.3
 yusufzai,1
 breast_feed,0
 guard_tube,0
-benjamin_franklin,0.01851851852
+benjamin_franklin,0.0185185185
 baroda,0
 khadir,0
 jaljeera,0
@@ -5456,7 +5456,7 @@ offens,1
 meal,0
 lebanon,0
 durgabai_deshmukh,0
-testi,0.04166666667
+testi,0.0416666667
 visakhapatnam,0
 mentor,0
 settler,0.5
@@ -5549,10 +5549,10 @@ sen,0
 tick,0
 shiv_sena,0
 cheetal,0
-bohr,0.02702702703
+bohr,0.027027027
 cassiopeia,0
 dorabji_tata,0
-ronald_ross,0.04545454545
+ronald_ross,0.0454545455
 pelt,0
 civil_right,0
 right_act,1
@@ -5751,7 +5751,7 @@ pool,0
 derozio,0
 booth,0
 munda,0
-sulphur_acid,0.09090909091
+sulphur_acid,0.0909090909
 pelican,0
 vetti,0
 bombay_duck,0
@@ -5854,7 +5854,7 @@ lamina,0
 stirrer,0
 flood_control,0
 date_of_birth,0
-ethanol,0.07142857143
+ethanol,0.0714285714
 tuna,0
 daniel_arap_moi,0
 chair,0
@@ -5910,7 +5910,7 @@ icc,0
 chancellorship,0
 coastal_plain,0
 wasteland,0.3333333333
-static,0.09090909091
+static,0.0909090909
 betwa,0
 kayastha,0
 cite,1
@@ -6276,7 +6276,7 @@ percent,0.5
 aaba,0
 platform,0
 inamgaon,0
-adolf_hitler,0.02083333333
+adolf_hitler,0.0208333333
 socio,0
 plural,0
 date,1
@@ -6370,7 +6370,7 @@ ananga,0
 pala,0
 metron,0
 geodes,0
-dome,0.08333333333
+dome,0.0833333333
 postal,0
 item,0
 java,0
@@ -6396,7 +6396,7 @@ liberti,0
 sodium_ion,0
 dhara,0
 father,0
-ivan,0.03571428571
+ivan,0.0357142857
 hub,0
 polybag,0
 fish_boat,0
@@ -6515,7 +6515,7 @@ la_moneda,0
 rumin,0
 sea_of_grass,0
 xine,0
-meme,0.09090909091
+meme,0.0909090909
 zanskar,0
 minimum_wage,0
 church_of_st_paul,1
@@ -8659,7 +8659,7 @@ damodar_valley_project,0
 dagger,0
 triploblast,0
 cheat,0
-racket,0.06666666667
+racket,0.0666666667
 william_hodson,0
 ambos,0
 flood,0.1428571429
@@ -8676,7 +8676,7 @@ basic,1
 obc,0
 jatha,0
 tyrol,0
-hitler,0.02083333333
+hitler,0.0208333333
 mandi,0
 chantal,0
 bear,0
@@ -9717,7 +9717,7 @@ snack,0
 collect,0
 ginger,0
 bhima,0
-buddha,0.05882352941
+buddha,0.0588235294
 taxila,0
 barri,0
 parker,0
@@ -9735,7 +9735,7 @@ top,0.25
 himalayan_yew,0
 kul,0
 cubic,1
-dark,0.09090909091
+dark,0.0909090909
 oili,0
 liquid,0
 harold_c__urey,0
