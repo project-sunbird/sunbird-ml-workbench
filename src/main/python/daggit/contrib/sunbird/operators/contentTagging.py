@@ -487,7 +487,7 @@ class CorpusCreation(BaseOperator):
                         path_to_keywords, keep_default_na=False)
                     extracted_keys = list(extracted_keyword_df['keyword'])
                 content_keywords_list.append(extracted_keys)
-                print("content_keywords_list: ", content_keywords_list)
+                # print("content_keywords_list: ", content_keywords_list)
             content_keywords_list = custom_listPreProc(
                 content_keywords_list,
                 word_preprocess["method"],
@@ -510,7 +510,6 @@ class CorpusCreation(BaseOperator):
                 [i for item1 in taxonomy_keywords for i in item1] +
                 [j for item2 in content_keywords_list for j in item2] +
                 corpus))
-            print(all_words)
             print("number of unique words: " + str(len(set(all_words))))
             vocabulary = dict()
             for i in range(len(all_words)):
@@ -603,7 +602,7 @@ class ContentTaxonomyScoring(BaseOperator):
         taxonomy_keywords = custom_listPreProc(
             taxonomy_keywords, 'stem_lem', DELIMITTER)
 
-        print("****Taxonomy_df keywords****: ", taxonomy["Keywords"])
+        # print("****Taxonomy_df keywords****: ", taxonomy["Keywords"])
 
         logging.info('Number of Content detected:  ' + str(len(content_meta)))
         print("Number of content detected:", str(len(content_meta)))
@@ -648,12 +647,10 @@ class ContentTaxonomyScoring(BaseOperator):
                 content_keywords_list,
                 'stem_lem',
                 DELIMITTER)
-            print("*****content keyword list:", content_keywords_list)
             content_meta['Content_keywords'] = content_keywords_list
             content_meta = content_meta.iloc[[i for i, e in enumerate(
                 content_meta['Content_keywords']) if (e != []) and len(e) > min_words]]
             content_meta = content_meta.reset_index(drop=True)
-            print("******filtered content meta: ", content_meta)
             print(
                 "contentmeta domains:", set(
                     content_meta[contentmeta_filterby_column]))
@@ -662,8 +659,6 @@ class ContentTaxonomyScoring(BaseOperator):
                 content_meta[contentmeta_filterby_column]) & set(
                 taxonomy[taxonomy_filterby_column]))
             print()
-            print("content meta columns: ", content_meta.columns)
-            print("taxonomy columns:", taxonomy.columns)
             print("Domains: ", domains)
             # empty domain
             if not domains:

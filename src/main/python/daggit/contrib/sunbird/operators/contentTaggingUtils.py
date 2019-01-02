@@ -38,6 +38,7 @@ from SPARQLWrapper import SPARQLWrapper, JSON
 logging.getLogger("requests").setLevel(logging.WARNING)
 
 nltk.download("stopwords")
+nltk.download("wordnet")
 stopwords = stopwords.words('english')
 
 
@@ -1161,7 +1162,6 @@ def checkSubjectPartial(dbpedia_prefix_cat, subject):
 
 
 def keyword_filter(tagme_response_df, path_to_corpus, path_to_category_lookup, subject, update_corpus, filter_score_val, num_keywords):
-    print("tagme_response_df:", tagme_response_df)
     print("subject:", subject)
 
     corpus_lookup_filename = os.path.join(path_to_corpus, subject + ".csv")
@@ -1200,11 +1200,10 @@ def keyword_filter(tagme_response_df, path_to_corpus, path_to_category_lookup, s
                     relatedness = float(count)/float(len(dbpedia_categories))
                 else:
                     relatedness = 0
-            except:
+            except BaseException:
                 relatedness = 0
             score_df = pd.DataFrame({'keyword': [keyword], 'dbpedia_score': [relatedness]})
-            print("score_df:", score_df)
-        keyword_df = keyword_df.append(score_df,ignore_index=True)
+        keyword_df = keyword_df.append(score_df, ignore_index=True)
 
     # preprocessing
     keyword_df['keyword'] = [str(x).lower() for x in list((keyword_df['keyword'])) if str(x) != 'nan']
@@ -1223,7 +1222,7 @@ def keyword_filter(tagme_response_df, path_to_corpus, path_to_category_lookup, s
             keyword_df = keyword_df.sort_values('dbpedia_score', ascending=[False]).iloc[0:int(num_keywords)]
         except BaseException:
             print("Error: Invalid num_keywords. Unable to filter. ")
-    #keyword_relatedness_df.iloc[0:4]['KEYWORDS'].to_csv(Path_to_keywords + "KEYWORDS.csv")
+    # keyword_relatedness_df.iloc[0:4]['KEYWORDS'].to_csv(Path_to_keywords + "KEYWORDS.csv")
     return keyword_df
 
 
