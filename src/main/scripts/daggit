@@ -34,7 +34,6 @@ def _unpause(dag):
 
 
 def init(graph):
-    
     if ORCHESTRATOR == 'airflow':
         os.path.expanduser('~')
         airflow_home = os.getenv('AIRFLOW_HOME', os.path.expanduser('~/airflow'))

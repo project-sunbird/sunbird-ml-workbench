@@ -433,7 +433,7 @@ class WriteToElasticSearch(BaseOperator):
             autotagging_json = merge_json(merge_json_list)
             autotagging_json.update({"ETS": epoch_time})
             elastic_search = Elasticsearch(
-                [{'host': 'localhost', 'port': 9200}])
+                [{'host': 'es', 'port': 9200}]) #change it to localhost
             if es_request.status_code == 200:
                 elastic_search.index(
                     index="auto_tagging",

@@ -13,6 +13,7 @@ from daggit.runtime.airflow_runtime import DaggitPyOp
 
 
 def create_dag(dag_config_file):
+    """Creating dags from graph location"""
     dag_config = {}
     with open(dag_config_file, 'r', encoding="latin1") as stream:
         try:

@@ -39,3 +39,4 @@ SPARQLWrapper
 elasticsearch
 pdfminer.six
 configparser
+sphinx_rtd_theme

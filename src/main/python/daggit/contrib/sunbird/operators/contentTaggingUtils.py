@@ -46,19 +46,14 @@ pun_list = list(string.punctuation)
 
 
 def language_detection(text):
+
     """
     This function will take in an enriched text as input and
     use google translate API to detect language of the text and returns it
 
-    Parameters
-    ----------
-    arg1: type
-    description
 
-    Returns
-    -------
-    result: type
-    description
+    :param text(str): The text for which the language need to be detected.
+    :returns: The detected language for the given text.
     """
     translate_client = translate.Client()
     result = translate_client.detect_language(text)
@@ -66,6 +61,13 @@ def language_detection(text):
 
 
 def is_date(date_string):
+
+    """
+    This function  takes a string as an argument and check if the string is a valid date
+
+    :param date_string(str): A string
+    :returns: A boolean value. True if the string is a valid date and False if otherwise
+    """
     try:
         parse(date_string)
         return True
@@ -74,23 +76,16 @@ def is_date(date_string):
 
 
 def downloadZipFile(url, directory):
+
     """
     Multimedia Content are stored in cloud in ecar or zip format.
     This function downloads a zip file pointed by url location.
     The user is expected to have access to the file pointed by url.
     The extracted file is available in location specified by directory.
 
-    Parameters
-    ----------
-    url: str
-    A valid url pointing to ziped Content location on cloud
+    :param url(str): A valid url pointing to zipped Content location on cloud
 
-    directory: str
-    path to download and extract the zip file
-
-    Returns
-    -------
-    bool: Status of download. True: succesful download  and False: for unsuccesful download
+    :returns: Status of download.``True``for uccessful download and ``False`` for unsuccesful download
     """
     r = requests.get(url)
     try:
@@ -107,18 +102,10 @@ def findFiles(directory, substrings):
     For a given directory, the function looks for any occurance of a particular
     file type mentioned by the substrings parameter.
 
-    Parameters
-    ----------
-    directory: str
-    path to a folder
-
-    substrings: list
-    an array of extentions to be searched within the directory.
-    ex: jpg, png, webm, mp4
-
-    Returns
-    -------
-    list: list of paths to detected files
+    :param directory(str): The path to a folder
+    :param substrings(list of strings): An array of extensions to be searched within the directory.
+                                        ``eg: jpg, png, webm, mp4``
+    :returns: List of paths to the detected files
     """
     ls = []
     if isinstance(directory, str) and isinstance(substrings, list):
@@ -133,6 +120,11 @@ def findFiles(directory, substrings):
 
 
 def unzip_files(directory):
+    """
+    This function iterates through all the files in a directory and unzip those that are zipped (.zip) to that same folder
+
+    :param directory(str): A directory or path to a folder
+    """
     assert isinstance(directory, str)
     zip_list = findFiles(directory, ['.zip'])
     bugs = {}
@@ -174,13 +166,13 @@ def ekstep_ecar_unzip(download_location, copy_location):
     """
     This function unzips an ecar file(ekstep file format)
     and parses all the subfolder.
-    All the files are copied into one of 'assets','data','items' folder
+    All the files are copied into one of ``'assets','data','items'`` folder
     (same name as in downloaded folder is maintained)
     based on its location in the downloaded folder.
-    ==========
-    arguments:
-        download_location: A location in the disk where ekstep ecar resource file in  downloaded
-        copy_location: A disk location where the ecar is unwrapped
+
+    :param download_location(str): A location in the disk where ekstep ecar resource file is downloaded
+    :param copy_location(str): A disk location where the ecar is unwrapped
+
     """
     assert isinstance(download_location, str)
     assert isinstance(copy_location, str)
@@ -190,7 +182,6 @@ def ekstep_ecar_unzip(download_location, copy_location):
         os.makedirs(copy_location)
     location = [os.path.join(copy_location, folder)
                 for folder in ['assets', 'data', 'items']]
-
     for loc in location:
         if not os.path.exists(loc):
             os.makedirs(loc)
@@ -234,20 +225,11 @@ def download_from_downloadUrl(url_to_download, path_to_folder, file_name):
 
 def df_feature_check(df, mandatory_fields):
     """
-    Check if columns are present in dataframe
+    Check if columns are present in the dataframe.
 
-    Parameters
-    ----------
-    df: dataframe
-    DataFrame that needs to be checked
-
-    mandatory_fields: list
-    list of column names
-
-    Returns
-    -------
-    result: bool
-    True if all columns are present. False if not all columns are present
+    :param df(dataframe): DataFrame that needs to be checked
+    :param mandatory_fields(list of strings): List of column names.``eg: jpg, png, webm, mp4``
+    :returns: ``True`` if all columns are present and ``False`` if not all columns are present
     """
     check = [0 if elem in list(df.columns) else 1 for elem in mandatory_fields]
     if sum(check) > 0:
@@ -260,15 +242,8 @@ def cleantext(text):
     """
     Custom function to clean enriched text
 
-    Parameters
-    ----------
-    text: str
-    Enriched text from Ekstep Content.
-
-    Returns
-    -------
-    text: str
-    Cleaned text
+    :param text(str): Enriched ytext from Ekstep Content.
+    :returns: Cleaned text.
     """
     replace_char = [
         "[",
@@ -300,24 +275,25 @@ def clean_text_tokens(text):
     """
     A custom preprocessor to tokenise and clean a text.
     Used in Content enrichment pipeline.
+
     Process:
-    - tokenise string using nltk word_tokenize()
-    - Remove stopwords
-    - Remove punctuations in words
-    - Remove digits and whitespaces
-    - Convert all words to lowercase
-    - Remove words of length 1
-    - Remove nan or empty string
 
-    Parameters
-    ----------
-    text: str
-    The string to be tokenised
+    * tokenise string using nltk word_tokenize()
 
-    Returns
-    -------
-    token: list
-    list of cleaned tokenised words
+    * Remove stopwords
+
+    * Remove punctuations in words
+
+    * Remove digits and whitespaces
+
+    * Convert all words to lowercase
+
+    * Remove words of length
+
+    * Remove nan or empty string
+
+    :param text(str): The string to be tokenised.
+    :returns: List of cleaned tokenised words.
     """
     tokens = nltk.word_tokenize(text)
     tokens = [token for token in tokens if token.lower() not in stopwords]
@@ -334,18 +310,10 @@ def strip_word(word, delimitter):
     Replace punctuations from string, punctuation and space in a word
     with a DELIMITTER
 
-    Parameters
-    ----------
-    word: str
-    Typically a word whose punctuations and space are removed
+    :param word(str): Typically a word whose punctuations and space are removed.
+    :param DELIMITTER(str): String to replace punctuations.
 
-    DELIMITTER: str
-    string to replace punctuations
-
-    Returns
-    -------
-    result: str
-    Processed string
+    :returns: Processed string.
     """
     delimitters = ["___", "__", " ", ",", "_", "-", ".", "/"] + \
         list(set(string.punctuation))
@@ -355,6 +323,14 @@ def strip_word(word, delimitter):
 
 
 def identify_contentType(url):
+
+    """
+    Given a URL for a content, it identifies the type of the content
+
+    :param url(str): URL
+
+    :returns: Type of the content
+    """
     extensions = ['mp3', 'wav', 'jpeg', 'zip', 'jpg', 'mp4', 'webm', 'ecar', 'wav', 'png']
     if ('youtu.be' in url) or ('youtube' in url):
         return "youtube"
@@ -367,12 +343,27 @@ def identify_contentType(url):
 
 
 def fetch_video_id(url):
+
+    """
+    Parse a youtube URL and generate video id
+
+    :param url(str): youtube video URL
+
+    :returns: Video id of the video URL
+    """
     parse_url = urllib.parse.urlparse(url)
     query = urllib.parse.parse_qs(parse_url.query)
     return query["v"][0]
 
 
 def embed_youtube_url_validation(url):
+    """
+    Convert a broken youtube URL to custom youtube URL
+
+    :param url(str): Youtube URL
+
+    :returns: Custom youtube URL
+    """
     youtube_regex = (
         r'(https?://)?(www\.)?'
         '(youtube|youtu|youtube-nocookie)\.(com|be)/'
@@ -389,6 +380,13 @@ def embed_youtube_url_validation(url):
 
 
 def getImgTags(img_file_name):
+    """
+    Enables to detect text from an image file using Google cloud vision API
+
+    :param img_file_name(str): Path to an image file
+
+    :returns: Text detected from the image file
+    """
     # Instantiates a client
     vision_client = vision.ImageAnnotatorClient()
     with io.open(img_file_name, 'rb') as image_file:
@@ -408,6 +406,12 @@ def getImgTags(img_file_name):
 
 
 def url_to_audio_extraction(url, path):
+    """
+    Download audio in .mp3 format from a youtube URL and save it in a disk location.
+
+    :param url(str): A youtube URL
+    :returns: Path to the downloaded audio
+    """
     logging.info("UTAE_YOUTUBE_URL_START: {0}".format(url))
     if not os.path.exists(path):
         os.makedirs(path)
@@ -446,17 +450,11 @@ def audio_split(path_to_audiofile, path_to_split_audio):
     """
     Takes in an audiofile, split it as per the duration and
     returns the path to the split
-    Parameters
-    ----------
-    path_to_audiofile: str
-    The string is the path to the audio m4a file.
-    path_to_split_audio:str
-    The path to save the audio segmented according to the duration.
 
-    Returns
-    -------
-    result: str
-    path to audio segment for a given audio file
+    :param path_to_audiofile(str): The string is the path to the audio m4a file.
+    :param path_to_split_audio(str): The path to save the audio segmented according to the duration.
+
+    :returns: Path to audio segment for a given audio file.
     """
     if not os.path.exists(path_to_split_audio):
         os.makedirs(path_to_split_audio)
@@ -499,17 +497,11 @@ def audio_split(path_to_audiofile, path_to_split_audio):
 def getTexts(AUDIO_FILE, lan, GOOGLE_APPLICATION_CREDENTIALS):
     """
     Takes in an audiofile and return text of the given audio input
-    Parameters
-    ----------
-    AUDIO_FILE: str
-    path to audio file in mp3 format
-    lan:str
-    This attribute will set the language of the recognition
 
-    Returns
-    -------
-    result: text
-    Recognized text for the audio snippet
+    :param AUDIO_FILE(str):     path to audio file in mp3 format
+    :param lan(str): This attribute will set the language of the recognition
+
+    :returns: Recognized text for the audio snippet
     """
     temp = AUDIO_FILE[:-4]
     AudioSegment.from_file(
@@ -538,13 +530,10 @@ def getTexts(AUDIO_FILE, lan, GOOGLE_APPLICATION_CREDENTIALS):
 
 def translate_english(text):
     """Translates a given text into target language
-    Parameters
-    ----------
-      text: str
-    Returns
-    -------
-    result: translated text
-    Text translated into a target language, say:en(English)
+
+    :param text(str): Text that need to be translated
+
+    :returns: Text translated into a target language, say:``en(English)``
     """
     translate_client = translate.Client()
     target = 'en'
@@ -554,6 +543,16 @@ def translate_english(text):
 
 
 def audio_to_text(path_to_audio_split_folder, GOOGLE_APPLICATION_CREDENTIALS):
+
+    """
+    This function takes in a folder of audios split as per its time duration and convert each audio into text
+    in succession and returns the concatenated texts for a given audio split folder
+
+    :param path_to_audio_split_folder(str): Path to a folder with the audio splits
+    :param GOOGLE_APPLICATION_CREDENTIALS: Environment variable to designate path to CREDENTIALS json
+
+    :returns: Concatenated text
+    """
     text = ""
     for i in natsorted(os.listdir(path_to_audio_split_folder), reverse=False):
         if i[-4:] == ".mp3":
@@ -565,22 +564,22 @@ def audio_to_text(path_to_audio_split_folder, GOOGLE_APPLICATION_CREDENTIALS):
     return text
 
 
-def text_conversion(path_to_audio_split_folder, path_to_text_folder):
-    logging.info("TC_START for audio split folder: {0}". format(
-        path_to_audio_split_folder))
-    if not os.path.exists(path_to_text_folder):
-        os.mkdir(path_to_text_folder)
+# def text_conversion(path_to_audio_split_folder, path_to_text_folder):
+#     logging.info("TC_START for audio split folder: {0}". format(
+#         path_to_audio_split_folder))
+#     if not os.path.exists(path_to_text_folder):
+#         os.mkdir(path_to_text_folder)
 
-    path_ = os.path.join(path_to_text_folder, "enriched_text.txt")
-    print("type of audio to text: ", type(
-        audio_to_text(path_to_audio_split_folder, GOOGLE_APPLICATION_CREDENTIALS)))
-    with open(path_, "w") as myTextFile:
-        myTextFile.write(audio_to_text(path_to_audio_split_folder, GOOGLE_APPLICATION_CREDENTIALS))
+#     path_ = os.path.join(path_to_text_folder, "enriched_text.txt")
+#     print("type of audio to text: ", type(
+#         audio_to_text(path_to_audio_split_folder, GOOGLE_APPLICATION_CREDENTIALS)))
+#     with open(path_, "w") as myTextFile:
+#         myTextFile.write(audio_to_text(path_to_audio_split_folder, GOOGLE_APPLICATION_CREDENTIALS))
 
-    logging.info("TC_TRANSCRIPT_PATH_CREATED: {0}".format(path_))
-    logging.info("TC_STOP for audio split folder: {0}". format(
-        path_to_audio_split_folder))
-    return path_
+#     logging.info("TC_TRANSCRIPT_PATH_CREATED: {0}".format(path_))
+#     logging.info("TC_STOP for audio split folder: {0}". format(
+#         path_to_audio_split_folder))
+#     return path_
 
 
 def getText_json(jdata, key):
@@ -716,6 +715,13 @@ def image_to_text(method, path_to_assets):
 
 
 def convert_pdf_to_txt(path_to_pdf_file):
+    """
+    A basic wrapper around PDF miner that parse a PDF file and extracts text from it.
+
+    :param path_to_pdf_file(str): Path to a PDF file
+
+    :returns: Text extracted from the PDF file
+    """
     rsrcmgr = PDFResourceManager()
     retstr = io.StringIO()
     codec = 'utf-8'
@@ -777,6 +783,9 @@ def convert_pdf_to_txt(path_to_pdf_file):
 
 
 def pdf_to_text(method, path_to_assets, pdf_url):
+    """
+
+    """
     text = ""
     number_of_pages = 0
     logging.info("PTT_START")
@@ -901,30 +910,20 @@ def multimodal_text_enrichment(
         content_to_text_path,
         GOOGLE_APPLICATION_CREDENTIALS):
     """
-    index, content_meta, content_type, content_to_text_path
     A custom function to extract text from a given
     Content id in a Content meta dataframe extracted using Content V2 api
 
     Parameters
     ----------
-    index: intpdf_to
-    row id for the Content
+    :param index(int): row id for the Content
+    :param content_meta(dataframe): A dataframe of Content metadata.
+     Mandatory fields for content_meta are ``['artifactUrl', 'content_type','downloadUrl',
+     'gradeLevel', 'identifier','keywords',
+     'language', 'subject']``
+    :param content_type(str): Can be ``youtube, pdf, ecml, unknown``
+    :param content_to_text_path(str): path to save the extracted text
 
-    content_meta: dataframe
-    A dataframe of Content metadata.
-    Mandatory fields: ['artifactUrl', 'content_type','downloadUrl',
-    'gradeLevel', 'identifier','keywords', 'language', 'subject']
-
-    content_type: str
-    Can be youtube, pdf, ecml, unknown
-
-    content_to_text_path:str
-    path to save the extracted text
-
-    Returns
-    -------
-    path_to_transcript: str
-    Path where text is saved
+    :returns: Path where text is saved
     """
     type_of_url = content_meta.iloc[index]["derived_contentType"]
     id_name = content_meta["identifier"][index]
@@ -1026,18 +1025,10 @@ def custom_tokenizer(path_to_text_file):
     Given a text file uses custom_tokenizer function
     to tokenise and write the tokenised words to a keywords.csv file.
 
-    Parameters
-    ----------
-    path_to_text_file: str
-    Location of text file to be tokenised
+    :param path_to_text_file(str): Location of text file to be tokenised
+    :param path_to_text_tokens_folder(str): Location to write the tokenised words
 
-    path_to_text_tokens_folder: str
-    Location to write the tokenised words
-
-    Returns
-    -------
-    path: str
-    location of keywords file. path_to_pafy_text_tokens_folder+"keywords.csv"
+    :returns: A dataframe with a ``KEYWORDS`` column that contains tokenised keywords.
     """
     text = open(path_to_text_file, "r")
     text_file = text.read()
@@ -1245,35 +1236,23 @@ def keyword_extraction_parallel(
     Part of Content enrichment pipeline.
     The funtion allows keyword extraction using TAGME or
     tokenising the words using nltk tokeniser.
-    The extracted keywords can be filtered based on following criteris:
-        -taxonomy: if the word is a taxonomy keyword
-        -dbpedia: if the keyword is domain keyword based on dbpedia criteria
+
+    The extracted keywords can be filtered based on following criteria:
+
+        - taxonomy: if the word is a taxonomy keyword
+
+        - dbpedia: if the keyword is domain keyword based on dbpedia criteria
         (occurs under the domain ontolgy in wikipedia)
+
         - none
 
+    :param dir(str): Name of the folder containing enriched_text.txt file inside it.
+    :param content_to_text_path(str): Path to directory containing multiple Content id folders.
+    :param taxonomy(str): Path to taxonomy file(csv)
+    :param extract_keywords(str): can be ``tagme`` or ``text_token``
+    :param filter_criteria(str): can be ``taxonomy`` or ``none``
 
-    Parameters
-    ----------
-    dir: str
-    Name of the folder containing enriched_text.txt file inside it.
-
-    content_to_text_path:str
-    path to directory containing multiple Content id folders
-
-    taxonomy: str
-    path to taxonomy file(csv)
-
-    extract_keywords:str
-    can be "tagme" or "text_token"
-
-    filter_criteria: str
-    can be "taxonomy" or "none"
-
-
-    Returns
-    -------
-    content_to_text_path: str
-    path to extracted keywords.
+    :returns: Path to extracted keywords.
     """
     print("*******dir*********:", dir)
     print("***Extract keywords***:", extract_keywords)
@@ -1677,7 +1656,7 @@ def agg_precision_from_dictionary(predicted_dct, observed_dct, window_len):
 def CustomDateFormater(**kwargs):
     import datetime
     from datetime import date, timedelta
-    expected_args = ['x','fileloc', 'datepattern']
+    expected_args = ['x', 'fileloc', 'datepattern']
     kwargsdict = dict()
     for key in kwargs.keys():
         if key in expected_args:

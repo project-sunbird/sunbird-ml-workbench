@@ -27,7 +27,7 @@ graph:
     operation: contentTagging.ContentToText
     arguments:
       range_start: 1
-      range_end: 5
+      range_end: 2
       num_of_processes: 1
       subset_contentMeta_by: youtube
       content_type:
@@ -64,10 +64,10 @@ graph:
       filter_score_val: 0.4
       num_keywords: 5
 
-  - node_name: write_to_elastic_search
-    inputs: [content_to_text.timestamp_folder]
-    outputs: []
-    operation: contentTagging.WriteToElasticSearch
+  # - node_name: write_to_elastic_search
+  #   inputs: [content_to_text.timestamp_folder]
+  #   outputs: []
+  #   operation: contentTagging.WriteToElasticSearch
 
   - node_name: corpus_creation
     inputs: [pathTotaxonomy, keyword_extraction.pathTocontentKeywords]

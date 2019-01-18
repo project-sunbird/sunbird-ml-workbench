@@ -1,0 +1,621 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>daggit.core.operators package &mdash; daggit 0.5.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="daggit.runtime package" href="daggit.runtime.html" />
+    <link rel="prev" title="daggit.core.io package" href="daggit.core.io.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> daggit
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="daggit.html">daggit package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="daggit.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="daggit.contrib.html">daggit.contrib package</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="daggit.core.html">daggit.core package</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="daggit.core.html#subpackages">Subpackages</a></li>
+<li class="toctree-l4"><a class="reference internal" href="daggit.core.html#module-daggit.core">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="daggit.runtime.html">daggit.runtime package</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="daggit.html#module-daggit">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">daggit</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="daggit.html">daggit package</a> &raquo;</li>
+        
+          <li><a href="daggit.core.html">daggit.core package</a> &raquo;</li>
+        
+      <li>daggit.core.operators package</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/daggit.core.operators.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="daggit-core-operators-package">
+<h1>daggit.core.operators package<a class="headerlink" href="#daggit-core-operators-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="daggit-core-operators-dfsplitters-module">
+<h2>daggit.core.operators.dfsplitters module<a class="headerlink" href="#daggit-core-operators-dfsplitters-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-daggit.core.operators.etl">
+<span id="daggit-core-operators-etl-module"></span><h2>daggit.core.operators.etl module<a class="headerlink" href="#module-daggit.core.operators.etl" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="daggit.core.operators.etl.Binning">
+<em class="property">class </em><code class="descclassname">daggit.core.operators.etl.</code><code class="descname">Binning</code><span class="sig-paren">(</span><em>nBins</em>, <em>labels=None</em>, <em>right=True</em>, <em>include_lowest=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/operators/etl.html#Binning"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.operators.etl.Binning" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">sklearn.base.TransformerMixin</span></code></p>
+<dl class="method">
+<dt id="daggit.core.operators.etl.Binning.fit">
+<code class="descname">fit</code><span class="sig-paren">(</span><em>X</em>, <em>y=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/operators/etl.html#Binning.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.operators.etl.Binning.fit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="daggit.core.operators.etl.Binning.transform">
+<code class="descname">transform</code><span class="sig-paren">(</span><em>X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/operators/etl.html#Binning.transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.operators.etl.Binning.transform" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="daggit.core.operators.etl.ColumnExtractor">
+<em class="property">class </em><code class="descclassname">daggit.core.operators.etl.</code><code class="descname">ColumnExtractor</code><span class="sig-paren">(</span><em>cols</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/operators/etl.html#ColumnExtractor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.operators.etl.ColumnExtractor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">sklearn.base.TransformerMixin</span></code></p>
+<dl class="method">
+<dt id="daggit.core.operators.etl.ColumnExtractor.fit">
+<code class="descname">fit</code><span class="sig-paren">(</span><em>X</em>, <em>y=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/operators/etl.html#ColumnExtractor.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.operators.etl.ColumnExtractor.fit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="daggit.core.operators.etl.ColumnExtractor.transform">
+<code class="descname">transform</code><span class="sig-paren">(</span><em>X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/operators/etl.html#ColumnExtractor.transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.operators.etl.ColumnExtractor.transform" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="daggit.core.operators.etl.DFClip">
+<em class="property">class </em><code class="descclassname">daggit.core.operators.etl.</code><code class="descname">DFClip</code><span class="sig-paren">(</span><em>lower=None</em>, <em>upper=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/operators/etl.html#DFClip"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.operators.etl.DFClip" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">sklearn.base.TransformerMixin</span></code></p>
+<p>Refer <a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/generated/pandas.DataFrame.clip.html">https://pandas.pydata.org/pandas-docs/stable/generated/pandas.DataFrame.clip.html</a></p>
+<dl class="method">
+<dt id="daggit.core.operators.etl.DFClip.fit">
+<code class="descname">fit</code><span class="sig-paren">(</span><em>X</em>, <em>y=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/operators/etl.html#DFClip.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.operators.etl.DFClip.fit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="daggit.core.operators.etl.DFClip.transform">
+<code class="descname">transform</code><span class="sig-paren">(</span><em>X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/operators/etl.html#DFClip.transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.operators.etl.DFClip.transform" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="daggit.core.operators.etl.DFFeatureUnion">
+<em class="property">class </em><code class="descclassname">daggit.core.operators.etl.</code><code class="descname">DFFeatureUnion</code><span class="sig-paren">(</span><em>transformer_list</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/operators/etl.html#DFFeatureUnion"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.operators.etl.DFFeatureUnion" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">sklearn.base.TransformerMixin</span></code></p>
+<dl class="method">
+<dt id="daggit.core.operators.etl.DFFeatureUnion.fit">
+<code class="descname">fit</code><span class="sig-paren">(</span><em>X</em>, <em>y=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/operators/etl.html#DFFeatureUnion.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.operators.etl.DFFeatureUnion.fit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="daggit.core.operators.etl.DFFeatureUnion.transform">
+<code class="descname">transform</code><span class="sig-paren">(</span><em>X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/operators/etl.html#DFFeatureUnion.transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.operators.etl.DFFeatureUnion.transform" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="daggit.core.operators.etl.DFImputer">
+<em class="property">class </em><code class="descclassname">daggit.core.operators.etl.</code><code class="descname">DFImputer</code><span class="sig-paren">(</span><em>strategy='mean'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/operators/etl.html#DFImputer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.operators.etl.DFImputer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">sklearn.base.TransformerMixin</span></code></p>
+<dl class="method">
+<dt id="daggit.core.operators.etl.DFImputer.fit">
+<code class="descname">fit</code><span class="sig-paren">(</span><em>X</em>, <em>y=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/operators/etl.html#DFImputer.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.operators.etl.DFImputer.fit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="daggit.core.operators.etl.DFImputer.transform">
+<code class="descname">transform</code><span class="sig-paren">(</span><em>X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/operators/etl.html#DFImputer.transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.operators.etl.DFImputer.transform" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="daggit.core.operators.etl.DFMissingNum">
+<em class="property">class </em><code class="descclassname">daggit.core.operators.etl.</code><code class="descname">DFMissingNum</code><span class="sig-paren">(</span><em>replace</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/operators/etl.html#DFMissingNum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.operators.etl.DFMissingNum" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">sklearn.base.TransformerMixin</span></code></p>
+<p>Replaces missing values by input value or method.Below are the methods available.
+‘mean’: replace missing values using the mean.
+‘median’: replace missing values using the median
+‘most_frequent’: replace missing values using the mode
+‘backfill’ or ‘bfill’: use NEXT valid observation to fill gap.
+‘pad’ or ‘ffill’: propagate last valid observation forward to next valid.
+Numeric value: Replaces with the input value
+Ex: repalce = “”mean”” for replacing with mean, replace = 0 for replacing with the numeric 0
+Note: No quotes for numeric values</p>
+<dl class="method">
+<dt id="daggit.core.operators.etl.DFMissingNum.fit">
+<code class="descname">fit</code><span class="sig-paren">(</span><em>X</em>, <em>y=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/operators/etl.html#DFMissingNum.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.operators.etl.DFMissingNum.fit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="daggit.core.operators.etl.DFMissingNum.transform">
+<code class="descname">transform</code><span class="sig-paren">(</span><em>X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/operators/etl.html#DFMissingNum.transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.operators.etl.DFMissingNum.transform" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="daggit.core.operators.etl.DFMissingStr">
+<em class="property">class </em><code class="descclassname">daggit.core.operators.etl.</code><code class="descname">DFMissingStr</code><span class="sig-paren">(</span><em>replace</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/operators/etl.html#DFMissingStr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.operators.etl.DFMissingStr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">sklearn.base.TransformerMixin</span></code></p>
+<p>METHODS
+most_frequent:
+backfill/bfill:
+pad/ffill:</p>
+<dl class="method">
+<dt id="daggit.core.operators.etl.DFMissingStr.fit">
+<code class="descname">fit</code><span class="sig-paren">(</span><em>X</em>, <em>y=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/operators/etl.html#DFMissingStr.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.operators.etl.DFMissingStr.fit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="daggit.core.operators.etl.DFMissingStr.transform">
+<code class="descname">transform</code><span class="sig-paren">(</span><em>X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/operators/etl.html#DFMissingStr.transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.operators.etl.DFMissingStr.transform" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="daggit.core.operators.etl.DFNormalizer">
+<em class="property">class </em><code class="descclassname">daggit.core.operators.etl.</code><code class="descname">DFNormalizer</code><span class="sig-paren">(</span><em>norm='l2'</em>, <em>copy=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/operators/etl.html#DFNormalizer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.operators.etl.DFNormalizer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">sklearn.base.TransformerMixin</span></code></p>
+<dl class="method">
+<dt id="daggit.core.operators.etl.DFNormalizer.fit">
+<code class="descname">fit</code><span class="sig-paren">(</span><em>X</em>, <em>y=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/operators/etl.html#DFNormalizer.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.operators.etl.DFNormalizer.fit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="daggit.core.operators.etl.DFNormalizer.transform">
+<code class="descname">transform</code><span class="sig-paren">(</span><em>X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/operators/etl.html#DFNormalizer.transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.operators.etl.DFNormalizer.transform" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="daggit.core.operators.etl.DFOneHot">
+<em class="property">class </em><code class="descclassname">daggit.core.operators.etl.</code><code class="descname">DFOneHot</code><span class="sig-paren">(</span><em>dummy_na=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/operators/etl.html#DFOneHot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.operators.etl.DFOneHot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">sklearn.base.TransformerMixin</span></code></p>
+<p>dummy_na: Unseeen values Boolean
+reference - <a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/generated/pandas.get_dummies.html">https://pandas.pydata.org/pandas-docs/stable/generated/pandas.get_dummies.html</a></p>
+<dl class="method">
+<dt id="daggit.core.operators.etl.DFOneHot.fit">
+<code class="descname">fit</code><span class="sig-paren">(</span><em>X</em>, <em>y=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/operators/etl.html#DFOneHot.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.operators.etl.DFOneHot.fit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="daggit.core.operators.etl.DFOneHot.transform">
+<code class="descname">transform</code><span class="sig-paren">(</span><em>X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/operators/etl.html#DFOneHot.transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.operators.etl.DFOneHot.transform" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="daggit.core.operators.etl.DFReplace">
+<em class="property">class </em><code class="descclassname">daggit.core.operators.etl.</code><code class="descname">DFReplace</code><span class="sig-paren">(</span><em>to_replace=None</em>, <em>value=None</em>, <em>regex=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/operators/etl.html#DFReplace"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.operators.etl.DFReplace" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">sklearn.base.TransformerMixin</span></code></p>
+<p>Refer <a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/generated/pandas.DataFrame.replace.html">https://pandas.pydata.org/pandas-docs/stable/generated/pandas.DataFrame.replace.html</a></p>
+<dl class="method">
+<dt id="daggit.core.operators.etl.DFReplace.fit">
+<code class="descname">fit</code><span class="sig-paren">(</span><em>X</em>, <em>y=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/operators/etl.html#DFReplace.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.operators.etl.DFReplace.fit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="daggit.core.operators.etl.DFReplace.transform">
+<code class="descname">transform</code><span class="sig-paren">(</span><em>X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/operators/etl.html#DFReplace.transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.operators.etl.DFReplace.transform" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="daggit.core.operators.etl.DFToSeries">
+<em class="property">class </em><code class="descclassname">daggit.core.operators.etl.</code><code class="descname">DFToSeries</code><a class="reference internal" href="_modules/daggit/core/operators/etl.html#DFToSeries"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.operators.etl.DFToSeries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">sklearn.base.TransformerMixin</span></code></p>
+<p>Implementation of pandas friendly numeric cast</p>
+<dl class="method">
+<dt id="daggit.core.operators.etl.DFToSeries.fit">
+<code class="descname">fit</code><span class="sig-paren">(</span><em>X</em>, <em>y=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/operators/etl.html#DFToSeries.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.operators.etl.DFToSeries.fit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="daggit.core.operators.etl.DFToSeries.transform">
+<code class="descname">transform</code><span class="sig-paren">(</span><em>X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/operators/etl.html#DFToSeries.transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.operators.etl.DFToSeries.transform" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="daggit.core.operators.etl.NumericCast">
+<em class="property">class </em><code class="descclassname">daggit.core.operators.etl.</code><code class="descname">NumericCast</code><a class="reference internal" href="_modules/daggit/core/operators/etl.html#NumericCast"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.operators.etl.NumericCast" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">sklearn.base.TransformerMixin</span></code></p>
+<p>Implementation of pandas friendly numeric cast</p>
+<dl class="method">
+<dt id="daggit.core.operators.etl.NumericCast.fit">
+<code class="descname">fit</code><span class="sig-paren">(</span><em>X</em>, <em>y=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/operators/etl.html#NumericCast.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.operators.etl.NumericCast.fit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="daggit.core.operators.etl.NumericCast.transform">
+<code class="descname">transform</code><span class="sig-paren">(</span><em>X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/operators/etl.html#NumericCast.transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.operators.etl.NumericCast.transform" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="daggit.core.operators.etl.QBinning">
+<em class="property">class </em><code class="descclassname">daggit.core.operators.etl.</code><code class="descname">QBinning</code><span class="sig-paren">(</span><em>q</em>, <em>labels=None</em>, <em>duplicates='raise'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/operators/etl.html#QBinning"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.operators.etl.QBinning" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">sklearn.base.TransformerMixin</span></code></p>
+<dl class="method">
+<dt id="daggit.core.operators.etl.QBinning.fit">
+<code class="descname">fit</code><span class="sig-paren">(</span><em>X</em>, <em>y=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/operators/etl.html#QBinning.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.operators.etl.QBinning.fit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="daggit.core.operators.etl.QBinning.transform">
+<code class="descname">transform</code><span class="sig-paren">(</span><em>X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/operators/etl.html#QBinning.transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.operators.etl.QBinning.transform" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="daggit.core.operators.etl.SeriesToDF">
+<em class="property">class </em><code class="descclassname">daggit.core.operators.etl.</code><code class="descname">SeriesToDF</code><a class="reference internal" href="_modules/daggit/core/operators/etl.html#SeriesToDF"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.operators.etl.SeriesToDF" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">sklearn.base.TransformerMixin</span></code></p>
+<p>Implementation of pandas friendly numeric cast</p>
+<dl class="method">
+<dt id="daggit.core.operators.etl.SeriesToDF.fit">
+<code class="descname">fit</code><span class="sig-paren">(</span><em>X</em>, <em>y=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/operators/etl.html#SeriesToDF.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.operators.etl.SeriesToDF.fit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="daggit.core.operators.etl.SeriesToDF.transform">
+<code class="descname">transform</code><span class="sig-paren">(</span><em>X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/operators/etl.html#SeriesToDF.transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.operators.etl.SeriesToDF.transform" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="daggit.core.operators.etl.StringCast">
+<em class="property">class </em><code class="descclassname">daggit.core.operators.etl.</code><code class="descname">StringCast</code><a class="reference internal" href="_modules/daggit/core/operators/etl.html#StringCast"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.operators.etl.StringCast" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">sklearn.base.TransformerMixin</span></code></p>
+<p>Implementation of pandas friendly string cast</p>
+<dl class="method">
+<dt id="daggit.core.operators.etl.StringCast.fit">
+<code class="descname">fit</code><span class="sig-paren">(</span><em>X</em>, <em>y=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/operators/etl.html#StringCast.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.operators.etl.StringCast.fit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="daggit.core.operators.etl.StringCast.transform">
+<code class="descname">transform</code><span class="sig-paren">(</span><em>X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/operators/etl.html#StringCast.transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.operators.etl.StringCast.transform" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="daggit.core.operators.etl.UnitConv">
+<em class="property">class </em><code class="descclassname">daggit.core.operators.etl.</code><code class="descname">UnitConv</code><span class="sig-paren">(</span><em>frm</em>, <em>to</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/operators/etl.html#UnitConv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.operators.etl.UnitConv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">sklearn.base.TransformerMixin</span></code></p>
+<dl class="method">
+<dt id="daggit.core.operators.etl.UnitConv.fit">
+<code class="descname">fit</code><span class="sig-paren">(</span><em>X</em>, <em>y=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/operators/etl.html#UnitConv.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.operators.etl.UnitConv.fit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="daggit.core.operators.etl.UnitConv.transform">
+<code class="descname">transform</code><span class="sig-paren">(</span><em>X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/operators/etl.html#UnitConv.transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.operators.etl.UnitConv.transform" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-daggit.core.operators.keras">
+<span id="daggit-core-operators-keras-module"></span><h2>daggit.core.operators.keras module<a class="headerlink" href="#module-daggit.core.operators.keras" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="daggit.core.operators.keras.baseline_model_svm">
+<code class="descclassname">daggit.core.operators.keras.</code><code class="descname">baseline_model_svm</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/operators/keras.html#baseline_model_svm"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.operators.keras.baseline_model_svm" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="daggit.core.operators.keras.train_svm_model">
+<em class="property">class </em><code class="descclassname">daggit.core.operators.keras.</code><code class="descname">train_svm_model</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/operators/keras.html#train_svm_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.operators.keras.train_svm_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="daggit.core.base.html#daggit.core.base.factory.BaseOperator" title="daggit.core.base.factory.BaseOperator"><code class="xref py py-class docutils literal notranslate"><span class="pre">daggit.core.base.factory.BaseOperator</span></code></a></p>
+<dl class="attribute">
+<dt id="daggit.core.operators.keras.train_svm_model.inputs">
+<code class="descname">inputs</code><a class="headerlink" href="#daggit.core.operators.keras.train_svm_model.inputs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="daggit.core.operators.keras.train_svm_model.outputs">
+<code class="descname">outputs</code><a class="headerlink" href="#daggit.core.operators.keras.train_svm_model.outputs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="daggit.core.operators.keras.train_svm_model.run">
+<code class="descname">run</code><span class="sig-paren">(</span><em>target_variable</em>, <em>ignore_variables=None</em>, <em>model_args=None</em>, <em>cv_args=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/operators/keras.html#train_svm_model.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.operators.keras.train_svm_model.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-daggit.core.operators.operators_registry">
+<span id="daggit-core-operators-operators-registry-module"></span><h2>daggit.core.operators.operators_registry module<a class="headerlink" href="#module-daggit.core.operators.operators_registry" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="daggit.core.operators.operators_registry.get_op_callable">
+<code class="descclassname">daggit.core.operators.operators_registry.</code><code class="descname">get_op_callable</code><span class="sig-paren">(</span><em>operator</em>, <em>module_path=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/operators/operators_registry.html#get_op_callable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.operators.operators_registry.get_op_callable" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-daggit.core.operators.sklearn">
+<span id="daggit-core-operators-sklearn-module"></span><h2>daggit.core.operators.sklearn module<a class="headerlink" href="#module-daggit.core.operators.sklearn" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="daggit.core.operators.sklearn.CrossValidate">
+<em class="property">class </em><code class="descclassname">daggit.core.operators.sklearn.</code><code class="descname">CrossValidate</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/operators/sklearn.html#CrossValidate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.operators.sklearn.CrossValidate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="daggit.core.base.html#daggit.core.base.factory.BaseOperator" title="daggit.core.base.factory.BaseOperator"><code class="xref py py-class docutils literal notranslate"><span class="pre">daggit.core.base.factory.BaseOperator</span></code></a></p>
+<dl class="attribute">
+<dt id="daggit.core.operators.sklearn.CrossValidate.inputs">
+<code class="descname">inputs</code><a class="headerlink" href="#daggit.core.operators.sklearn.CrossValidate.inputs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="daggit.core.operators.sklearn.CrossValidate.outputs">
+<code class="descname">outputs</code><a class="headerlink" href="#daggit.core.operators.sklearn.CrossValidate.outputs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="daggit.core.operators.sklearn.CrossValidate.run">
+<code class="descname">run</code><span class="sig-paren">(</span><em>target_variable</em>, <em>model_args</em>, <em>cv_args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/operators/sklearn.html#CrossValidate.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.operators.sklearn.CrossValidate.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="daggit.core.operators.sklearn.CustomPreprocess">
+<em class="property">class </em><code class="descclassname">daggit.core.operators.sklearn.</code><code class="descname">CustomPreprocess</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/operators/sklearn.html#CustomPreprocess"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.operators.sklearn.CustomPreprocess" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="daggit.core.base.html#daggit.core.base.factory.BaseOperator" title="daggit.core.base.factory.BaseOperator"><code class="xref py py-class docutils literal notranslate"><span class="pre">daggit.core.base.factory.BaseOperator</span></code></a></p>
+<dl class="attribute">
+<dt id="daggit.core.operators.sklearn.CustomPreprocess.inputs">
+<code class="descname">inputs</code><a class="headerlink" href="#daggit.core.operators.sklearn.CustomPreprocess.inputs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="daggit.core.operators.sklearn.CustomPreprocess.outputs">
+<code class="descname">outputs</code><a class="headerlink" href="#daggit.core.operators.sklearn.CustomPreprocess.outputs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="daggit.core.operators.sklearn.CustomPreprocess.run">
+<code class="descname">run</code><span class="sig-paren">(</span><em>drop_missing_perc</em>, <em>target_variable</em>, <em>ignore_variables</em>, <em>categorical_impute</em>, <em>numeric_impute</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/operators/sklearn.html#CustomPreprocess.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.operators.sklearn.CustomPreprocess.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="daggit.core.operators.sklearn.Splitters">
+<em class="property">class </em><code class="descclassname">daggit.core.operators.sklearn.</code><code class="descname">Splitters</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/operators/sklearn.html#Splitters"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.operators.sklearn.Splitters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="daggit.core.base.html#daggit.core.base.factory.BaseOperator" title="daggit.core.base.factory.BaseOperator"><code class="xref py py-class docutils literal notranslate"><span class="pre">daggit.core.base.factory.BaseOperator</span></code></a></p>
+<dl class="attribute">
+<dt id="daggit.core.operators.sklearn.Splitters.inputs">
+<code class="descname">inputs</code><a class="headerlink" href="#daggit.core.operators.sklearn.Splitters.inputs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="daggit.core.operators.sklearn.Splitters.outputs">
+<code class="descname">outputs</code><a class="headerlink" href="#daggit.core.operators.sklearn.Splitters.outputs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="daggit.core.operators.sklearn.Splitters.run">
+<code class="descname">run</code><span class="sig-paren">(</span><em>model_args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/operators/sklearn.html#Splitters.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.operators.sklearn.Splitters.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-daggit.core.operators">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-daggit.core.operators" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="daggit.runtime.html" class="btn btn-neutral float-right" title="daggit.runtime package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="daggit.core.io.html" class="btn btn-neutral" title="daggit.core.io package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Sunbird
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+    
+
+  
+
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

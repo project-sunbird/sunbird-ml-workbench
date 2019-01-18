@@ -10,9 +10,9 @@ from functools import reduce
 
 
 class NumericCast(TransformerMixin):
-    '''
+    """
     Implementation of pandas friendly numeric cast
-    '''
+    """
 
     def __init__(self):
         pass

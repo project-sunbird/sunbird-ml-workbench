@@ -1,0 +1,344 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>daggit.core.base.factory &mdash; daggit 0.5.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+
+  
+  <script src="../../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> daggit
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../daggit.html">daggit package</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">daggit</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>daggit.core.base.factory</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for daggit.core.base.factory</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">abc</span> <span class="k">import</span> <span class="n">ABCMeta</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span> <span class="nn">daggit.core.base.utils</span> <span class="k">import</span> <span class="n">get_as_list</span>
+
+
+<div class="viewcode-block" id="BaseOperator"><a class="viewcode-back" href="../../../../daggit.core.base.html#daggit.core.base.factory.BaseOperator">[docs]</a><span class="k">class</span> <span class="nc">BaseOperator</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="n">__metaclass__</span> <span class="o">=</span> <span class="n">ABCMeta</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">node</span> <span class="o">=</span> <span class="n">node</span>
+
+    <span class="nd">@property</span>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;Needs to be implemented!&#39;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">outputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;Needs to be implemented!&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="BaseOperator.run"><a class="viewcode-back" href="../../../../daggit.core.base.html#daggit.core.base.factory.BaseOperator.run">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;Needs to be implemented!&#39;</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_pre_execute</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_pre_execute</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="BaseDAGManager"><a class="viewcode-back" href="../../../../daggit.core.base.html#daggit.core.base.factory.BaseDAGManager">[docs]</a><span class="k">class</span> <span class="nc">BaseDAGManager</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="n">__metaclass__</span> <span class="o">=</span> <span class="n">ABCMeta</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dag</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dag</span> <span class="o">=</span> <span class="n">dag</span>
+
+<div class="viewcode-block" id="BaseDAGManager.init"><a class="viewcode-back" href="../../../../daggit.core.base.html#daggit.core.base.factory.BaseDAGManager.init">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">init</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;dagit init Needs to be implemented!&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BaseDAGManager.run"><a class="viewcode-back" href="../../../../daggit.core.base.html#daggit.core.base.factory.BaseDAGManager.run">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;dagit run needs to be implemented!&#39;</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="NodeData"><a class="viewcode-back" href="../../../../daggit.core.base.html#daggit.core.base.factory.NodeData">[docs]</a><span class="k">class</span> <span class="nc">NodeData</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">dag_id</span><span class="p">,</span>
+            <span class="n">task_id</span><span class="p">,</span>
+            <span class="n">data_alias</span><span class="p">,</span>
+            <span class="n">parent_task</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">external_ref</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dag_id</span> <span class="o">=</span> <span class="n">dag_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">task_id</span> <span class="o">=</span> <span class="n">task_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_alias</span> <span class="o">=</span> <span class="n">data_alias</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parent_task</span> <span class="o">=</span> <span class="n">parent_task</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">external_ref</span> <span class="o">=</span> <span class="n">external_ref</span></div>
+
+
+<div class="viewcode-block" id="Node"><a class="viewcode-back" href="../../../../daggit.core.base.html#daggit.core.base.factory.Node">[docs]</a><span class="k">class</span> <span class="nc">Node</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">node_config</span><span class="p">,</span>
+            <span class="n">experiment_name</span><span class="p">,</span>
+            <span class="n">owner</span><span class="p">,</span>
+            <span class="n">graph_inputs</span><span class="p">,</span>
+            <span class="n">graph_outputs</span><span class="p">,</span>
+            <span class="n">inputs_parents</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">dag_id</span> <span class="o">=</span> <span class="n">experiment_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">owner</span> <span class="o">=</span> <span class="n">owner</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">graph_inputs</span> <span class="o">=</span> <span class="n">graph_inputs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">graph_outputs</span> <span class="o">=</span> <span class="n">graph_outputs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">task_id</span> <span class="o">=</span> <span class="n">node_config</span><span class="p">[</span><span class="s2">&quot;node_name&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span> <span class="o">=</span> <span class="n">get_as_list</span><span class="p">(</span><span class="n">node_config</span><span class="p">[</span><span class="s2">&quot;inputs&quot;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span> <span class="o">=</span> <span class="n">get_as_list</span><span class="p">(</span><span class="n">node_config</span><span class="p">[</span><span class="s2">&quot;outputs&quot;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">operation</span> <span class="o">=</span> <span class="n">node_config</span><span class="p">[</span><span class="s2">&quot;operation&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inputs_parents</span> <span class="o">=</span> <span class="n">inputs_parents</span>
+
+        <span class="k">if</span> <span class="s2">&quot;imports&quot;</span> <span class="ow">in</span> <span class="n">node_config</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">imports</span> <span class="o">=</span> <span class="n">node_config</span><span class="p">[</span><span class="s2">&quot;imports&quot;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">imports</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="s2">&quot;arguments&quot;</span> <span class="ow">in</span> <span class="n">node_config</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">arguments</span> <span class="o">=</span> <span class="n">node_config</span><span class="p">[</span><span class="s2">&quot;arguments&quot;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">arguments</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">infer_data_objects</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Node.infer_data_objects"><a class="viewcode-back" href="../../../../daggit.core.base.html#daggit.core.base.factory.Node.infer_data_objects">[docs]</a>    <span class="k">def</span> <span class="nf">infer_data_objects</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="n">inputs_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">data_label</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">:</span>
+
+            <span class="k">if</span> <span class="n">data_label</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph_inputs</span><span class="p">:</span>
+                <span class="n">data_object</span> <span class="o">=</span> <span class="n">NodeData</span><span class="p">(</span>
+                    <span class="n">dag_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dag_id</span><span class="p">,</span>
+                    <span class="n">task_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">task_id</span><span class="p">,</span>
+                    <span class="n">data_alias</span><span class="o">=</span><span class="n">data_label</span><span class="p">,</span>
+                    <span class="n">external_ref</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">graph_inputs</span><span class="p">[</span><span class="n">data_label</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">data_name</span> <span class="o">=</span> <span class="n">data_label</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+                    <span class="n">data_name</span> <span class="o">=</span> <span class="n">data_label</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">data_object</span> <span class="o">=</span> <span class="n">NodeData</span><span class="p">(</span>
+                    <span class="n">dag_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dag_id</span><span class="p">,</span>
+                    <span class="n">task_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">task_id</span><span class="p">,</span>
+                    <span class="n">data_alias</span><span class="o">=</span><span class="n">data_name</span><span class="p">,</span>
+                    <span class="n">parent_task</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">inputs_parents</span><span class="p">[</span><span class="n">data_label</span><span class="p">])</span>
+
+            <span class="n">inputs_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">data_object</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span> <span class="o">=</span> <span class="n">inputs_list</span>
+
+        <span class="n">outputs_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">data_label</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="p">:</span>
+            <span class="n">namespaced_data_label</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_id</span> <span class="o">+</span> <span class="s1">&#39;.&#39;</span> <span class="o">+</span> <span class="n">data_label</span>
+            <span class="k">if</span> <span class="n">namespaced_data_label</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph_outputs</span><span class="p">:</span>
+                <span class="n">data_object</span> <span class="o">=</span> <span class="n">NodeData</span><span class="p">(</span>
+                    <span class="n">dag_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dag_id</span><span class="p">,</span>
+                    <span class="n">task_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">task_id</span><span class="p">,</span>
+                    <span class="n">parent_task</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">task_id</span><span class="p">,</span>
+                    <span class="n">data_alias</span><span class="o">=</span><span class="n">data_label</span><span class="p">,</span>
+                    <span class="n">external_ref</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">graph_outputs</span><span class="p">[</span><span class="n">namespaced_data_label</span><span class="p">])</span>
+            <span class="k">elif</span> <span class="n">data_label</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph_outputs</span><span class="p">:</span>
+                <span class="n">data_object</span> <span class="o">=</span> <span class="n">NodeData</span><span class="p">(</span>
+                    <span class="n">dag_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dag_id</span><span class="p">,</span>
+                    <span class="n">task_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">task_id</span><span class="p">,</span>
+                    <span class="n">parent_task</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">task_id</span><span class="p">,</span>
+                    <span class="n">data_alias</span><span class="o">=</span><span class="n">data_label</span><span class="p">,</span>
+                    <span class="n">external_ref</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">graph_outputs</span><span class="p">[</span><span class="n">data_label</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">data_object</span> <span class="o">=</span> <span class="n">NodeData</span><span class="p">(</span>
+                    <span class="n">dag_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dag_id</span><span class="p">,</span>
+                    <span class="n">task_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">task_id</span><span class="p">,</span>
+                    <span class="n">data_alias</span><span class="o">=</span><span class="n">data_label</span><span class="p">,</span>
+                    <span class="n">parent_task</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">task_id</span><span class="p">)</span>
+
+            <span class="n">outputs_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">data_object</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span> <span class="o">=</span> <span class="n">outputs_list</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Sunbird
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    
+
+  
+
+  <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

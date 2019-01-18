@@ -1,0 +1,1191 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>daggit.contrib.sunbird.operators package &mdash; daggit 0.5.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="daggit.core package" href="daggit.core.html" />
+    <link rel="prev" title="daggit.contrib.sunbird package" href="daggit.contrib.sunbird.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> daggit
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="daggit.html">daggit package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="daggit.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="daggit.contrib.html">daggit.contrib package</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="daggit.contrib.html#subpackages">Subpackages</a></li>
+<li class="toctree-l4"><a class="reference internal" href="daggit.contrib.html#module-daggit.contrib">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="daggit.core.html">daggit.core package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="daggit.runtime.html">daggit.runtime package</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="daggit.html#module-daggit">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">daggit</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="daggit.html">daggit package</a> &raquo;</li>
+        
+          <li><a href="daggit.contrib.html">daggit.contrib package</a> &raquo;</li>
+        
+          <li><a href="daggit.contrib.sunbird.html">daggit.contrib.sunbird package</a> &raquo;</li>
+        
+      <li>daggit.contrib.sunbird.operators package</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/daggit.contrib.sunbird.operators.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="daggit-contrib-sunbird-operators-package">
+<h1>daggit.contrib.sunbird.operators package<a class="headerlink" href="#daggit-contrib-sunbird-operators-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-daggit.contrib.sunbird.operators.contentTagging">
+<span id="daggit-contrib-sunbird-operators-contenttagging-module"></span><h2>daggit.contrib.sunbird.operators.contentTagging module<a class="headerlink" href="#module-daggit.contrib.sunbird.operators.contentTagging" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="daggit.contrib.sunbird.operators.contentTagging.ContentTaxonomyScoring">
+<em class="property">class </em><code class="descclassname">daggit.contrib.sunbird.operators.contentTagging.</code><code class="descname">ContentTaxonomyScoring</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTagging.html#ContentTaxonomyScoring"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTagging.ContentTaxonomyScoring" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="daggit.core.base.html#daggit.core.base.factory.BaseOperator" title="daggit.core.base.factory.BaseOperator"><code class="xref py py-class docutils literal notranslate"><span class="pre">daggit.core.base.factory.BaseOperator</span></code></a></p>
+<dl class="attribute">
+<dt id="daggit.contrib.sunbird.operators.contentTagging.ContentTaxonomyScoring.inputs">
+<code class="descname">inputs</code><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTagging.ContentTaxonomyScoring.inputs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="daggit.contrib.sunbird.operators.contentTagging.ContentTaxonomyScoring.outputs">
+<code class="descname">outputs</code><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTagging.ContentTaxonomyScoring.outputs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="daggit.contrib.sunbird.operators.contentTagging.ContentTaxonomyScoring.run">
+<code class="descname">run</code><span class="sig-paren">(</span><em>keyword_extract_filter_by</em>, <em>phrase_split</em>, <em>min_words</em>, <em>distanceMeasure</em>, <em>embedding_method</em>, <em>delimitter</em>, <em>filter_by</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTagging.html#ContentTaxonomyScoring.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTagging.ContentTaxonomyScoring.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="daggit.contrib.sunbird.operators.contentTagging.ContentToText">
+<em class="property">class </em><code class="descclassname">daggit.contrib.sunbird.operators.contentTagging.</code><code class="descname">ContentToText</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTagging.html#ContentToText"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTagging.ContentToText" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="daggit.core.base.html#daggit.core.base.factory.BaseOperator" title="daggit.core.base.factory.BaseOperator"><code class="xref py py-class docutils literal notranslate"><span class="pre">daggit.core.base.factory.BaseOperator</span></code></a></p>
+<dl class="attribute">
+<dt id="daggit.contrib.sunbird.operators.contentTagging.ContentToText.inputs">
+<code class="descname">inputs</code><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTagging.ContentToText.inputs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="daggit.contrib.sunbird.operators.contentTagging.ContentToText.outputs">
+<code class="descname">outputs</code><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTagging.ContentToText.outputs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="daggit.contrib.sunbird.operators.contentTagging.ContentToText.run">
+<code class="descname">run</code><span class="sig-paren">(</span><em>range_start</em>, <em>range_end</em>, <em>num_of_processes</em>, <em>subset_contentMeta_by</em>, <em>content_type</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTagging.html#ContentToText.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTagging.ContentToText.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="daggit.contrib.sunbird.operators.contentTagging.ContentToTextRead">
+<em class="property">class </em><code class="descclassname">daggit.contrib.sunbird.operators.contentTagging.</code><code class="descname">ContentToTextRead</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTagging.html#ContentToTextRead"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTagging.ContentToTextRead" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="daggit.core.base.html#daggit.core.base.factory.BaseOperator" title="daggit.core.base.factory.BaseOperator"><code class="xref py py-class docutils literal notranslate"><span class="pre">daggit.core.base.factory.BaseOperator</span></code></a></p>
+<dl class="attribute">
+<dt id="daggit.contrib.sunbird.operators.contentTagging.ContentToTextRead.inputs">
+<code class="descname">inputs</code><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTagging.ContentToTextRead.inputs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="daggit.contrib.sunbird.operators.contentTagging.ContentToTextRead.outputs">
+<code class="descname">outputs</code><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTagging.ContentToTextRead.outputs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="daggit.contrib.sunbird.operators.contentTagging.ContentToTextRead.run">
+<code class="descname">run</code><span class="sig-paren">(</span><em>range_start</em>, <em>range_end</em>, <em>num_of_processes</em>, <em>subset_contentMeta_by</em>, <em>content_type</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTagging.html#ContentToTextRead.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTagging.ContentToTextRead.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="daggit.contrib.sunbird.operators.contentTagging.ContentmetaCreation">
+<em class="property">class </em><code class="descclassname">daggit.contrib.sunbird.operators.contentTagging.</code><code class="descname">ContentmetaCreation</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTagging.html#ContentmetaCreation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTagging.ContentmetaCreation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="daggit.core.base.html#daggit.core.base.factory.BaseOperator" title="daggit.core.base.factory.BaseOperator"><code class="xref py py-class docutils literal notranslate"><span class="pre">daggit.core.base.factory.BaseOperator</span></code></a></p>
+<dl class="attribute">
+<dt id="daggit.contrib.sunbird.operators.contentTagging.ContentmetaCreation.inputs">
+<code class="descname">inputs</code><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTagging.ContentmetaCreation.inputs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="daggit.contrib.sunbird.operators.contentTagging.ContentmetaCreation.outputs">
+<code class="descname">outputs</code><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTagging.ContentmetaCreation.outputs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="daggit.contrib.sunbird.operators.contentTagging.ContentmetaCreation.run">
+<code class="descname">run</code><span class="sig-paren">(</span><em>copy_to</em>, <em>file_name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTagging.html#ContentmetaCreation.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTagging.ContentmetaCreation.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="daggit.contrib.sunbird.operators.contentTagging.CorpusCreation">
+<em class="property">class </em><code class="descclassname">daggit.contrib.sunbird.operators.contentTagging.</code><code class="descname">CorpusCreation</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTagging.html#CorpusCreation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTagging.CorpusCreation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="daggit.core.base.html#daggit.core.base.factory.BaseOperator" title="daggit.core.base.factory.BaseOperator"><code class="xref py py-class docutils literal notranslate"><span class="pre">daggit.core.base.factory.BaseOperator</span></code></a></p>
+<dl class="attribute">
+<dt id="daggit.contrib.sunbird.operators.contentTagging.CorpusCreation.inputs">
+<code class="descname">inputs</code><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTagging.CorpusCreation.inputs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="daggit.contrib.sunbird.operators.contentTagging.CorpusCreation.outputs">
+<code class="descname">outputs</code><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTagging.CorpusCreation.outputs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="daggit.contrib.sunbird.operators.contentTagging.CorpusCreation.run">
+<code class="descname">run</code><span class="sig-paren">(</span><em>keyword_folder_name</em>, <em>update_corpus</em>, <em>word_preprocess</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTagging.html#CorpusCreation.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTagging.CorpusCreation.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="daggit.contrib.sunbird.operators.contentTagging.Evaluation">
+<em class="property">class </em><code class="descclassname">daggit.contrib.sunbird.operators.contentTagging.</code><code class="descname">Evaluation</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTagging.html#Evaluation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTagging.Evaluation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="daggit.core.base.html#daggit.core.base.factory.BaseOperator" title="daggit.core.base.factory.BaseOperator"><code class="xref py py-class docutils literal notranslate"><span class="pre">daggit.core.base.factory.BaseOperator</span></code></a></p>
+<dl class="attribute">
+<dt id="daggit.contrib.sunbird.operators.contentTagging.Evaluation.inputs">
+<code class="descname">inputs</code><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTagging.Evaluation.inputs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="daggit.contrib.sunbird.operators.contentTagging.Evaluation.outputs">
+<code class="descname">outputs</code><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTagging.Evaluation.outputs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="daggit.contrib.sunbird.operators.contentTagging.Evaluation.run">
+<code class="descname">run</code><span class="sig-paren">(</span><em>window</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTagging.html#Evaluation.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTagging.Evaluation.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="daggit.contrib.sunbird.operators.contentTagging.GenerateObservedTag">
+<em class="property">class </em><code class="descclassname">daggit.contrib.sunbird.operators.contentTagging.</code><code class="descname">GenerateObservedTag</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTagging.html#GenerateObservedTag"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTagging.GenerateObservedTag" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="daggit.core.base.html#daggit.core.base.factory.BaseOperator" title="daggit.core.base.factory.BaseOperator"><code class="xref py py-class docutils literal notranslate"><span class="pre">daggit.core.base.factory.BaseOperator</span></code></a></p>
+<dl class="method">
+<dt id="daggit.contrib.sunbird.operators.contentTagging.GenerateObservedTag.getGradedigits">
+<code class="descname">getGradedigits</code><span class="sig-paren">(</span><em>class_x</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTagging.html#GenerateObservedTag.getGradedigits"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTagging.GenerateObservedTag.getGradedigits" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="daggit.contrib.sunbird.operators.contentTagging.GenerateObservedTag.inputs">
+<code class="descname">inputs</code><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTagging.GenerateObservedTag.inputs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="daggit.contrib.sunbird.operators.contentTagging.GenerateObservedTag.outputs">
+<code class="descname">outputs</code><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTagging.GenerateObservedTag.outputs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="daggit.contrib.sunbird.operators.contentTagging.GenerateObservedTag.run">
+<code class="descname">run</code><span class="sig-paren">(</span><em>window</em>, <em>level</em>, <em>tax_known_tag</em>, <em>content_known_tag</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTagging.html#GenerateObservedTag.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTagging.GenerateObservedTag.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="daggit.contrib.sunbird.operators.contentTagging.KeywordExtraction">
+<em class="property">class </em><code class="descclassname">daggit.contrib.sunbird.operators.contentTagging.</code><code class="descname">KeywordExtraction</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTagging.html#KeywordExtraction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTagging.KeywordExtraction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="daggit.core.base.html#daggit.core.base.factory.BaseOperator" title="daggit.core.base.factory.BaseOperator"><code class="xref py py-class docutils literal notranslate"><span class="pre">daggit.core.base.factory.BaseOperator</span></code></a></p>
+<dl class="attribute">
+<dt id="daggit.contrib.sunbird.operators.contentTagging.KeywordExtraction.inputs">
+<code class="descname">inputs</code><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTagging.KeywordExtraction.inputs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="daggit.contrib.sunbird.operators.contentTagging.KeywordExtraction.outputs">
+<code class="descname">outputs</code><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTagging.KeywordExtraction.outputs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="daggit.contrib.sunbird.operators.contentTagging.KeywordExtraction.run">
+<code class="descname">run</code><span class="sig-paren">(</span><em>extract_keywords</em>, <em>filter_criteria</em>, <em>update_corpus</em>, <em>filter_score_val</em>, <em>num_keywords</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTagging.html#KeywordExtraction.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTagging.KeywordExtraction.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="daggit.contrib.sunbird.operators.contentTagging.PredictTag">
+<em class="property">class </em><code class="descclassname">daggit.contrib.sunbird.operators.contentTagging.</code><code class="descname">PredictTag</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTagging.html#PredictTag"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTagging.PredictTag" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="daggit.core.base.html#daggit.core.base.factory.BaseOperator" title="daggit.core.base.factory.BaseOperator"><code class="xref py py-class docutils literal notranslate"><span class="pre">daggit.core.base.factory.BaseOperator</span></code></a></p>
+<dl class="attribute">
+<dt id="daggit.contrib.sunbird.operators.contentTagging.PredictTag.inputs">
+<code class="descname">inputs</code><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTagging.PredictTag.inputs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="daggit.contrib.sunbird.operators.contentTagging.PredictTag.outputs">
+<code class="descname">outputs</code><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTagging.PredictTag.outputs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="daggit.contrib.sunbird.operators.contentTagging.PredictTag.run">
+<code class="descname">run</code><span class="sig-paren">(</span><em>window</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTagging.html#PredictTag.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTagging.PredictTag.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="daggit.contrib.sunbird.operators.contentTagging.WriteToElasticSearch">
+<em class="property">class </em><code class="descclassname">daggit.contrib.sunbird.operators.contentTagging.</code><code class="descname">WriteToElasticSearch</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTagging.html#WriteToElasticSearch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTagging.WriteToElasticSearch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="daggit.core.base.html#daggit.core.base.factory.BaseOperator" title="daggit.core.base.factory.BaseOperator"><code class="xref py py-class docutils literal notranslate"><span class="pre">daggit.core.base.factory.BaseOperator</span></code></a></p>
+<dl class="attribute">
+<dt id="daggit.contrib.sunbird.operators.contentTagging.WriteToElasticSearch.inputs">
+<code class="descname">inputs</code><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTagging.WriteToElasticSearch.inputs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="daggit.contrib.sunbird.operators.contentTagging.WriteToElasticSearch.run">
+<code class="descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTagging.html#WriteToElasticSearch.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTagging.WriteToElasticSearch.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-daggit.contrib.sunbird.operators.contentTaggingUtils">
+<span id="daggit-contrib-sunbird-operators-contenttaggingutils-module"></span><h2>daggit.contrib.sunbird.operators.contentTaggingUtils module<a class="headerlink" href="#module-daggit.contrib.sunbird.operators.contentTaggingUtils" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="daggit.contrib.sunbird.operators.contentTaggingUtils.CustomDateFormater">
+<code class="descclassname">daggit.contrib.sunbird.operators.contentTaggingUtils.</code><code class="descname">CustomDateFormater</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTaggingUtils.html#CustomDateFormater"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTaggingUtils.CustomDateFormater" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="daggit.contrib.sunbird.operators.contentTaggingUtils.WordtoPhraseMatch">
+<code class="descclassname">daggit.contrib.sunbird.operators.contentTaggingUtils.</code><code class="descname">WordtoPhraseMatch</code><span class="sig-paren">(</span><em>wordlist</em>, <em>phraselist</em>, <em>DELIMITTER</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTaggingUtils.html#WordtoPhraseMatch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTaggingUtils.WordtoPhraseMatch" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="daggit.contrib.sunbird.operators.contentTaggingUtils.agg_precision_from_dictionary">
+<code class="descclassname">daggit.contrib.sunbird.operators.contentTaggingUtils.</code><code class="descname">agg_precision_from_dictionary</code><span class="sig-paren">(</span><em>predicted_dct</em>, <em>observed_dct</em>, <em>window_len</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTaggingUtils.html#agg_precision_from_dictionary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTaggingUtils.agg_precision_from_dictionary" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="daggit.contrib.sunbird.operators.contentTaggingUtils.audio_split">
+<code class="descclassname">daggit.contrib.sunbird.operators.contentTaggingUtils.</code><code class="descname">audio_split</code><span class="sig-paren">(</span><em>path_to_audiofile</em>, <em>path_to_split_audio</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTaggingUtils.html#audio_split"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTaggingUtils.audio_split" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes in an audiofile, split it as per the duration and
+returns the path to the split</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>path_to_audiofile</strong><strong>(</strong><strong>str</strong><strong>)</strong> – The string is the path to the audio m4a file.</li>
+<li><strong>path_to_split_audio</strong><strong>(</strong><strong>str</strong><strong>)</strong> – The path to save the audio segmented according to the duration.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Path to audio segment for a given audio file.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="daggit.contrib.sunbird.operators.contentTaggingUtils.audio_to_text">
+<code class="descclassname">daggit.contrib.sunbird.operators.contentTaggingUtils.</code><code class="descname">audio_to_text</code><span class="sig-paren">(</span><em>path_to_audio_split_folder</em>, <em>GOOGLE_APPLICATION_CREDENTIALS</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTaggingUtils.html#audio_to_text"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTaggingUtils.audio_to_text" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="daggit.contrib.sunbird.operators.contentTaggingUtils.checkSubject">
+<code class="descclassname">daggit.contrib.sunbird.operators.contentTaggingUtils.</code><code class="descname">checkSubject</code><span class="sig-paren">(</span><em>dbpedia_prefix_cat</em>, <em>subject</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTaggingUtils.html#checkSubject"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTaggingUtils.checkSubject" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="daggit.contrib.sunbird.operators.contentTaggingUtils.checkSubjectPartial">
+<code class="descclassname">daggit.contrib.sunbird.operators.contentTaggingUtils.</code><code class="descname">checkSubjectPartial</code><span class="sig-paren">(</span><em>dbpedia_prefix_cat</em>, <em>subject</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTaggingUtils.html#checkSubjectPartial"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTaggingUtils.checkSubjectPartial" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="daggit.contrib.sunbird.operators.contentTaggingUtils.clean_string_list">
+<code class="descclassname">daggit.contrib.sunbird.operators.contentTaggingUtils.</code><code class="descname">clean_string_list</code><span class="sig-paren">(</span><em>x_list</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTaggingUtils.html#clean_string_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTaggingUtils.clean_string_list" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="daggit.contrib.sunbird.operators.contentTaggingUtils.clean_text_tokens">
+<code class="descclassname">daggit.contrib.sunbird.operators.contentTaggingUtils.</code><code class="descname">clean_text_tokens</code><span class="sig-paren">(</span><em>text</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTaggingUtils.html#clean_text_tokens"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTaggingUtils.clean_text_tokens" title="Permalink to this definition">¶</a></dt>
+<dd><p>A custom preprocessor to tokenise and clean a text.
+Used in Content enrichment pipeline.</p>
+<p>Process:
+* tokenise string using nltk word_tokenize()
+* Remove stopwords
+* Remove punctuations in words
+* Remove digits and whitespaces
+* Convert all words to lowercase
+* Remove words of length 1
+* Remove nan or empty string</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>text</strong><strong>(</strong><strong>str</strong><strong>)</strong> – The string to be tokenised.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">List of cleaned tokenised words.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="daggit.contrib.sunbird.operators.contentTaggingUtils.cleantext">
+<code class="descclassname">daggit.contrib.sunbird.operators.contentTaggingUtils.</code><code class="descname">cleantext</code><span class="sig-paren">(</span><em>text</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTaggingUtils.html#cleantext"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTaggingUtils.cleantext" title="Permalink to this definition">¶</a></dt>
+<dd><p>Custom function to clean enriched text</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>text</strong><strong>(</strong><strong>str</strong><strong>)</strong> – Enriched ytext from Ekstep Content.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Cleaned text.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="daggit.contrib.sunbird.operators.contentTaggingUtils.convert_pdf_to_txt">
+<code class="descclassname">daggit.contrib.sunbird.operators.contentTaggingUtils.</code><code class="descname">convert_pdf_to_txt</code><span class="sig-paren">(</span><em>path_to_pdf_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTaggingUtils.html#convert_pdf_to_txt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTaggingUtils.convert_pdf_to_txt" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="daggit.contrib.sunbird.operators.contentTaggingUtils.custom_listPreProc">
+<code class="descclassname">daggit.contrib.sunbird.operators.contentTaggingUtils.</code><code class="descname">custom_listPreProc</code><span class="sig-paren">(</span><em>key_list</em>, <em>preproc</em>, <em>DELIMITTER</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTaggingUtils.html#custom_listPreProc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTaggingUtils.custom_listPreProc" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="daggit.contrib.sunbird.operators.contentTaggingUtils.custom_tokenizer">
+<code class="descclassname">daggit.contrib.sunbird.operators.contentTaggingUtils.</code><code class="descname">custom_tokenizer</code><span class="sig-paren">(</span><em>path_to_text_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTaggingUtils.html#custom_tokenizer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTaggingUtils.custom_tokenizer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a text file uses custom_tokenizer function
+to tokenise and write the tokenised words to a keywords.csv file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>path_to_text_file</strong><strong>(</strong><strong>str</strong><strong>)</strong> – Location of text file to be tokenised</li>
+<li><strong>path_to_text_tokens_folder</strong><strong>(</strong><strong>str</strong><strong>)</strong> – Location to write the tokenised words</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A dataframe with a <code class="docutils literal notranslate"><span class="pre">KEYWORDS</span></code> column that contains tokenised keywords.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="daggit.contrib.sunbird.operators.contentTaggingUtils.df_feature_check">
+<code class="descclassname">daggit.contrib.sunbird.operators.contentTaggingUtils.</code><code class="descname">df_feature_check</code><span class="sig-paren">(</span><em>df</em>, <em>mandatory_fields</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTaggingUtils.html#df_feature_check"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTaggingUtils.df_feature_check" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if columns are present in the dataframe.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>df</strong><strong>(</strong><strong>dataframe</strong><strong>)</strong> – DataFrame that needs to be checked</li>
+<li><strong>of strings</strong><strong>)</strong> (<em>mandatory_fields</em><em>(</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)"><em>list</em></a>) – List of column names.
+<code class="docutils literal notranslate"><span class="pre">eg:</span> <span class="pre">jpg,</span> <span class="pre">png,</span> <span class="pre">webm,</span> <span class="pre">mp4</span></code></li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><code class="docutils literal notranslate"><span class="pre">True</span></code> if all columns are present and <code class="docutils literal notranslate"><span class="pre">False</span></code> if not all columns are present</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="daggit.contrib.sunbird.operators.contentTaggingUtils.dictionary_merge">
+<code class="descclassname">daggit.contrib.sunbird.operators.contentTaggingUtils.</code><code class="descname">dictionary_merge</code><span class="sig-paren">(</span><em>dict_ls</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTaggingUtils.html#dictionary_merge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTaggingUtils.dictionary_merge" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="daggit.contrib.sunbird.operators.contentTaggingUtils.downloadZipFile">
+<code class="descclassname">daggit.contrib.sunbird.operators.contentTaggingUtils.</code><code class="descname">downloadZipFile</code><span class="sig-paren">(</span><em>url</em>, <em>directory</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTaggingUtils.html#downloadZipFile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTaggingUtils.downloadZipFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Multimedia Content are stored in cloud in ecar or zip format.
+This function downloads a zip file pointed by url location.
+The user is expected to have access to the file pointed by url.
+The extracted file is available in location specified by directory.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>url</strong><strong>(</strong><strong>str</strong><strong>)</strong> – A valid url pointing to zipped Content location on cloud</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Status of download.
+<code class="docutils literal notranslate"><span class="pre">True</span></code>: for successful download
+<code class="docutils literal notranslate"><span class="pre">False</span></code>: for unsuccesful download</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="daggit.contrib.sunbird.operators.contentTaggingUtils.download_from_downloadUrl">
+<code class="descclassname">daggit.contrib.sunbird.operators.contentTaggingUtils.</code><code class="descname">download_from_downloadUrl</code><span class="sig-paren">(</span><em>url_to_download</em>, <em>path_to_folder</em>, <em>file_name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTaggingUtils.html#download_from_downloadUrl"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTaggingUtils.download_from_downloadUrl" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="daggit.contrib.sunbird.operators.contentTaggingUtils.download_to_local">
+<code class="descclassname">daggit.contrib.sunbird.operators.contentTaggingUtils.</code><code class="descname">download_to_local</code><span class="sig-paren">(</span><em>method</em>, <em>url_to_download</em>, <em>path_to_save</em>, <em>id_name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTaggingUtils.html#download_to_local"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTaggingUtils.download_to_local" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="daggit.contrib.sunbird.operators.contentTaggingUtils.ecml_index_to_text">
+<code class="descclassname">daggit.contrib.sunbird.operators.contentTaggingUtils.</code><code class="descname">ecml_index_to_text</code><span class="sig-paren">(</span><em>method</em>, <em>path_to_id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTaggingUtils.html#ecml_index_to_text"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTaggingUtils.ecml_index_to_text" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="daggit.contrib.sunbird.operators.contentTaggingUtils.ecml_parser">
+<code class="descclassname">daggit.contrib.sunbird.operators.contentTaggingUtils.</code><code class="descname">ecml_parser</code><span class="sig-paren">(</span><em>ecml_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTaggingUtils.html#ecml_parser"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTaggingUtils.ecml_parser" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="daggit.contrib.sunbird.operators.contentTaggingUtils.ekstep_ecar_unzip">
+<code class="descclassname">daggit.contrib.sunbird.operators.contentTaggingUtils.</code><code class="descname">ekstep_ecar_unzip</code><span class="sig-paren">(</span><em>download_location</em>, <em>copy_location</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTaggingUtils.html#ekstep_ecar_unzip"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTaggingUtils.ekstep_ecar_unzip" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function unzips an ecar file(ekstep file format)
+and parses all the subfolder.
+All the files are copied into one of <code class="docutils literal notranslate"><span class="pre">'assets','data','items'</span></code> folder
+(same name as in downloaded folder is maintained)
+based on its location in the downloaded folder.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>download_location</strong><strong>(</strong><strong>str</strong><strong>)</strong> – A location in the disk where ekstep ecar resource file is downloaded</li>
+<li><strong>copy_location</strong><strong>(</strong><strong>str</strong><strong>)</strong> – A disk location where the ecar is unwrapped</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="daggit.contrib.sunbird.operators.contentTaggingUtils.embed_youtube_url_validation">
+<code class="descclassname">daggit.contrib.sunbird.operators.contentTaggingUtils.</code><code class="descname">embed_youtube_url_validation</code><span class="sig-paren">(</span><em>url</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTaggingUtils.html#embed_youtube_url_validation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTaggingUtils.embed_youtube_url_validation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="daggit.contrib.sunbird.operators.contentTaggingUtils.fetch_video_id">
+<code class="descclassname">daggit.contrib.sunbird.operators.contentTaggingUtils.</code><code class="descname">fetch_video_id</code><span class="sig-paren">(</span><em>url</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTaggingUtils.html#fetch_video_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTaggingUtils.fetch_video_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="daggit.contrib.sunbird.operators.contentTaggingUtils.findDate">
+<code class="descclassname">daggit.contrib.sunbird.operators.contentTaggingUtils.</code><code class="descname">findDate</code><span class="sig-paren">(</span><em>x_date</em>, <em>DS_DATA_HOME</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTaggingUtils.html#findDate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTaggingUtils.findDate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="daggit.contrib.sunbird.operators.contentTaggingUtils.findFiles">
+<code class="descclassname">daggit.contrib.sunbird.operators.contentTaggingUtils.</code><code class="descname">findFiles</code><span class="sig-paren">(</span><em>directory</em>, <em>substrings</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTaggingUtils.html#findFiles"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTaggingUtils.findFiles" title="Permalink to this definition">¶</a></dt>
+<dd><p>Accio!!
+For a given directory, the function looks for any occurance of a particular
+file type mentioned by the substrings parameter.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>directory</strong><strong>(</strong><strong>str</strong><strong>)</strong> – The path to a folder</li>
+<li><strong>of strings</strong><strong>)</strong> (<em>substrings</em><em>(</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)"><em>list</em></a>) – An array of extensions to be searched within the directory.
+<code class="docutils literal notranslate"><span class="pre">eg:</span> <span class="pre">jpg,</span> <span class="pre">png,</span> <span class="pre">webm,</span> <span class="pre">mp4</span></code></li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">List of paths to the detected files</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="daggit.contrib.sunbird.operators.contentTaggingUtils.getGradedigits">
+<code class="descclassname">daggit.contrib.sunbird.operators.contentTaggingUtils.</code><code class="descname">getGradedigits</code><span class="sig-paren">(</span><em>class_x</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTaggingUtils.html#getGradedigits"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTaggingUtils.getGradedigits" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="daggit.contrib.sunbird.operators.contentTaggingUtils.getImgTags">
+<code class="descclassname">daggit.contrib.sunbird.operators.contentTaggingUtils.</code><code class="descname">getImgTags</code><span class="sig-paren">(</span><em>img_file_name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTaggingUtils.html#getImgTags"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTaggingUtils.getImgTags" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="daggit.contrib.sunbird.operators.contentTaggingUtils.getPhrase">
+<code class="descclassname">daggit.contrib.sunbird.operators.contentTaggingUtils.</code><code class="descname">getPhrase</code><span class="sig-paren">(</span><em>x_list</em>, <em>DELIMITTER</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTaggingUtils.html#getPhrase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTaggingUtils.getPhrase" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="daggit.contrib.sunbird.operators.contentTaggingUtils.getTaxonomy">
+<code class="descclassname">daggit.contrib.sunbird.operators.contentTaggingUtils.</code><code class="descname">getTaxonomy</code><span class="sig-paren">(</span><em>DBpedia_cat</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTaggingUtils.html#getTaxonomy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTaggingUtils.getTaxonomy" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="daggit.contrib.sunbird.operators.contentTaggingUtils.getText_json">
+<code class="descclassname">daggit.contrib.sunbird.operators.contentTaggingUtils.</code><code class="descname">getText_json</code><span class="sig-paren">(</span><em>jdata</em>, <em>key</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTaggingUtils.html#getText_json"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTaggingUtils.getText_json" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="daggit.contrib.sunbird.operators.contentTaggingUtils.getTexts">
+<code class="descclassname">daggit.contrib.sunbird.operators.contentTaggingUtils.</code><code class="descname">getTexts</code><span class="sig-paren">(</span><em>AUDIO_FILE</em>, <em>lan</em>, <em>GOOGLE_APPLICATION_CREDENTIALS</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTaggingUtils.html#getTexts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTaggingUtils.getTexts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes in an audiofile and return text of the given audio input</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>AUDIO_FILE</strong><strong>(</strong><strong>str</strong><strong>)</strong> – path to audio file in mp3 format</li>
+<li><strong>lan</strong><strong>(</strong><strong>str</strong><strong>)</strong> – This attribute will set the language of the recognition</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Recognized text for the audio snippet</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="daggit.contrib.sunbird.operators.contentTaggingUtils.get_level_keywords">
+<code class="descclassname">daggit.contrib.sunbird.operators.contentTaggingUtils.</code><code class="descname">get_level_keywords</code><span class="sig-paren">(</span><em>taxonomy_df</em>, <em>level</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTaggingUtils.html#get_level_keywords"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTaggingUtils.get_level_keywords" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="daggit.contrib.sunbird.operators.contentTaggingUtils.get_sorted_list">
+<code class="descclassname">daggit.contrib.sunbird.operators.contentTaggingUtils.</code><code class="descname">get_sorted_list</code><span class="sig-paren">(</span><em>x</em>, <em>order</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTaggingUtils.html#get_sorted_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTaggingUtils.get_sorted_list" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="daggit.contrib.sunbird.operators.contentTaggingUtils.get_tagme_spots">
+<code class="descclassname">daggit.contrib.sunbird.operators.contentTaggingUtils.</code><code class="descname">get_tagme_spots</code><span class="sig-paren">(</span><em>path_to_text</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTaggingUtils.html#get_tagme_spots"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTaggingUtils.get_tagme_spots" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="daggit.contrib.sunbird.operators.contentTaggingUtils.get_words">
+<code class="descclassname">daggit.contrib.sunbird.operators.contentTaggingUtils.</code><code class="descname">get_words</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTaggingUtils.html#get_words"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTaggingUtils.get_words" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="daggit.contrib.sunbird.operators.contentTaggingUtils.identify_contentType">
+<code class="descclassname">daggit.contrib.sunbird.operators.contentTaggingUtils.</code><code class="descname">identify_contentType</code><span class="sig-paren">(</span><em>url</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTaggingUtils.html#identify_contentType"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTaggingUtils.identify_contentType" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="daggit.contrib.sunbird.operators.contentTaggingUtils.image_to_text">
+<code class="descclassname">daggit.contrib.sunbird.operators.contentTaggingUtils.</code><code class="descname">image_to_text</code><span class="sig-paren">(</span><em>method</em>, <em>path_to_assets</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTaggingUtils.html#image_to_text"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTaggingUtils.image_to_text" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="daggit.contrib.sunbird.operators.contentTaggingUtils.is_date">
+<code class="descclassname">daggit.contrib.sunbird.operators.contentTaggingUtils.</code><code class="descname">is_date</code><span class="sig-paren">(</span><em>date_string</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTaggingUtils.html#is_date"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTaggingUtils.is_date" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function  takes a string as an argument and check if the string is a valid date</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>date_string</strong><strong>(</strong><strong>str</strong><strong>)</strong> – A string</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A boolean value. True if the string is a valid date and False if otherwise</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="daggit.contrib.sunbird.operators.contentTaggingUtils.jaccard_with_phrase">
+<code class="descclassname">daggit.contrib.sunbird.operators.contentTaggingUtils.</code><code class="descname">jaccard_with_phrase</code><span class="sig-paren">(</span><em>list1</em>, <em>list2</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTaggingUtils.html#jaccard_with_phrase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTaggingUtils.jaccard_with_phrase" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="daggit.contrib.sunbird.operators.contentTaggingUtils.keyword_extraction_parallel">
+<code class="descclassname">daggit.contrib.sunbird.operators.contentTaggingUtils.</code><code class="descname">keyword_extraction_parallel</code><span class="sig-paren">(</span><em>dir</em>, <em>timestr</em>, <em>content_to_text_path</em>, <em>taxonomy</em>, <em>extract_keywords</em>, <em>filter_criteria</em>, <em>path_to_corpus</em>, <em>path_to_category_lookup</em>, <em>update_corpus</em>, <em>filter_score_val</em>, <em>num_keywords</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTaggingUtils.html#keyword_extraction_parallel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTaggingUtils.keyword_extraction_parallel" title="Permalink to this definition">¶</a></dt>
+<dd><p>A custom function to parallelly extract keywords
+for all the Content texts in a folder.
+This is run typically after multimodal_text_enrichment.
+Part of Content enrichment pipeline.
+The funtion allows keyword extraction using TAGME or
+tokenising the words using nltk tokeniser.
+The extracted keywords can be filtered based on following criteria:</p>
+<blockquote>
+<div>-taxonomy: if the word is a taxonomy keyword
+-dbpedia: if the keyword is domain keyword based on dbpedia criteria
+(occurs under the domain ontolgy in wikipedia)
+- none</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>dir</strong><strong>(</strong><strong>str</strong><strong>)</strong> – Name of the folder containing enriched_text.txt file inside it.</li>
+<li><strong>content_to_text_path</strong><strong>(</strong><strong>str</strong><strong>)</strong> – Path to directory containing multiple Content id folders.</li>
+<li><strong>taxonomy</strong><strong>(</strong><strong>str</strong><strong>)</strong> – Path to taxonomy file(csv)</li>
+<li><strong>extract_keywords</strong><strong>(</strong><strong>str</strong><strong>)</strong> – can be <code class="docutils literal notranslate"><span class="pre">tagme</span></code> or <code class="docutils literal notranslate"><span class="pre">text_token</span></code></li>
+<li><strong>filter_criteria</strong><strong>(</strong><strong>str</strong><strong>)</strong> – can be <code class="docutils literal notranslate"><span class="pre">taxonomy</span></code> or <code class="docutils literal notranslate"><span class="pre">none</span></code></li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Path to extracted keywords.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="daggit.contrib.sunbird.operators.contentTaggingUtils.keyword_filter">
+<code class="descclassname">daggit.contrib.sunbird.operators.contentTaggingUtils.</code><code class="descname">keyword_filter</code><span class="sig-paren">(</span><em>tagme_response_df</em>, <em>path_to_corpus</em>, <em>path_to_category_lookup</em>, <em>subject</em>, <em>update_corpus</em>, <em>filter_score_val</em>, <em>num_keywords</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTaggingUtils.html#keyword_filter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTaggingUtils.keyword_filter" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="daggit.contrib.sunbird.operators.contentTaggingUtils.language_detection">
+<code class="descclassname">daggit.contrib.sunbird.operators.contentTaggingUtils.</code><code class="descname">language_detection</code><span class="sig-paren">(</span><em>text</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTaggingUtils.html#language_detection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTaggingUtils.language_detection" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function will take in an enriched text as input and
+use google translate API to detect language of the text and returns it</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>text</strong><strong>(</strong><strong>str</strong><strong>)</strong> – The text for which the language need to be detected.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The detected language for the given text.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="daggit.contrib.sunbird.operators.contentTaggingUtils.load_obj">
+<code class="descclassname">daggit.contrib.sunbird.operators.contentTaggingUtils.</code><code class="descname">load_obj</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTaggingUtils.html#load_obj"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTaggingUtils.load_obj" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="daggit.contrib.sunbird.operators.contentTaggingUtils.match_str_list">
+<code class="descclassname">daggit.contrib.sunbird.operators.contentTaggingUtils.</code><code class="descname">match_str_list</code><span class="sig-paren">(</span><em>list1</em>, <em>list2</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTaggingUtils.html#match_str_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTaggingUtils.match_str_list" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="daggit.contrib.sunbird.operators.contentTaggingUtils.merge_json">
+<code class="descclassname">daggit.contrib.sunbird.operators.contentTaggingUtils.</code><code class="descname">merge_json</code><span class="sig-paren">(</span><em>merge_json_loc_list</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTaggingUtils.html#merge_json"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTaggingUtils.merge_json" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="daggit.contrib.sunbird.operators.contentTaggingUtils.multimodal_text_enrichment">
+<code class="descclassname">daggit.contrib.sunbird.operators.contentTaggingUtils.</code><code class="descname">multimodal_text_enrichment</code><span class="sig-paren">(</span><em>index</em>, <em>timestr</em>, <em>content_meta</em>, <em>content_type</em>, <em>content_to_text_path</em>, <em>GOOGLE_APPLICATION_CREDENTIALS</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTaggingUtils.html#multimodal_text_enrichment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTaggingUtils.multimodal_text_enrichment" title="Permalink to this definition">¶</a></dt>
+<dd><p>A custom function to extract text from a given
+Content id in a Content meta dataframe extracted using Content V2 api</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>index</strong><strong>(</strong><strong>int</strong><strong>)</strong> – row id for the Content</li>
+<li><strong>content_meta</strong><strong>(</strong><strong>dataframe</strong><strong>)</strong> – A dataframe of Content metadata.
+Mandatory fields for content_meta are <code class="docutils literal notranslate"><span class="pre">['artifactUrl',</span> <span class="pre">'content_type','downloadUrl',</span>
+<span class="pre">'gradeLevel',</span> <span class="pre">'identifier','keywords',</span> <span class="pre">'language',</span> <span class="pre">'subject']</span></code></li>
+<li><strong>content_type</strong><strong>(</strong><strong>str</strong><strong>)</strong> – Can be <code class="docutils literal notranslate"><span class="pre">youtube,</span> <span class="pre">pdf,</span> <span class="pre">ecml,</span> <span class="pre">unknown</span></code></li>
+<li><strong>content_to_text_path</strong><strong>(</strong><strong>str</strong><strong>)</strong> – path to save the extracted text</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Path where text is saved</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="daggit.contrib.sunbird.operators.contentTaggingUtils.normalize">
+<code class="descclassname">daggit.contrib.sunbird.operators.contentTaggingUtils.</code><code class="descname">normalize</code><span class="sig-paren">(</span><em>v</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTaggingUtils.html#normalize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTaggingUtils.normalize" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="daggit.contrib.sunbird.operators.contentTaggingUtils.pdf_to_text">
+<code class="descclassname">daggit.contrib.sunbird.operators.contentTaggingUtils.</code><code class="descname">pdf_to_text</code><span class="sig-paren">(</span><em>method</em>, <em>path_to_assets</em>, <em>pdf_url</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTaggingUtils.html#pdf_to_text"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTaggingUtils.pdf_to_text" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="daggit.contrib.sunbird.operators.contentTaggingUtils.precision_from_dictionary">
+<code class="descclassname">daggit.contrib.sunbird.operators.contentTaggingUtils.</code><code class="descname">precision_from_dictionary</code><span class="sig-paren">(</span><em>predicted_df</em>, <em>observed_df</em>, <em>window_len</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTaggingUtils.html#precision_from_dictionary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTaggingUtils.precision_from_dictionary" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="daggit.contrib.sunbird.operators.contentTaggingUtils.removeShortWords">
+<code class="descclassname">daggit.contrib.sunbird.operators.contentTaggingUtils.</code><code class="descname">removeShortWords</code><span class="sig-paren">(</span><em>mylist</em>, <em>wordlen</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTaggingUtils.html#removeShortWords"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTaggingUtils.removeShortWords" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="daggit.contrib.sunbird.operators.contentTaggingUtils.run_tagme">
+<code class="descclassname">daggit.contrib.sunbird.operators.contentTaggingUtils.</code><code class="descname">run_tagme</code><span class="sig-paren">(</span><em>path_to_text</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTaggingUtils.html#run_tagme"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTaggingUtils.run_tagme" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="daggit.contrib.sunbird.operators.contentTaggingUtils.save_obj">
+<code class="descclassname">daggit.contrib.sunbird.operators.contentTaggingUtils.</code><code class="descname">save_obj</code><span class="sig-paren">(</span><em>obj</em>, <em>name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTaggingUtils.html#save_obj"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTaggingUtils.save_obj" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="daggit.contrib.sunbird.operators.contentTaggingUtils.speech_to_text">
+<code class="descclassname">daggit.contrib.sunbird.operators.contentTaggingUtils.</code><code class="descname">speech_to_text</code><span class="sig-paren">(</span><em>method</em>, <em>path_to_assets</em>, <em>GOOGLE_APPLICATION_CREDENTIALS</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTaggingUtils.html#speech_to_text"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTaggingUtils.speech_to_text" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="daggit.contrib.sunbird.operators.contentTaggingUtils.stem_lem">
+<code class="descclassname">daggit.contrib.sunbird.operators.contentTaggingUtils.</code><code class="descname">stem_lem</code><span class="sig-paren">(</span><em>keyword_list</em>, <em>DELIMITTER</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTaggingUtils.html#stem_lem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTaggingUtils.stem_lem" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="daggit.contrib.sunbird.operators.contentTaggingUtils.strip_word">
+<code class="descclassname">daggit.contrib.sunbird.operators.contentTaggingUtils.</code><code class="descname">strip_word</code><span class="sig-paren">(</span><em>word</em>, <em>delimitter</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTaggingUtils.html#strip_word"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTaggingUtils.strip_word" title="Permalink to this definition">¶</a></dt>
+<dd><p>Replace punctuations from string, punctuation and space in a word
+with a DELIMITTER</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>word</strong><strong>(</strong><strong>str</strong><strong>)</strong> – Typically a word whose punctuations and space are removed.</li>
+<li><strong>DELIMITTER</strong><strong>(</strong><strong>str</strong><strong>)</strong> – String to replace punctuations.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Processed string.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="daggit.contrib.sunbird.operators.contentTaggingUtils.tagme_taxonomy_intersection_keywords">
+<code class="descclassname">daggit.contrib.sunbird.operators.contentTaggingUtils.</code><code class="descname">tagme_taxonomy_intersection_keywords</code><span class="sig-paren">(</span><em>tagme_df</em>, <em>taxonomy_keywords_set</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTaggingUtils.html#tagme_taxonomy_intersection_keywords"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTaggingUtils.tagme_taxonomy_intersection_keywords" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="daggit.contrib.sunbird.operators.contentTaggingUtils.tagme_text">
+<code class="descclassname">daggit.contrib.sunbird.operators.contentTaggingUtils.</code><code class="descname">tagme_text</code><span class="sig-paren">(</span><em>text</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTaggingUtils.html#tagme_text"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTaggingUtils.tagme_text" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="daggit.contrib.sunbird.operators.contentTaggingUtils.text_conversion">
+<code class="descclassname">daggit.contrib.sunbird.operators.contentTaggingUtils.</code><code class="descname">text_conversion</code><span class="sig-paren">(</span><em>path_to_audio_split_folder</em>, <em>path_to_text_folder</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTaggingUtils.html#text_conversion"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTaggingUtils.text_conversion" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="daggit.contrib.sunbird.operators.contentTaggingUtils.text_token_taxonomy_intersection_keywords">
+<code class="descclassname">daggit.contrib.sunbird.operators.contentTaggingUtils.</code><code class="descname">text_token_taxonomy_intersection_keywords</code><span class="sig-paren">(</span><em>text_df</em>, <em>taxonomy_keywords_set</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTaggingUtils.html#text_token_taxonomy_intersection_keywords"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTaggingUtils.text_token_taxonomy_intersection_keywords" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="daggit.contrib.sunbird.operators.contentTaggingUtils.translate_english">
+<code class="descclassname">daggit.contrib.sunbird.operators.contentTaggingUtils.</code><code class="descname">translate_english</code><span class="sig-paren">(</span><em>text</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTaggingUtils.html#translate_english"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTaggingUtils.translate_english" title="Permalink to this definition">¶</a></dt>
+<dd><p>Translates a given text into target language</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>text</strong><strong>(</strong><strong>str</strong><strong>)</strong> – Text that need to be translated</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Text translated into a target language, say:<code class="docutils literal notranslate"><span class="pre">en(English)</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="daggit.contrib.sunbird.operators.contentTaggingUtils.unzip_files">
+<code class="descclassname">daggit.contrib.sunbird.operators.contentTaggingUtils.</code><code class="descname">unzip_files</code><span class="sig-paren">(</span><em>directory</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTaggingUtils.html#unzip_files"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTaggingUtils.unzip_files" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="daggit.contrib.sunbird.operators.contentTaggingUtils.url_to_audio_extraction">
+<code class="descclassname">daggit.contrib.sunbird.operators.contentTaggingUtils.</code><code class="descname">url_to_audio_extraction</code><span class="sig-paren">(</span><em>url</em>, <em>path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTaggingUtils.html#url_to_audio_extraction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTaggingUtils.url_to_audio_extraction" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="daggit.contrib.sunbird.operators.contentTaggingUtils.video_to_speech">
+<code class="descclassname">daggit.contrib.sunbird.operators.contentTaggingUtils.</code><code class="descname">video_to_speech</code><span class="sig-paren">(</span><em>method</em>, <em>path_to_assets</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/contentTaggingUtils.html#video_to_speech"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.contentTaggingUtils.video_to_speech" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-daggit.contrib.sunbird.operators.interruptedcontentTagging">
+<span id="daggit-contrib-sunbird-operators-interruptedcontenttagging-module"></span><h2>daggit.contrib.sunbird.operators.interruptedcontentTagging module<a class="headerlink" href="#module-daggit.contrib.sunbird.operators.interruptedcontentTagging" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="daggit.contrib.sunbird.operators.interruptedcontentTagging.ContentTaxonomyScoring">
+<em class="property">class </em><code class="descclassname">daggit.contrib.sunbird.operators.interruptedcontentTagging.</code><code class="descname">ContentTaxonomyScoring</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/interruptedcontentTagging.html#ContentTaxonomyScoring"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.interruptedcontentTagging.ContentTaxonomyScoring" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="daggit.core.base.html#daggit.core.base.factory.BaseOperator" title="daggit.core.base.factory.BaseOperator"><code class="xref py py-class docutils literal notranslate"><span class="pre">daggit.core.base.factory.BaseOperator</span></code></a></p>
+<dl class="attribute">
+<dt id="daggit.contrib.sunbird.operators.interruptedcontentTagging.ContentTaxonomyScoring.inputs">
+<code class="descname">inputs</code><a class="headerlink" href="#daggit.contrib.sunbird.operators.interruptedcontentTagging.ContentTaxonomyScoring.inputs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="daggit.contrib.sunbird.operators.interruptedcontentTagging.ContentTaxonomyScoring.outputs">
+<code class="descname">outputs</code><a class="headerlink" href="#daggit.contrib.sunbird.operators.interruptedcontentTagging.ContentTaxonomyScoring.outputs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="daggit.contrib.sunbird.operators.interruptedcontentTagging.ContentTaxonomyScoring.run">
+<code class="descname">run</code><span class="sig-paren">(</span><em>keyword_extract_filter_by</em>, <em>phrase_split</em>, <em>min_words</em>, <em>distanceMeasure</em>, <em>embedding_method</em>, <em>delimitter</em>, <em>filter_by</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/interruptedcontentTagging.html#ContentTaxonomyScoring.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.interruptedcontentTagging.ContentTaxonomyScoring.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="daggit.contrib.sunbird.operators.interruptedcontentTagging.ContentToTextRead">
+<em class="property">class </em><code class="descclassname">daggit.contrib.sunbird.operators.interruptedcontentTagging.</code><code class="descname">ContentToTextRead</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/interruptedcontentTagging.html#ContentToTextRead"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.interruptedcontentTagging.ContentToTextRead" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="daggit.core.base.html#daggit.core.base.factory.BaseOperator" title="daggit.core.base.factory.BaseOperator"><code class="xref py py-class docutils literal notranslate"><span class="pre">daggit.core.base.factory.BaseOperator</span></code></a></p>
+<dl class="attribute">
+<dt id="daggit.contrib.sunbird.operators.interruptedcontentTagging.ContentToTextRead.inputs">
+<code class="descname">inputs</code><a class="headerlink" href="#daggit.contrib.sunbird.operators.interruptedcontentTagging.ContentToTextRead.inputs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="daggit.contrib.sunbird.operators.interruptedcontentTagging.ContentToTextRead.outputs">
+<code class="descname">outputs</code><a class="headerlink" href="#daggit.contrib.sunbird.operators.interruptedcontentTagging.ContentToTextRead.outputs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="daggit.contrib.sunbird.operators.interruptedcontentTagging.ContentToTextRead.run">
+<code class="descname">run</code><span class="sig-paren">(</span><em>range_start</em>, <em>range_end</em>, <em>num_of_processes</em>, <em>subset_contentMeta_by</em>, <em>content_type</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/interruptedcontentTagging.html#ContentToTextRead.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.interruptedcontentTagging.ContentToTextRead.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="daggit.contrib.sunbird.operators.interruptedcontentTagging.CorpusCreation">
+<em class="property">class </em><code class="descclassname">daggit.contrib.sunbird.operators.interruptedcontentTagging.</code><code class="descname">CorpusCreation</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/interruptedcontentTagging.html#CorpusCreation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.interruptedcontentTagging.CorpusCreation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="daggit.core.base.html#daggit.core.base.factory.BaseOperator" title="daggit.core.base.factory.BaseOperator"><code class="xref py py-class docutils literal notranslate"><span class="pre">daggit.core.base.factory.BaseOperator</span></code></a></p>
+<dl class="attribute">
+<dt id="daggit.contrib.sunbird.operators.interruptedcontentTagging.CorpusCreation.inputs">
+<code class="descname">inputs</code><a class="headerlink" href="#daggit.contrib.sunbird.operators.interruptedcontentTagging.CorpusCreation.inputs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="daggit.contrib.sunbird.operators.interruptedcontentTagging.CorpusCreation.outputs">
+<code class="descname">outputs</code><a class="headerlink" href="#daggit.contrib.sunbird.operators.interruptedcontentTagging.CorpusCreation.outputs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="daggit.contrib.sunbird.operators.interruptedcontentTagging.CorpusCreation.run">
+<code class="descname">run</code><span class="sig-paren">(</span><em>keyword_folder_name</em>, <em>update_corpus</em>, <em>word_preprocess</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/interruptedcontentTagging.html#CorpusCreation.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.interruptedcontentTagging.CorpusCreation.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="daggit.contrib.sunbird.operators.interruptedcontentTagging.Evaluation">
+<em class="property">class </em><code class="descclassname">daggit.contrib.sunbird.operators.interruptedcontentTagging.</code><code class="descname">Evaluation</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/interruptedcontentTagging.html#Evaluation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.interruptedcontentTagging.Evaluation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="daggit.core.base.html#daggit.core.base.factory.BaseOperator" title="daggit.core.base.factory.BaseOperator"><code class="xref py py-class docutils literal notranslate"><span class="pre">daggit.core.base.factory.BaseOperator</span></code></a></p>
+<dl class="attribute">
+<dt id="daggit.contrib.sunbird.operators.interruptedcontentTagging.Evaluation.inputs">
+<code class="descname">inputs</code><a class="headerlink" href="#daggit.contrib.sunbird.operators.interruptedcontentTagging.Evaluation.inputs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="daggit.contrib.sunbird.operators.interruptedcontentTagging.Evaluation.outputs">
+<code class="descname">outputs</code><a class="headerlink" href="#daggit.contrib.sunbird.operators.interruptedcontentTagging.Evaluation.outputs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="daggit.contrib.sunbird.operators.interruptedcontentTagging.Evaluation.run">
+<code class="descname">run</code><span class="sig-paren">(</span><em>window</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/interruptedcontentTagging.html#Evaluation.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.interruptedcontentTagging.Evaluation.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="daggit.contrib.sunbird.operators.interruptedcontentTagging.GenerateObservedTag">
+<em class="property">class </em><code class="descclassname">daggit.contrib.sunbird.operators.interruptedcontentTagging.</code><code class="descname">GenerateObservedTag</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/interruptedcontentTagging.html#GenerateObservedTag"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.interruptedcontentTagging.GenerateObservedTag" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="daggit.core.base.html#daggit.core.base.factory.BaseOperator" title="daggit.core.base.factory.BaseOperator"><code class="xref py py-class docutils literal notranslate"><span class="pre">daggit.core.base.factory.BaseOperator</span></code></a></p>
+<dl class="method">
+<dt id="daggit.contrib.sunbird.operators.interruptedcontentTagging.GenerateObservedTag.getGradedigits">
+<code class="descname">getGradedigits</code><span class="sig-paren">(</span><em>class_x</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/interruptedcontentTagging.html#GenerateObservedTag.getGradedigits"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.interruptedcontentTagging.GenerateObservedTag.getGradedigits" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="daggit.contrib.sunbird.operators.interruptedcontentTagging.GenerateObservedTag.inputs">
+<code class="descname">inputs</code><a class="headerlink" href="#daggit.contrib.sunbird.operators.interruptedcontentTagging.GenerateObservedTag.inputs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="daggit.contrib.sunbird.operators.interruptedcontentTagging.GenerateObservedTag.outputs">
+<code class="descname">outputs</code><a class="headerlink" href="#daggit.contrib.sunbird.operators.interruptedcontentTagging.GenerateObservedTag.outputs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="daggit.contrib.sunbird.operators.interruptedcontentTagging.GenerateObservedTag.run">
+<code class="descname">run</code><span class="sig-paren">(</span><em>window</em>, <em>level</em>, <em>tax_known_tag</em>, <em>content_known_tag</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/interruptedcontentTagging.html#GenerateObservedTag.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.interruptedcontentTagging.GenerateObservedTag.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="daggit.contrib.sunbird.operators.interruptedcontentTagging.KeywordExtraction">
+<em class="property">class </em><code class="descclassname">daggit.contrib.sunbird.operators.interruptedcontentTagging.</code><code class="descname">KeywordExtraction</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/interruptedcontentTagging.html#KeywordExtraction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.interruptedcontentTagging.KeywordExtraction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="daggit.core.base.html#daggit.core.base.factory.BaseOperator" title="daggit.core.base.factory.BaseOperator"><code class="xref py py-class docutils literal notranslate"><span class="pre">daggit.core.base.factory.BaseOperator</span></code></a></p>
+<dl class="attribute">
+<dt id="daggit.contrib.sunbird.operators.interruptedcontentTagging.KeywordExtraction.inputs">
+<code class="descname">inputs</code><a class="headerlink" href="#daggit.contrib.sunbird.operators.interruptedcontentTagging.KeywordExtraction.inputs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="daggit.contrib.sunbird.operators.interruptedcontentTagging.KeywordExtraction.outputs">
+<code class="descname">outputs</code><a class="headerlink" href="#daggit.contrib.sunbird.operators.interruptedcontentTagging.KeywordExtraction.outputs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="daggit.contrib.sunbird.operators.interruptedcontentTagging.KeywordExtraction.run">
+<code class="descname">run</code><span class="sig-paren">(</span><em>extract_keywords</em>, <em>filter_criteria</em>, <em>update_corpus</em>, <em>filter_score_val</em>, <em>num_keywords</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/interruptedcontentTagging.html#KeywordExtraction.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.interruptedcontentTagging.KeywordExtraction.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="daggit.contrib.sunbird.operators.interruptedcontentTagging.PredictTag">
+<em class="property">class </em><code class="descclassname">daggit.contrib.sunbird.operators.interruptedcontentTagging.</code><code class="descname">PredictTag</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/interruptedcontentTagging.html#PredictTag"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.interruptedcontentTagging.PredictTag" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="daggit.core.base.html#daggit.core.base.factory.BaseOperator" title="daggit.core.base.factory.BaseOperator"><code class="xref py py-class docutils literal notranslate"><span class="pre">daggit.core.base.factory.BaseOperator</span></code></a></p>
+<dl class="attribute">
+<dt id="daggit.contrib.sunbird.operators.interruptedcontentTagging.PredictTag.inputs">
+<code class="descname">inputs</code><a class="headerlink" href="#daggit.contrib.sunbird.operators.interruptedcontentTagging.PredictTag.inputs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="daggit.contrib.sunbird.operators.interruptedcontentTagging.PredictTag.outputs">
+<code class="descname">outputs</code><a class="headerlink" href="#daggit.contrib.sunbird.operators.interruptedcontentTagging.PredictTag.outputs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="daggit.contrib.sunbird.operators.interruptedcontentTagging.PredictTag.run">
+<code class="descname">run</code><span class="sig-paren">(</span><em>window</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/interruptedcontentTagging.html#PredictTag.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.interruptedcontentTagging.PredictTag.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="daggit.contrib.sunbird.operators.interruptedcontentTagging.WriteToElasticSearch">
+<em class="property">class </em><code class="descclassname">daggit.contrib.sunbird.operators.interruptedcontentTagging.</code><code class="descname">WriteToElasticSearch</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/interruptedcontentTagging.html#WriteToElasticSearch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.interruptedcontentTagging.WriteToElasticSearch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="daggit.core.base.html#daggit.core.base.factory.BaseOperator" title="daggit.core.base.factory.BaseOperator"><code class="xref py py-class docutils literal notranslate"><span class="pre">daggit.core.base.factory.BaseOperator</span></code></a></p>
+<dl class="attribute">
+<dt id="daggit.contrib.sunbird.operators.interruptedcontentTagging.WriteToElasticSearch.inputs">
+<code class="descname">inputs</code><a class="headerlink" href="#daggit.contrib.sunbird.operators.interruptedcontentTagging.WriteToElasticSearch.inputs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="daggit.contrib.sunbird.operators.interruptedcontentTagging.WriteToElasticSearch.run">
+<code class="descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/contrib/sunbird/operators/interruptedcontentTagging.html#WriteToElasticSearch.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.contrib.sunbird.operators.interruptedcontentTagging.WriteToElasticSearch.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-daggit.contrib.sunbird.operators">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-daggit.contrib.sunbird.operators" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="daggit.core.html" class="btn btn-neutral float-right" title="daggit.core package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="daggit.contrib.sunbird.html" class="btn btn-neutral" title="daggit.contrib.sunbird package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Sunbird
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+    
+
+  
+
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
