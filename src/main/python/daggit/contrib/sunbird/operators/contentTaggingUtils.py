@@ -859,6 +859,38 @@ def ecml_parser(ecml_file):
     num_stages = [i.tag for i in xmldoc.iter()].count('stage')
     return dict({'text': all_text, 'plugin': plugin_used, 'stages': num_stages})
 
+def modified_ecml_parser(ecml_file):
+    tree = ET.parse(ecml_file)
+    root = tree.getroot()
+    tag_to_check = ['org.ekstep.text']
+    alltext = ""
+    # create empty list for text items 
+    for i in root.iter():
+        if i.tag in tag_to_check: 
+            content = ""
+            for item in root.findall('./stage/'+i.tag): 
+                for child in item:
+                    print(child.text)
+                    try:
+                        if child.tag == 'config': 
+                            result = re.split(r"\,", child.text)
+                            content = str(ast.literal_eval(result[8][7:])).strip() + ' '
+                    except:
+                        pass
+                    alltext+=content
+        else:
+            alltext = ""
+            print(i.tag)
+    plugin_used = []
+    for elem in tree.iter():
+        if (elem.tag in ['media']):
+            plugin_used.append(elem.attrib['plugin'])
+        if (elem.tag in ['plugin']):
+            plugin_used.append(elem.attrib['id'])
+    plugin_used = list(set(plugin_used))
+    num_stages = [i.tag for i in tree.iter()].count('stage')
+    return dict({'text': all_text, 'plugin': plugin_used, 'stages': num_stages})
+
 
 def ecml_index_to_text(method, path_to_id):
     all_text = ""
@@ -870,7 +902,7 @@ def ecml_index_to_text(method, path_to_id):
             ecml_file = os.path.join(path_to_id, "index.ecml")
             try:
                 logging.info('...File type detected as ecml')
-                ecml_tags = ecml_parser(ecml_file)
+                ecml_tags = modified_ecml_parser(ecml_file)
                 all_text = ecml_tags['text']
                 plugin_used = ecml_tags['plugin']
                 num_stages = ecml_tags['stages']
