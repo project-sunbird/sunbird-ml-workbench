@@ -1,0 +1,111 @@
+experiment_name: Task_Distribution_Branching
+owner: sunbird
+
+inputs:
+  DS_DATA_HOME: /home/aleena/data/sample_celery
+
+outputs:
+  dummy: /home/DS_HOME
+
+graph:
+
+  - node_name: content1
+    inputs: [DS_DATA_HOME]
+    outputs: [time_content1]
+    operation: taskDistribution_branching.Content1
+
+  - node_name: content2
+    inputs: [DS_DATA_HOME]
+    outputs: [time_content2]
+    operation: taskDistribution_branching.Content2
+
+  - node_name: content3
+    inputs: [DS_DATA_HOME]
+    outputs: [time_content3]
+    operation: taskDistribution_branching.Content3
+  
+  - node_name: content4
+    inputs: [DS_DATA_HOME]
+    outputs: [time_content4]
+    operation: taskDistribution_branching.Content4
+
+  - node_name: content5
+    inputs: [DS_DATA_HOME]
+    outputs: [time_content5]
+    operation: taskDistribution_branching.Content5
+
+  - node_name: c1_task1
+    inputs: [content1.time_content1]
+    outputs: [c1_time_task1]
+    operation: taskDistribution_branching.C1_Task1
+
+  - node_name: c1_task2
+    inputs: [content1.time_content1]
+    outputs: [c1_time_task2]
+    operation: taskDistribution_branching.C1_Task2
+
+  - node_name: c1_task3
+    inputs: [content1.time_content1]
+    outputs: [c1_time_task3]
+    operation: taskDistribution_branching.C1_Task3
+
+  - node_name: c2_task1
+    inputs: [content2.time_content2]
+    outputs: [c2_time_task1]
+    operation: taskDistribution_branching.C2_Task1
+
+  - node_name: c2_task2
+    inputs: [content2.time_content2]
+    outputs: [c2_time_task2]
+    operation: taskDistribution_branching.C2_Task2
+
+  - node_name: c2_task3
+    inputs: [content2.time_content2]
+    outputs: [c2_time_task3]
+    operation: taskDistribution_branching.C2_Task3
+
+  - node_name: c3_task1
+    inputs: [content3.time_content3]
+    outputs: [c3_time_task1]
+    operation: taskDistribution_branching.C3_Task1
+
+  - node_name: c3_task2
+    inputs: [content3.time_content3]
+    outputs: [c3_time_task2]
+    operation: taskDistribution_branching.C3_Task2
+
+  - node_name: c3_task3
+    inputs: [content3.time_content3]
+    outputs: [c3_time_task3]
+    operation: taskDistribution_branching.C3_Task3
+
+  - node_name: c4_task1
+    inputs: [content4.time_content4]
+    outputs: [c4_time_task1]
+    operation: taskDistribution_branching.C4_Task1
+
+  - node_name: c4_task2
+    inputs: [content2.time_content2]
+    outputs: [c4_time_task2]
+    operation: taskDistribution_branching.C4_Task2
+
+  - node_name: c4_task3
+    inputs: [content4.time_content4]
+    outputs: [c4_time_task3]
+    operation: taskDistribution_branching.C4_Task3
+
+  - node_name: c5_task1
+    inputs: [content5.time_content5]
+    outputs: [c5_time_task1]
+    operation: taskDistribution_branching.C5_Task1
+
+  - node_name: c5_task2
+    inputs: [content5.time_content5]
+    outputs: [c5_time_task2]
+    operation: taskDistribution_branching.C5_Task2
+
+  - node_name: c5_task3
+    inputs: [content5.time_content5]
+    outputs: [c5_time_task3]
+    operation: taskDistribution_branching.C5_Task3
+

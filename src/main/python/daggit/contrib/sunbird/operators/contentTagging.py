@@ -603,7 +603,6 @@ class ContentTaxonomyScoring(BaseOperator):
             taxonomy_keywords, 'stem_lem', DELIMITTER)
 
         # print("****Taxonomy_df keywords****: ", taxonomy["Keywords"])
-
         logging.info('Number of Content detected:  ' + str(len(content_meta)))
         print("Number of content detected:", str(len(content_meta)))
 

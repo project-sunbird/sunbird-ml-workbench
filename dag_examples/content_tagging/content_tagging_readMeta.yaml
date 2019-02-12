@@ -2,8 +2,8 @@ experiment_name: Content_tagging
 owner: sunbird
 
 inputs:
-  DS_DATA_HOME: /home/DS_DATA_HOME
-  pathTocontentMeta: inputs/new_content_meta.csv
+  DS_DATA_HOME: /home/DS_DATA_HOME/sample_celery
+  pathTocontentMeta: inputs/sample_meta.csv
   pathTocredentials: /home/DS_DATA_HOME/credentials.ini
   pathTotaxonomy: inputs/taxonomy.csv
   categoryLookup: inputs/category_lookup.yaml
@@ -19,8 +19,8 @@ graph:
     outputs: [timestamp_folder]
     operation: contentTagging.ContentToTextRead
     arguments:
-      range_start: 0
-      range_end: 10
+      range_start: START
+      range_end: END
       num_of_processes: 1
       subset_contentMeta_by: pdf
       content_type:
@@ -91,3 +91,27 @@ graph:
         taxonomy:
           column: Subject
           alignment_depth: Chapter Name
+  
+  - node_name: predict_tag
+    inputs: [content_taxonomy_scoring.path_to_timestampFolder]
+    outputs: [path_to_predictedTags]
+    operation: contentTagging.PredictTag
+    arguments:
+      window: 5
+
+  - node_name: generate_observed_tag
+    inputs: [contentmeta_creation.pathTocontentMeta, pathTotaxonomy, content_taxonomy_scoring.path_to_timestampFolder]
+    outputs: [path_to_timestampFolder, path_to_observedtag, path_to_predictedtag]
+    operation: contentTagging.GenerateObservedTag
+    arguments:
+      window: 5
+      level: Chapter Name
+      tax_known_tag: Grade
+      content_known_tag: gradeLevel
+
+  - node_name: evaluation
+    inputs: [generate_observed_tag.path_to_timestampFolder, generate_observed_tag.path_to_observedtag, generate_observed_tag.path_to_predictedtag]
+    outputs: [path_to_agg_precision, path_to_nonagg_precision]
+    operation: contentTagging.Evaluation
+    arguments:
+      window: 5
