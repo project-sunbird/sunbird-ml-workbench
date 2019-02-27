@@ -4,13 +4,13 @@
         "filters":{
                     "objectType" : ["Content"],
                     "contentType" : ["Resource"],
-                    "mimeType" : ["video/x-youtube"],
+                    "mimeType" : ["application/pdf"],
                     "language": ["English"],
                     "status" : ["Live"],
                     "lastUpdatedOn" : {"min": "28-01-2018", "max": "28-11-2018"},
                     "ML_tag": { "ne": ["v1"]}
              
                  },
-        "limit":1000
+        "limit":100
         }
 }

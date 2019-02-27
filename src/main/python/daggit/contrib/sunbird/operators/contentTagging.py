@@ -9,6 +9,7 @@ import pandas as pd
 import numpy as np
 import configparser
 from functools import partial
+from elasticsearch import Elasticsearch
 
 from daggit.core.io.io import Pandas_Dataframe, File_Txt
 from daggit.core.io.io import ReadDaggitTask_Folderpath
@@ -29,8 +30,8 @@ from ..operators.contentTaggingUtils import CustomDateFormater, findDate
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-from elasticsearch import Elasticsearch
-
+from functools import partial, reduce
+from kafka import KafkaProducer, KafkaConsumer, KafkaClient
 
 class ContentmetaCreation(BaseOperator):
 
@@ -111,7 +112,6 @@ class ContentToText(BaseOperator):
             range_start,
             range_end,
             num_of_processes,
-            subset_contentMeta_by,
             content_type):
         pathTocredentials = self.inputs["pathTocredentials"].read_loc()
         path_to_content_meta = self.inputs["pathTocontentMeta"].read()
@@ -159,10 +159,7 @@ class ContentToText(BaseOperator):
             "----Running Content_to_Text for contents from {0} to {1}:".format(
                 range_start, range_end))
         logging.info("time started: {0}".format(start))
-        # subset contentMeta:
-        content_meta = content_meta[content_meta["derived_contentType"].isin(
-            subset_contentMeta_by.split(", "))]
-        content_meta.reset_index(drop=True, inplace=True)
+        
         if range_start == "START":
             range_start = 0
         if range_end == "END":
@@ -440,6 +437,48 @@ class WriteToElasticSearch(BaseOperator):
                     doc_type='content_id_info',
                     id=cid,
                     body=autotagging_json)
+
+class WriteToKafkaTopic(BaseOperator):
+
+    @property
+    def inputs(self):
+        return {"path_to_contentKeywords": File_Txt(self.node.inputs[0])
+                }
+
+    def run(self, kafka_broker, kafkaTopic_writeTo):
+        path_to_contentKeywords = self.inputs["path_to_contentKeywords"].read()
+        timestamp_folder = os.path.split(os.path.split(timestamp_folder)[0])[1]
+        timestr = os.path.split(timestamp_folder)[1]
+        epoch_time = time.mktime(time.strptime(timestr, "%Y%m%d-%H%M%S"))
+        content_to_textpath = os.path.join(timestamp_folder, "content_to_text")
+        cid_name = [i for i in os.listdir(content_to_textpath) if i not in ['.DS_Store']]
+        for cid in cid_name:
+            merge_json_list = []
+            json_file = findFiles(os.path.join(content_to_textpath, cid), ["json"])
+            for file in json_file:
+                if os.path.split(file)[1] in [
+                        "ML_keyword_info.json", "ML_content_info.json"]:
+                    merge_json_list.append(file)
+            ignore_list = ["ets"]
+            dict_list = []
+            for file in merge_json_list:
+                with open(file, "r", encoding="UTF-8") as info:
+                    new_json = json.load(info)
+                    [new_json.pop(ignore) for ignore in ignore_list if ignore in new_json.keys()]
+                dict_list.append(new_json)
+            # merge the nested jsons:-
+            autotagging_json = reduce(merge, dict_list)
+            autotagging_json.update({"ets": epoch_time})
+            with open(os.path.join(timestamp_folder, "content_to_text", cid, "autoTagging_json.json"), "w+") as main_json:
+                json.dump(autotagging_json, main_json, sort_keys=True, indent=4)
+            client = KafkaClient(kafka_broker)
+            server_topics = client.topic_partitions
+            for i in server_topics:
+                if i == kafkaTopic_writeTo:
+                    producer = KafkaProducer(bootstrap_servers='localhost:9092', value_serializer=lambda v: json.dumps(v, indent=4).encode('utf-8'))
+                    #serializing json message:-
+                    event_send = producer.send(kafkaTopic_writeTo, autotagging_json)
+                    result = event_send.get(timeout=60)
 
 
 class CorpusCreation(BaseOperator):

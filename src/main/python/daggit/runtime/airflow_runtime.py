@@ -1,8 +1,9 @@
 from future.builtins import super
 from airflow.operators.python_operator import PythonOperator
+from airflow.utils.trigger_rule import TriggerRule
 from daggit.core.operators.operators_registry import get_op_callable
 
-
+#try editting trigger rules
 class DaggitPyOp(PythonOperator):
 
     def __init__(self, node, dag, *args, **kwargs):

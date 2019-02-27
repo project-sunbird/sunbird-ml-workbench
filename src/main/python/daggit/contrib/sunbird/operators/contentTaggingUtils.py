@@ -624,15 +624,19 @@ def download_to_local(method, url_to_download, path_to_save, id_name):
 
 def video_to_speech(method, path_to_assets):
     logging.info('VTS_START')
-    video_names = findFiles(path_to_assets, ['mp4'])
+    video_names = findFiles(path_to_assets, ['mp4', 'webm'])
     logging.info('...detected {0} video files'.format(str(len(video_names))))
     if method == "ffmpeg" and len(video_names) > 0:
         logging.info("VTS_START_FOR_METHOD: {0}".format(method))
 
         for file in video_names:
             # ffmpy wrapper to convert mp4 to mp3:
-            ff = ffmpy.FFmpeg(inputs={file: None}, outputs={os.path.join(
-                file[:-4] + ".mp3"): '-vn -ar 44100 -ac 2 -ab 192 -f mp3'})
+            if "webm" in file:
+                ff = ffmpy.FFmpeg(inputs={file: None}, outputs={os.path.join(
+                    file[:-5] + ".mp3"): '-vn -ar 44100 -ac 2 -ab 192 -f mp3'})
+            else:    
+                ff = ffmpy.FFmpeg(inputs={file: None}, outputs={os.path.join(
+                    file[:-4] + ".mp3"): '-vn -ar 44100 -ac 2 -ab 192 -f mp3'})
             ff.run()
             if os.path.exists(os.path.join(
                     path_to_assets, file[:-4] + ".mp3")):
@@ -780,6 +784,7 @@ def pdf_to_text(method, path_to_assets, pdf_url):
     number_of_pages = 0
     logging.info("PTT_START")
     pdf_names = findFiles(path_to_assets, ['.pdf'])
+    print("----->pdf_names: ", pdf_names)
     if method == "PyPDF2":
         logging.info("PTT_METHOD: {0}".format(method))
         for j in range(0, len(pdf_names) + 1):
@@ -863,7 +868,7 @@ def modified_ecml_parser(ecml_file):
                     try:
                         if child.tag == 'config': 
                             result = re.split(r"\,", child.text)
-                            content = str(ast.literal_eval(result[8][7:])).strip() + ' '
+                            content = str(result[8][7:]).strip() + ' '
                     except:
                         pass
                     alltext+=content
@@ -957,98 +962,124 @@ def multimodal_text_enrichment(
     logging.info("MTT_START_FOR_CID {0}".format(id_name))
     logging.info("MTT_START_FOR_URL {0}".format(url))
     # start text extraction pipeline:
-    try:
-        start = time.time()
-        path_to_id = download_to_local(
-            type_of_url, url, content_to_text_path, id_name)
-        print("path_to_id", path_to_id)
-        path_to_assets = os.path.join(path_to_id, "assets")
-        if type_of_url != "pdf":
-            path_to_audio = video_to_speech(
-                content_type[type_of_url]["video_to_speech"],
-                path_to_assets)
-            print(path_to_audio)
-        if len(findFiles(path_to_assets, ["mp3"])) > 0:
-            audio = AudioSegment.from_mp3(findFiles(path_to_assets, ["mp3"])[0])
-            duration = round(len(audio) / 1000)
-        else:
-            duration = 0
-        textExtraction_pipeline = [
-            (speech_to_text,
-             (content_type[type_of_url]["speech_to_text"],
-              path_to_assets, GOOGLE_APPLICATION_CREDENTIALS)),
-            (image_to_text,
-             (content_type[type_of_url]["image_to_text"],
-              path_to_assets)),
-            (pdf_to_text,
-             (content_type[type_of_url]["pdf_to_text"],
-              path_to_assets,
-              url)),
-            (ecml_index_to_text,
-             (content_type[type_of_url]["ecml_index_to_text"],
-              path_to_id))]
-        path_to_transcript = os.path.join(path_to_id, "enriched_text.txt")
-        text = ""
-        for method, param_tuple in textExtraction_pipeline:
-            text += method(*param_tuple)["text"]
-        # Adding description and title to the text only for PDF content
-        if type_of_url == "pdf":
-            text += content_meta["name"].iloc[index] + " " + content_meta["description"].iloc[index]
-        if os.path.exists(path_to_id) and text:
-            with open(path_to_transcript, "w") as myTextFile:
-                myTextFile.write(text)
-        # num_of_PDFpages = pdf_to_text("none", path_to_assets, url)["no_of_pages"]
-        # Reading pdata
-        airflow_home = os.getenv('AIRFLOW_HOME', os.path.expanduser('~/airflow'))
-        dag_location = os.path.join(airflow_home, 'dags')
-        print("AIRFLOW_HOME: ", dag_location)
-        filename = os.path.join(dag_location, 'graph_location')
-        f = open(filename, "r")
-        pdata = f.read()
-        f.close()
+    # try:
+    start = time.time()
+    path_to_id = download_to_local(
+        type_of_url, url, content_to_text_path, id_name)
+    print("path_to_id", path_to_id)
+    path_to_assets = os.path.join(path_to_id, "assets")
+    if type_of_url != "pdf":
+        path_to_audio = video_to_speech(
+            content_type[type_of_url]["video_to_speech"],
+            path_to_assets)
+        print(path_to_audio)
+    if len(findFiles(path_to_assets, ["mp3"])) > 0:
+        audio = AudioSegment.from_mp3(findFiles(path_to_assets, ["mp3"])[0])
+        duration = round(len(audio) / 1000)
+    else:
+        duration = 0
+    textExtraction_pipeline = [
+        (speech_to_text,
+         (content_type[type_of_url]["speech_to_text"],
+          path_to_assets, GOOGLE_APPLICATION_CREDENTIALS)),
+        (image_to_text,
+         (content_type[type_of_url]["image_to_text"],
+          path_to_assets)),
+        (pdf_to_text,
+         (content_type[type_of_url]["pdf_to_text"],
+          path_to_assets,
+          url)),
+        (ecml_index_to_text,
+         (content_type[type_of_url]["ecml_index_to_text"],
+          path_to_id))]
+    path_to_transcript = os.path.join(path_to_id, "enriched_text.txt")
+    text = ""
+    for method, param_tuple in textExtraction_pipeline:
+        text += method(*param_tuple)["text"]
+    # Adding description and title to the text only for PDF content
+    if type_of_url == "pdf":
+        text += content_meta["name"].iloc[index] + " " + content_meta["description"].iloc[index]
+    if os.path.exists(path_to_id) and text:
+        with open(path_to_transcript, "w") as myTextFile:
+            myTextFile.write(text)
+    # num_of_PDFpages = pdf_to_text("none", path_to_assets, url)["no_of_pages"]
+    # Reading pdata
+    airflow_home = os.getenv('AIRFLOW_HOME', os.path.expanduser('~/airflow'))
+    dag_location = os.path.join(airflow_home, 'dags')
+    print("AIRFLOW_HOME: ", dag_location)
+    filename = os.path.join(dag_location, 'graph_location')
+    f = open(filename, "r")
+    pdata = f.read()
+    f.close()
 
-        # estimating ets:
-        epoch_time = time.mktime(time.strptime(timestr, "%Y%m%d-%H%M%S"))
-        domain = content_meta["subject"][index]
+    # estimating ets:
+    epoch_time = time.mktime(time.strptime(timestr, "%Y%m%d-%H%M%S"))
+    domain = content_meta["subject"][index]
+    object_type = content_meta["objectType"][index]
+    template = ""
+    plugin_used = []
+    num_of_stages = 0
+    # only for type ecml
+    if type_of_url == "ecml":
+        plugin_used = ecml_index_to_text("parse", path_to_id)["plugin_used"]
+        num_of_stages = ecml_index_to_text("parse", path_to_id)["num_stage"]
 
-        template = ""
-        plugin_used = []
-        num_of_stages = 0
-        # only for type ecml
-        if type_of_url == "ecml":
-            plugin_used = ecml_index_to_text("parse", path_to_id)["plugin_used"]
-            num_of_stages = ecml_index_to_text("parse", path_to_id)["num_stage"]
-
-        mnt_output_dict = {
-                    'ETS': int(epoch_time),
-                    'content_id': id_name,
-                    'content_type': type_of_url,
-                    'domain': domain,
-                    'medium': language_detection(text),
-                    'duration': duration,
-                    'plugin_used': plugin_used,
-                    'num_of_stages': num_of_stages,
-                    'template': template,
-                    'text': text,
-                    'pdata': pdata,
-                    'commit_id': ""
-                }
-
-        with open(os.path.join(path_to_id, "ML_content_info.json"), "w") as info:
-            mnt_json_dump = json.dump(
-                mnt_output_dict, info, sort_keys=False, indent=4)
-            print(mnt_json_dump)
-        stop = time.time()
-        time_consumed = stop-start
-        time_consumed_minutes = time_consumed/60.0
-        print("time taken in sec for text enrichment for cid -----> {0} : {1}".format(id_name, time_consumed))
-        print("time taken in minutes for text enrichment for cid -----> {0} : {1}".format(id_name, time_consumed_minutes))
-        logging.info("MTT_TRANSCRIPT_PATH_CREATED: {0}".format(path_to_transcript))
-        logging.info("MTT_CONTENT_ID_READ: {0}".format(id_name))
-        logging.info("MTT_STOP_FOR_URL {0}".format(url))
-        #return os.path.join(path_to_id, "ML_content_info.json")
-    except BaseException:
-        logging.info("TextEnrichment failed for url:{0} with id:{1}".format(url, id_name))
+    mnt_output_dict = {
+                'ETS': int(epoch_time),
+                'content_id': id_name,
+                'content_type': type_of_url,
+                'domain': domain,
+                'medium': language_detection(text),
+                'duration': duration,
+                'plugin_used': plugin_used,
+                'num_of_stages': num_of_stages,
+                'template': template,
+                'text': text,
+                'pdata': pdata,
+                'commit_id': ""
+            }
+    
+    mnt_output_dict_new =  { "ets" : int(epoch_time), #Event generation time in epoch
+                            "nodeUniqueId" : id_name, #content id
+                            "operationType": "UPDATE", #default to UPDATE
+                            "nodeType": "DATA_NODE", #default to DATA_NODE
+                            "graphId": domain, #default to domain
+                            "objectType": object_type, #object type - content, worksheet, textbook, collection etc
+                            "nodeGraphId": 0, #default to 0
+                            "transactionData" : {
+                                "properties" : {
+                                    "tags": {
+                                        "system_contentType": type_of_url, #can be "youtube", "ecml", "pdf"
+                                        "system_medium": language_detection(text), #generated using google language detection api
+                                        "duration": {
+                                            "video" : "", #video duration in seconds
+                                            "stage" : ""#can be derived from usage data
+                                        },
+                                        "num_stage" : num_of_stages, #pdf: number of pages, ecml:number of stages, video:1
+                                        "system_plugins" : plugin_used, #id's of plugin used in Content
+                                        "system_templates" : template, #id's of templates used in Content
+                                        "text": text,
+                                        },
+                                    "version": pdata, #yaml version
+                                    "uri": "" #git commit id
+                                     }
+                                 }
+                             }
+    with open(os.path.join(path_to_id, "ML_content_info.json"), "w") as info:
+        mnt_json_dump = json.dump(
+            mnt_output_dict_new, info, indent=4) # sort_keys=True,
+        print(mnt_json_dump)
+    stop = time.time()
+    time_consumed = stop-start
+    time_consumed_minutes = time_consumed/60.0
+    print("time taken in sec for text enrichment for cid -----> {0} : {1}".format(id_name, time_consumed))
+    print("time taken in minutes for text enrichment for cid -----> {0} : {1}".format(id_name, time_consumed_minutes))
+    logging.info("MTT_TRANSCRIPT_PATH_CREATED: {0}".format(path_to_transcript))
+    logging.info("MTT_CONTENT_ID_READ: {0}".format(id_name))
+    logging.info("MTT_STOP_FOR_URL {0}".format(url))
+    #return os.path.join(path_to_id, "ML_content_info.json")
+# except BaseException:
+#         logging.info("TextEnrichment failed for url:{0} with id:{1}".format(url, id_name))
 
 
 def custom_tokenizer(path_to_text_file):
@@ -1293,7 +1324,8 @@ def keyword_extraction_parallel(
     if os.path.exists(content_info_json_loc):
         with open(content_info_json_loc, "r") as json_loc:
             content_info = json.load(json_loc)
-        subject = content_info["domain"]
+        #subject = content_info["domain"]
+        subject = content_info["graphId"]
     else:
         subject = "none"
     logging.info("Subject of the id: {0}".format(subject))
@@ -1400,17 +1432,26 @@ def keyword_extraction_parallel(
     print("AIRFLOW_HOME: ", dag_location)
     # estimating ets:
     epoch_time = time.mktime(time.strptime(timestr, "%Y%m%d-%H%M%S"))
-    kep_output_dict = {
+    kep_output_dict = { 'ets':  int(epoch_time),
                         'keywords': keywords_dpediaScore,
-                        'content_id': dir,
                         "pdata": pdata,
-                        "commit_id": "",
-                        "ETS": int(epoch_time)
+                        "commit_id": ""
                         }
+    kep_output_dict_new = { "ets" : int(epoch_time), #Event generation time in epoch
+                            "transactionData" : {
+                                "properties" : {
+                                    "tags": {
+                                        "system_keywords": keywords_dpediaScore,
+                                        },
+                                    "version": pdata, #yaml version
+                                    "uri": ""
+                                     }
+                                }
+                           }
 
     with open(os.path.join(path_to_id, "ML_keyword_info.json"), "w") as info:
         kep_json_dump = json.dump(
-            kep_output_dict, info, sort_keys=True, indent=4)
+            kep_output_dict_new, info, indent=4) # sort_keys=True,
         print(kep_json_dump)
     return content_to_text_path
 

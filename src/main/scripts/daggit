@@ -2,6 +2,7 @@
 
 import os
 import sys
+import yaml
 import shutil
 import argparse
 from subprocess import call
@@ -58,11 +59,31 @@ def init(graph):
             pass
         else:
             raise FileNotFoundError("The path to the dag file could not be resolved")
-
+        # edit today
+        graph_name = os.path.join(dag_location, 'graph_location') 
         f = open(os.path.join(dag_location, 'graph_location'), "w+")
         f.write(graph_location)
         f.close()
         db.initdb()
+        # if os.path.exists(graph_name) and os.path.getsize(graph_name)>0:
+        #     file = open(graph_name, "r")
+        #     read_file = file.readlines()
+        #     new_lines = []
+        #     for line in read_file:
+        #         #- Strip white spaces
+        #         line = line.strip()
+        #         if line == graph_location:
+        #             pass
+        #         else:
+        #             new_lines.append(line)
+        #     with open(graph_name, "w") as fp:
+        #         for n in new_lines:
+        #             fp.write(n+"\n")
+
+        # f = open(graph_name, "a+")
+        # f.write(graph_location+"\n")
+        # f.close()
+        # db.initdb()
 
 
 def run(dag_id, clear_all, clear_failed):
@@ -80,7 +101,7 @@ def run(dag_id, clear_all, clear_failed):
         print("---start running")
         mlwb.run()
         print("---stop running")
-
+    
 
 if __name__ == '__main__':
 

@@ -1,0 +1,314 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>daggit.core.operators.sklearn &mdash; daggit 0.5.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> daggit
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../daggit.html">daggit package</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">daggit</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>daggit.core.operators.sklearn</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for daggit.core.operators.sklearn</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">sklearn.pipeline</span> <span class="k">import</span> <span class="n">Pipeline</span>
+
+<span class="kn">from</span> <span class="nn">daggit.core.io.io</span> <span class="k">import</span> <span class="n">Pandas_Dataframe</span><span class="p">,</span> <span class="n">File_Txt</span><span class="p">,</span> <span class="n">Pickle_Obj</span>
+<span class="kn">from</span> <span class="nn">daggit.core.base.factory</span> <span class="k">import</span> <span class="n">BaseOperator</span>
+<span class="kn">from</span> <span class="nn">daggit.core.operators.operators_registry</span> <span class="k">import</span> <span class="n">get_op_callable</span>
+<span class="kn">from</span> <span class="nn">daggit.core.operators.etl</span> <span class="k">import</span> <span class="n">DFFeatureUnion</span><span class="p">,</span> <span class="n">ColumnExtractor</span>
+<span class="kn">from</span> <span class="nn">daggit.core.operators.etl</span> <span class="k">import</span> <span class="n">DFMissingStr</span><span class="p">,</span> <span class="n">DFOneHot</span>
+<span class="kn">from</span> <span class="nn">daggit.core.operators.etl</span> <span class="k">import</span> <span class="n">DFMissingNum</span>
+
+
+<div class="viewcode-block" id="CustomPreprocess"><a class="viewcode-back" href="../../../../daggit.core.operators.html#daggit.core.operators.sklearn.CustomPreprocess">[docs]</a><span class="k">class</span> <span class="nc">CustomPreprocess</span><span class="p">(</span><span class="n">BaseOperator</span><span class="p">):</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;train&quot;</span><span class="p">:</span> <span class="n">Pandas_Dataframe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+                <span class="s2">&quot;test&quot;</span><span class="p">:</span> <span class="n">Pandas_Dataframe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">1</span><span class="p">])}</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">outputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;preprocessed_train&quot;</span><span class="p">:</span> <span class="n">Pandas_Dataframe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+                <span class="s2">&quot;preprocessed_test&quot;</span><span class="p">:</span> <span class="n">Pandas_Dataframe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">1</span><span class="p">])}</span>
+
+<div class="viewcode-block" id="CustomPreprocess.run"><a class="viewcode-back" href="../../../../daggit.core.operators.html#daggit.core.operators.sklearn.CustomPreprocess.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">drop_missing_perc</span><span class="p">,</span>
+            <span class="n">target_variable</span><span class="p">,</span>
+            <span class="n">ignore_variables</span><span class="p">,</span>
+            <span class="n">categorical_impute</span><span class="p">,</span>
+            <span class="n">numeric_impute</span><span class="p">):</span>
+        <span class="n">train</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="s2">&quot;train&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="n">test</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="s2">&quot;test&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">ignore_variables</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">list</span><span class="p">:</span>
+            <span class="n">ignore_variables</span> <span class="o">=</span> <span class="p">[</span><span class="n">ignore_variables</span><span class="p">]</span>
+
+        <span class="n">data_availability</span> <span class="o">=</span> <span class="n">train</span><span class="o">.</span><span class="n">describe</span><span class="p">(</span>
+            <span class="n">include</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="s1">&#39;count&#39;</span><span class="p">]</span> <span class="o">/</span> <span class="n">train</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">selected_cols</span> <span class="o">=</span> <span class="n">data_availability</span><span class="p">[</span><span class="n">data_availability</span> <span class="o">&gt;</span>
+                                          <span class="n">drop_missing_perc</span><span class="p">]</span><span class="o">.</span><span class="n">index</span>
+        <span class="n">selected_cols</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">selected_cols</span><span class="p">)</span> <span class="o">-</span> \
+            <span class="p">(</span><span class="nb">set</span><span class="p">([</span><span class="n">target_variable</span><span class="p">])</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">ignore_variables</span><span class="p">)))</span>
+
+        <span class="n">numeric_cols</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
+            <span class="nb">set</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">train</span><span class="o">.</span><span class="n">_get_numeric_data</span><span class="p">()))</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">selected_cols</span><span class="p">))</span>
+        <span class="n">categorical_cols</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">selected_cols</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">numeric_cols</span><span class="p">))</span>
+
+        <span class="n">preprocess</span> <span class="o">=</span> <span class="n">Pipeline</span><span class="p">([(</span><span class="s2">&quot;features&quot;</span><span class="p">,</span>
+                                <span class="n">DFFeatureUnion</span><span class="p">([(</span><span class="s2">&quot;numeric&quot;</span><span class="p">,</span>
+                                                 <span class="n">Pipeline</span><span class="p">([(</span><span class="s2">&quot;num_sel&quot;</span><span class="p">,</span>
+                                                            <span class="n">ColumnExtractor</span><span class="p">(</span><span class="n">numeric_cols</span><span class="p">)),</span>
+                                                           <span class="p">(</span><span class="s2">&quot;num_impute&quot;</span><span class="p">,</span>
+                                                            <span class="n">DFMissingNum</span><span class="p">(</span><span class="n">replace</span><span class="o">=</span><span class="s1">&#39;median&#39;</span><span class="p">))])),</span>
+                                                <span class="p">(</span><span class="s2">&quot;categorical&quot;</span><span class="p">,</span>
+                                                 <span class="n">Pipeline</span><span class="p">([(</span><span class="s2">&quot;cat_sel&quot;</span><span class="p">,</span>
+                                                            <span class="n">ColumnExtractor</span><span class="p">(</span><span class="n">categorical_cols</span><span class="p">)),</span>
+                                                           <span class="p">(</span><span class="s2">&quot;str_impute&quot;</span><span class="p">,</span>
+                                                            <span class="n">DFMissingStr</span><span class="p">(</span><span class="n">replace</span><span class="o">=</span><span class="s1">&#39;most_frequent&#39;</span><span class="p">)),</span>
+                                                           <span class="p">(</span><span class="s2">&quot;one_hot&quot;</span><span class="p">,</span>
+                                                            <span class="n">DFOneHot</span><span class="p">())]))]))])</span>
+
+        <span class="n">processed_train</span> <span class="o">=</span> <span class="n">preprocess</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">train</span><span class="p">)</span>
+        <span class="n">processed_train</span><span class="p">[</span><span class="n">target_variable</span><span class="p">]</span> <span class="o">=</span> <span class="n">train</span><span class="p">[</span><span class="n">target_variable</span><span class="p">]</span>
+        <span class="n">processed_test</span> <span class="o">=</span> <span class="n">preprocess</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">test</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;preprocessed_train&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">processed_train</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;preprocessed_test&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">processed_test</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="CrossValidate"><a class="viewcode-back" href="../../../../daggit.core.operators.html#daggit.core.operators.sklearn.CrossValidate">[docs]</a><span class="k">class</span> <span class="nc">CrossValidate</span><span class="p">(</span><span class="n">BaseOperator</span><span class="p">):</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;preprocessed_train&quot;</span><span class="p">:</span> <span class="n">Pandas_Dataframe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">])}</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">outputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;report&quot;</span><span class="p">:</span> <span class="n">File_Txt</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="s2">&quot;model&quot;</span><span class="p">:</span> <span class="n">Pickle_Obj</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">1</span><span class="p">])}</span>
+
+<div class="viewcode-block" id="CrossValidate.run"><a class="viewcode-back" href="../../../../daggit.core.operators.html#daggit.core.operators.sklearn.CrossValidate.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_variable</span><span class="p">,</span> <span class="n">model_args</span><span class="p">,</span> <span class="n">cv_args</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="k">import</span> <span class="n">cross_val_score</span>
+        <span class="n">preprocessed_train</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="s1">&#39;preprocessed_train&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+
+        <span class="n">y</span> <span class="o">=</span> <span class="n">preprocessed_train</span><span class="p">[</span><span class="n">target_variable</span><span class="p">]</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="n">preprocessed_train</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">target_variable</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">values</span>
+
+        <span class="n">imports</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">imports</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">get_op_callable</span><span class="p">(</span><span class="n">imports</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="n">module_path</span><span class="o">=</span><span class="n">imports</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="n">model_params</span> <span class="o">=</span> <span class="n">model_args</span><span class="p">[</span><span class="s1">&#39;arguments&#39;</span><span class="p">]</span>
+        <span class="n">reg</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="o">**</span><span class="n">model_params</span><span class="p">)</span>
+        <span class="n">scores</span> <span class="o">=</span> <span class="n">cross_val_score</span><span class="p">(</span><span class="n">reg</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="o">**</span><span class="n">cv_args</span><span class="p">)</span>
+
+        <span class="n">reg</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+        <span class="n">report</span> <span class="o">=</span> <span class="s2">&quot;MSE: </span><span class="si">%0.2f</span><span class="s2"> (+/- </span><span class="si">%0.2f</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">scores</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span> <span class="n">scores</span><span class="o">.</span><span class="n">std</span><span class="p">()</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;model&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;report&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">report</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="Splitters"><a class="viewcode-back" href="../../../../daggit.core.operators.html#daggit.core.operators.sklearn.Splitters">[docs]</a><span class="k">class</span> <span class="nc">Splitters</span><span class="p">(</span><span class="n">BaseOperator</span><span class="p">):</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;input_df&quot;</span><span class="p">:</span> <span class="n">Pandas_Dataframe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="p">}</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">outputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;train&quot;</span><span class="p">:</span> <span class="n">Pandas_Dataframe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+                <span class="s2">&quot;test&quot;</span><span class="p">:</span> <span class="n">Pandas_Dataframe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">1</span><span class="p">])}</span>
+
+<div class="viewcode-block" id="Splitters.run"><a class="viewcode-back" href="../../../../daggit.core.operators.html#daggit.core.operators.sklearn.Splitters.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_args</span><span class="p">):</span>
+        <span class="n">input_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="s1">&#39;input_df&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+
+        <span class="n">imports</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">imports</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">get_op_callable</span><span class="p">(</span><span class="n">imports</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="n">module_path</span><span class="o">=</span><span class="n">imports</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="n">model_params</span> <span class="o">=</span> <span class="n">model_args</span><span class="p">[</span><span class="s1">&#39;arguments&#39;</span><span class="p">]</span>
+
+        <span class="n">train</span><span class="p">,</span> <span class="n">test</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">input_df</span><span class="p">,</span> <span class="o">**</span><span class="n">model_params</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;train&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">train</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;test&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">test</span><span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Sunbird
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
