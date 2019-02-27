@@ -19,7 +19,7 @@ from ..operators.contentTaggingUtils import keyword_extraction_parallel
 from ..operators.contentTaggingUtils import get_level_keywords
 from ..operators.contentTaggingUtils import jaccard_with_phrase
 from ..operators.contentTaggingUtils import save_obj, load_obj, findFiles
-from ..operators.contentTaggingUtils import merge_json
+from ..operators.contentTaggingUtils import merge_json, merge
 from ..operators.contentTaggingUtils import strip_word, get_words
 from ..operators.contentTaggingUtils import dictionary_merge, get_sorted_list
 from ..operators.contentTaggingUtils import custom_listPreProc
@@ -354,7 +354,7 @@ class KeywordExtraction(BaseOperator):
         return {"pathTotaxonomy": Pandas_Dataframe(self.node.inputs[0]),
                 "categoryLookup": ReadDaggitTask_Folderpath(self.node.inputs[1]),
                 "timestamp_folder": File_Txt(self.node.inputs[2]),
-                "pathTocorpus": ReadDaggitTask_Folderpath(self.node.inputs[3])
+                "pathTocredentials": ReadDaggitTask_Folderpath(self.node.inputs[3])
                 }
 
     @property
@@ -365,9 +365,16 @@ class KeywordExtraction(BaseOperator):
     def run(self, extract_keywords, filter_criteria, update_corpus, filter_score_val, num_keywords):
         assert extract_keywords == "tagme" or extract_keywords == "text_token"
         assert filter_criteria == "none" or filter_criteria == "taxonomy" or filter_criteria == "dbpedia"
+        pathTocredentials = self.inputs["pathTocredentials"].read_loc()
+        config = configparser.ConfigParser(allow_no_value=True)
+        config.read(pathTocredentials)
+        cache_cred=dict()
+        cache_cred['host']=config["redis"]["host"]
+        cache_cred['port']=config["redis"]["port"]
+        cache_cred['password']=config["redis"]["password"]
+
         taxonomy = self.inputs["pathTotaxonomy"].read()
         path_to_category_lookup = self.inputs["categoryLookup"].read_loc()
-        path_to_corpus = self.inputs["pathTocorpus"].read_loc()
         timestamp_folder = self.inputs["timestamp_folder"].read()
         timestr = os.path.split(timestamp_folder)[1]
         print("****timestamp folder:", timestamp_folder)
@@ -386,7 +393,7 @@ class KeywordExtraction(BaseOperator):
                taxonomy=taxonomy,
                extract_keywords=extract_keywords,
                filter_criteria=filter_criteria,
-               path_to_corpus=path_to_corpus,
+               cache_cred=cache_cred,
                path_to_category_lookup=path_to_category_lookup,
                update_corpus=update_corpus,
                filter_score_val=filter_score_val,
@@ -447,7 +454,7 @@ class WriteToKafkaTopic(BaseOperator):
 
     def run(self, kafka_broker, kafkaTopic_writeTo):
         path_to_contentKeywords = self.inputs["path_to_contentKeywords"].read()
-        timestamp_folder = os.path.split(os.path.split(timestamp_folder)[0])[1]
+        timestamp_folder = os.path.split(path_to_contentKeywords)[0]
         timestr = os.path.split(timestamp_folder)[1]
         epoch_time = time.mktime(time.strptime(timestr, "%Y%m%d-%H%M%S"))
         content_to_textpath = os.path.join(timestamp_folder, "content_to_text")

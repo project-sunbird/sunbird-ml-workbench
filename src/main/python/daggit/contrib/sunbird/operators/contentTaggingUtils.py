@@ -32,6 +32,7 @@ import time
 import requests
 import os
 import logging
+import redis
 import xml.etree.ElementTree as ET
 from dateutil.parser import parse
 from SPARQLWrapper import SPARQLWrapper, JSON
@@ -1214,57 +1215,56 @@ def checkSubjectPartial(dbpedia_prefix_cat, subject):
     return int(bool(sum([int(any([1 if ((i in j) or (j in i)) else 0 for j in dbpedia_prefix_cat])) for i in subject_paths])))
 
 
-def keyword_filter(tagme_response_df, path_to_corpus, path_to_category_lookup, subject, update_corpus, filter_score_val, num_keywords):
+def keyword_filter(tagme_response_df, cache_cred, path_to_category_lookup, subject, update_corpus, filter_score_val, num_keywords):
     print("subject:", subject)
 
-    corpus_lookup_filename = os.path.join(path_to_corpus, subject + ".csv")
-    print("Lookup corpus :"+corpus_lookup_filename)
-    if not os.path.exists(os.path.dirname(corpus_lookup_filename)):
-        try:
-            print("Creating :", os.path.dirname(corpus_lookup_filename))
-            os.makedirs(os.path.dirname(corpus_lookup_filename))
-        except OSError as exc:  # Guard against race condition
-            if exc.errno != errno.EEXIST:
-                raise
-    if os.path.isfile(corpus_lookup_filename):
-        lookup_df = pd.read_csv(os.path.join(path_to_corpus, subject + ".csv"))
-    else:
-        lookup_df = pd.DataFrame({'keyword': [], 'dbpedia_score': []})
-        lookup_df.to_csv(corpus_lookup_filename)
-    keyword_df = pd.DataFrame({'keyword': [], 'dbpedia_score': []})
-    for ind in range(len(tagme_response_df)):
-        keyword = tagme_response_df['spot'][ind]
 
-        if keyword in list(lookup_df['keyword']):
-            lookup_df = lookup_df[lookup_df['keyword'] == keyword]
-            relatedness = lookup_df.iloc[0]['dbpedia_score']
-            score_df = pd.DataFrame({'keyword': [keyword], 'dbpedia_score': [relatedness]})
-        else:
-            with open(path_to_category_lookup, 'r') as stream:
-                subject_ls = yaml.load(stream)[subject]
-            dbpedia_categories = tagme_response_df['dbpedia_categories'][ind]
-            count = 0
-            try:
-                for cat in dbpedia_categories:
-                    dbpedia_prefix_cat = getTaxonomy(cat)
-                    status = checkSubject(dbpedia_prefix_cat, subject_ls)
-                    count += status
-                if len(dbpedia_categories) > 0:
-                    relatedness = float(count)/float(len(dbpedia_categories))
-                else:
+    try:
+        for i in ['port', 'host', 'password']:
+            assert i in list(cache_cred.keys())
+            cache_status=True 
+    except:
+        try:
+            r=redis.redis(host=cache_cred['host'], port=cache_cred['port'])
+            r.set("test","test")
+            cache_cred["password"]=""
+            cache_status=True 
+        except IOError:
+            print("Unable to establish connection with redis cache.")
+
+    keyword_df = pd.DataFrame({'keyword': [], 'dbpedia_score': []})
+    if cache_status:
+        for ind in range(len(tagme_response_df)):
+            keyword = tagme_response_df['spot'][ind]
+            score=getRediskey(subject+"."+keyword, cache_cred['host'], cache_cred['port'], cache_cred['password'])
+            if score:
+                score_df = pd.DataFrame({'keyword': [keyword], 'dbpedia_score': [score]})
+            else:
+                with open(path_to_category_lookup, 'r') as stream:
+                    subject_ls = yaml.load(stream)[subject]
+                dbpedia_categories = tagme_response_df['dbpedia_categories'][ind]
+                count = 0
+                try:
+                    for cat in dbpedia_categories:
+                        dbpedia_prefix_cat = getTaxonomy(cat)
+                        status = checkSubject(dbpedia_prefix_cat, subject_ls)
+                        count += status
+                    if len(dbpedia_categories) > 0:
+                        relatedness = float(count)/float(len(dbpedia_categories))
+                    else:
+                        relatedness = 0
+                except BaseException:
                     relatedness = 0
-            except BaseException:
-                relatedness = 0
-            score_df = pd.DataFrame({'keyword': [keyword], 'dbpedia_score': [relatedness]})
-        keyword_df = keyword_df.append(score_df, ignore_index=True)
+                score_df = pd.DataFrame({'keyword': [keyword], 'dbpedia_score': [relatedness]})
+            keyword_df = keyword_df.append(score_df, ignore_index=True)
 
     # preprocessing
     keyword_df['keyword'] = [str(x).lower() for x in list((keyword_df['keyword'])) if str(x) != 'nan']
     if update_corpus:
             corpus_update_df = keyword_df.drop_duplicates('keyword')
             corpus_update_df = corpus_update_df.dropna()
-            with open(corpus_lookup_filename, 'a') as f:
-                corpus_update_df.to_csv(f, header=False, index=False)
+            for ind,val in corpus_update_df.iterrows():
+                    setRediskey(subject+"."+val['keyword'], val['dbpedia_score'], cache_cred['host'], cache_cred['port'], cache_cred['password'])          
     if filter_score_val:
         try:
             keyword_df = keyword_df[keyword_df['dbpedia_score'] >= float(filter_score_val)]  ### from yaml#filtered_keyword_df
@@ -1286,7 +1286,7 @@ def keyword_extraction_parallel(
         taxonomy,
         extract_keywords,
         filter_criteria,
-        path_to_corpus,
+        cache_cred,
         path_to_category_lookup,
         update_corpus,
         filter_score_val,
@@ -1348,7 +1348,7 @@ def keyword_extraction_parallel(
                     print("Tagme keyword extraction is running for {0}".format(
                         path_to_cid_transcript))
                     tagme_response_df = run_tagme(path_to_cid_transcript)
-                    keyword_filter_df = keyword_filter(tagme_response_df, path_to_corpus, path_to_category_lookup, subject, update_corpus, filter_score_val, num_keywords)
+                    keyword_filter_df = keyword_filter(tagme_response_df, cache_cred, path_to_category_lookup, subject, update_corpus, filter_score_val, num_keywords)
                     path_to_saved_keywords = os.path.join(path_to_keywords, "keywords.csv")
                     print("keyword_filter_df:", keyword_filter_df)
                     keyword_filter_df.to_csv(path_to_saved_keywords, index=False, encoding='utf-8')
@@ -1762,3 +1762,53 @@ def findDate(x_date, DS_DATA_HOME):
         return CustomDateFormater(x=x_date, fileloc=DS_DATA_HOME, datepattern='%Y%m%d-%H%M%S')
     else:
         return CustomDateFormater(x=x_date, datepattern="%d-%m-%Y")
+
+
+def setRediskey(key, val, host, port, password):
+
+    """
+    This function writes a key value pair into Redis cache. It is a wrapper on set operation of redis-py.
+
+    :param key(str): The key.
+    :param val(str): The value assigned to key.
+    :param host(str): redis server host. default:'localhost'.
+    :param port(str): redis server port. default: 6379'.
+    :param password(str): redis server password. default: None.
+    :returns: The detected language for the given text.
+    """
+    try:
+        r = redis.StrictRedis(host=redis_host, port=redis_port, password=redis_password, decode_responses=True)
+        msg = r.set(key, val)   
+    except Exception as e:
+        print(e)
+        
+def getRediskey(key, host, port, password):
+    """
+    This function reads the value from Redis cache based on the key. It is a wrapper on  get operation of redis-py .
+
+    :param key(str): The key.
+    :param host(str): redis server host. default:'localhost'.
+    :param port(str): redis server port. default: 6379'.
+    :param password(str): redis server password. default: None.
+    :returns: The detected language for the given text.
+    """
+    try:
+        r = redis.StrictRedis(host=redis_host, port=redis_port, password=redis_password, decode_responses=True)
+        msg = r.get(key)     
+        return msg
+    except Exception as e:
+        print(e)
+
+def merge(dict1, dict2, path=None): ##need to generalise. Use onle one of merge, merge_json
+   if path is None: path = []
+   for key in dict2:
+       if key in dict1:
+           if isinstance(dict1[key], dict) and isinstance(dict2[key], dict):
+               merge(dict1[key], dict2[key], path + [str(key)])
+           elif dict1[key] == dict2[key]:
+               pass # same leaf value
+           else:
+               raise Exception('Conflict at %s' % '.'.join(path + [str(key)]))
+       else:
+           dict1[key] = dict2[key]
+   return dict1

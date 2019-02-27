@@ -41,3 +41,4 @@ pdfminer.six
 configparser
 sphinx_rtd_theme
 kafka
+redis

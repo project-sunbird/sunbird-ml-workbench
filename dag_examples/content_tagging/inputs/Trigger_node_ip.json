@@ -4,7 +4,7 @@
         "filters":{
                     "objectType" : ["Content"],
                     "contentType" : ["Resource"],
-                    "mimeType" : ["application/pdf"],
+                    "mimeType" : ["video/x-youtube"],
                     "language": ["English"],
                     "status" : ["Live"],
                     "lastUpdatedOn" : {"min": "28-01-2018", "max": "28-11-2018"},

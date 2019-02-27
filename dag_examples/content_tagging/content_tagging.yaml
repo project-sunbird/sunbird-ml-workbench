@@ -3,14 +3,13 @@ owner: sunbird
 
 inputs:
   DS_DATA_HOME: /home/DS_DATA_HOME
-  pathTocredentials: /home/DS_DATA_HOME/credentials.ini
-  pathTotaxonomy: inputs/RevisedTaxonomy.csv
+  pathTocredentials: inputs/credentials.ini
+  pathTotaxonomy: inputs/Taxonomy.csv
   categoryLookup: inputs/category_lookup.yaml
   pathTotriggerJson: inputs/Trigger_node_ip.json
-  pathTocorpus: inputs/corpus
 
 outputs:
-  dummy: /home/DS_HOME
+  dummy: /home/DS_DATA_HOME
 
 graph:
   - node_name: contentmeta_creation
@@ -26,8 +25,8 @@ graph:
     outputs: [timestamp_folder]
     operation: contentTagging.ContentToText
     arguments:
-      range_start: START
-      range_end: END
+      range_start: 0
+      range_end: 2
       num_of_processes: 1
       content_type:
         youtube:
@@ -53,7 +52,7 @@ graph:
           ecml_index_to_text: none
 
   - node_name: keyword_extraction
-    inputs: [pathTotaxonomy, categoryLookup, content_to_text.timestamp_folder, pathTocorpus, contentmeta_creation.pathTocontentMeta]
+    inputs: [pathTotaxonomy, categoryLookup, content_to_text.timestamp_folder, pathTocredentials]
     outputs: [pathTocontentKeywords]
     operation: contentTagging.KeywordExtraction 
     arguments: 
