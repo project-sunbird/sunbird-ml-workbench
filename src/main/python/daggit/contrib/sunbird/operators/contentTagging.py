@@ -479,6 +479,7 @@ class WriteToKafkaTopic(BaseOperator):
             autotagging_json.update({"ets": epoch_time})
             with open(os.path.join(timestamp_folder, "content_to_text", cid, "autoTagging_json.json"), "w+") as main_json:
                 json.dump(autotagging_json, main_json, sort_keys=True, indent=4)
+            # check if connection established.
             server_topics = writeTokafka(kafka_broker)
             if server_topics:
                 for i in server_topics:
