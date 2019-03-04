@@ -4,12 +4,12 @@ owner: sunbird
 inputs:
   DS_DATA_HOME: /home/DS_DATA_HOME
   pathTocredentials: inputs/credentials.ini
-  pathTotaxonomy: inputs/Taxonomy.csv
+  pathTotaxonomy: inputs/taxonomy.csv
   categoryLookup: inputs/category_lookup.yaml
   pathTotriggerJson: inputs/Trigger_node_ip.json
 
 outputs:
-  dummy: /home/DS_DATA_HOME
+  dummy: /home/DS_HOME
 
 graph:
   - node_name: contentmeta_creation

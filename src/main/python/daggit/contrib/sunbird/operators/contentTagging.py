@@ -19,8 +19,9 @@ from ..operators.contentTaggingUtils import keyword_extraction_parallel
 from ..operators.contentTaggingUtils import get_level_keywords
 from ..operators.contentTaggingUtils import jaccard_with_phrase
 from ..operators.contentTaggingUtils import save_obj, load_obj, findFiles
-from ..operators.contentTaggingUtils import merge_json, merge
+from ..operators.contentTaggingUtils import merge_json
 from ..operators.contentTaggingUtils import strip_word, get_words
+from ..operators.contentTaggingUtils import writeTokafka
 from ..operators.contentTaggingUtils import dictionary_merge, get_sorted_list
 from ..operators.contentTaggingUtils import custom_listPreProc
 from ..operators.contentTaggingUtils import df_feature_check, identify_contentType
@@ -474,18 +475,18 @@ class WriteToKafkaTopic(BaseOperator):
                     [new_json.pop(ignore) for ignore in ignore_list if ignore in new_json.keys()]
                 dict_list.append(new_json)
             # merge the nested jsons:-
-            autotagging_json = reduce(merge, dict_list)
+            autotagging_json = reduce(merge_json, dict_list)
             autotagging_json.update({"ets": epoch_time})
             with open(os.path.join(timestamp_folder, "content_to_text", cid, "autoTagging_json.json"), "w+") as main_json:
                 json.dump(autotagging_json, main_json, sort_keys=True, indent=4)
-            client = KafkaClient(kafka_broker)
-            server_topics = client.topic_partitions
-            for i in server_topics:
-                if i == kafkaTopic_writeTo:
-                    producer = KafkaProducer(bootstrap_servers='localhost:9092', value_serializer=lambda v: json.dumps(v, indent=4).encode('utf-8'))
-                    #serializing json message:-
-                    event_send = producer.send(kafkaTopic_writeTo, autotagging_json)
-                    result = event_send.get(timeout=60)
+            server_topics = writeTokafka(kafka_broker)
+            if server_topics:
+                for i in server_topics:
+                    if i == kafkaTopic_writeTo:
+                        producer = KafkaProducer(bootstrap_servers=kafka_broker, value_serializer=lambda v: json.dumps(v, indent=4).encode('utf-8'))
+                        # sserializing json message:-
+                        event_send = producer.send(kafkaTopic_writeTo, autotagging_json)
+                        result = event_send.get(timeout=60)
 
 
 class CorpusCreation(BaseOperator):

@@ -11,6 +11,8 @@ from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
 from pdfminer.converter import HTMLConverter, TextConverter, XMLConverter
 from pdfminer.layout import LAParams
 from pdfminer.pdfpage import PDFPage
+from kafka import KafkaProducer, KafkaConsumer, KafkaClient
+
 import yaml
 import glob
 from PyPDF2 import PdfFileReader
@@ -136,31 +138,6 @@ def unzip_files(directory):
             os.remove(zip_file)
         except BaseException:
             bugs.append(zip_file)
-
-
-def merge_json(merge_json_loc_list):
-    ignore_list = ["ETS"]
-    dict_list = []
-    for file in merge_json_loc_list:
-        with open(file, "r", encoding="UTF-8") as info:
-            new_json = json.load(info)
-            [new_json.pop(ignore) for ignore in ignore_list if ignore in new_json.keys()]
-        dict_list.append(new_json)
-    merge_dict = {}
-    for dictionary in dict_list:
-        for k, _ in dictionary.items():
-            if k in merge_dict.keys():
-                print(k)
-                try:
-                    assert dictionary.get(k) == merge_dict.get(k)
-                    print(merge_dict.get(k))
-                    merge_dict.update({k: dictionary.get(k)})
-                except BaseException:
-                    print("Trying to merge keys with different values")
-                    pass
-            else:
-                merge_dict.update({k: dictionary.get(k)})
-    return merge_dict
 
 
 def ekstep_ecar_unzip(download_location, copy_location):
@@ -1217,8 +1194,6 @@ def checkSubjectPartial(dbpedia_prefix_cat, subject):
 
 def keyword_filter(tagme_response_df, cache_cred, path_to_category_lookup, subject, update_corpus, filter_score_val, num_keywords):
     print("subject:", subject)
-
-
     try:
         for i in ['port', 'host', 'password']:
             assert i in list(cache_cred.keys())
@@ -1799,12 +1774,12 @@ def getRediskey(key, host, port, password):
     except Exception as e:
         print(e)
 
-def merge(dict1, dict2, path=None): ##need to generalise. Use onle one of merge, merge_json
+def merge_json(dict1, dict2, path=None):
    if path is None: path = []
    for key in dict2:
        if key in dict1:
            if isinstance(dict1[key], dict) and isinstance(dict2[key], dict):
-               merge(dict1[key], dict2[key], path + [str(key)])
+               merge_json(dict1[key], dict2[key], path + [str(key)])
            elif dict1[key] == dict2[key]:
                pass # same leaf value
            else:
@@ -1812,3 +1787,15 @@ def merge(dict1, dict2, path=None): ##need to generalise. Use onle one of merge,
        else:
            dict1[key] = dict2[key]
    return dict1
+
+
+def writeTokafka(kafka_broker):
+    connection_established = False
+    try:
+        client = KafkaClient(kafka_broker)
+        server_topics = client.topic_partitions
+        connection_established = True
+        return server_topics
+    except Exception as e:
+        print(e)
+        return connection_established
