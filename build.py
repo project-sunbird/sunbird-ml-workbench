@@ -1,6 +1,6 @@
 from pybuilder.core import init, use_plugin
 
-delete_plugin("python.core")
+add_plugin("python.core")
 use_plugin("python.install_dependencies")
 use_plugin("python.distutils")
 use_plugin('copy_resources')
