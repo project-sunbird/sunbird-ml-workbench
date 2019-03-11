@@ -29,7 +29,7 @@ If your solution has a long standing application, it is inevitable that the solu
 1. The binary file is present at the following location `bin/`
 2. Install - `pip install  ML-Workbench/bin/daggit-0.5.0.tar.gz`
 #### Installation after build
-1. Clone the repository or download the zipped file from `https://github.com/ekstep/ML-Workbench.git`
+1. Clone the repository or download the zipped file from `https://github.com/project-suunbird/ML-Workbench.git`
 2. Change directory into ML-Workbench
 3. Run `bash build.sh`
 4. Install - `pip install  bin/daggit-0.5.0.tar.gz`

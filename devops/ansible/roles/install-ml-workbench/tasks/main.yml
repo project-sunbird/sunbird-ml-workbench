@@ -1,0 +1,19 @@
+---
+- name: Initiatialize virtualenv
+  pip: 
+    virtualenv: "{{ virtualenv_dir }}" 
+    virtualenv_python: python3.6
+    name: "{{ item }}"
+  with_items:
+    - "{{ requirements-ml-workbench }}"
+
+- name: copy the dependencies to virtualenv and run the installation script
+  template:
+    src: virtualenv-setup.j2
+    dest: /tmp/virtualenv-setup.sh
+    mode: 0755
+  
+- name: Running the dependencies in the virtual env
+  command: bash /tmp/virtualenv-setup.sh
+    args:
+      chdir: "/home/{{ansible+ssh_user}}"

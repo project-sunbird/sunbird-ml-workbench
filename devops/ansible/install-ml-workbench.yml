@@ -1,0 +1,13 @@
+---
+- hosts: ml-workbench
+  gather_facts: false
+  pre_tasks:
+    - name: Install Basic Dependencies for ML-WORKBENCH
+      apt:
+        name: "{{item}}"
+        state: present
+      with_items:
+        - python3.6
+        - python-pip
+  roles:
+    - install-ml-workbench
