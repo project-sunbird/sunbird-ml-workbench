@@ -8,8 +8,3 @@ RUN bash -x build.sh \
         && daggit run Example1_Iris_Classification
 CMD echo "Welcome to ML-WORKBENCH"
 
-# FROM python:3.6.5-apline  
-# RUN apk update
-# WORKDIR /home/
-# COPY --from=buildml /home/ml-workbench/bin/* .
-# RUN pip install 

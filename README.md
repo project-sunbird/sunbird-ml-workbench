@@ -26,6 +26,8 @@ If your solution has a long standing application, it is inevitable that the solu
 
 ### Installation
 #### Installation using Docker Container
+* If using docker no need of having a virtualenv installed
+* 
 * Clone this repo and Run `docker build --no-cache -t dockerHubName/imageName:Version .` <br/>Change the dockerHubName, imageName, Version as per your requirement
 * The above command will install ML-WORKBENCH with all the dependent binaries, 
 
