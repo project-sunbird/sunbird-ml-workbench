@@ -5,7 +5,7 @@
     virtualenv_python: python3.6
     name: "{{ item }}"
   with_items:
-    - "{{ requirements-ml-workbench }}"
+    - "{{ requirements }}"
 
 - name: copy the dependencies to virtualenv and run the installation script
   template:
@@ -14,6 +14,4 @@
     mode: 0755
   
 - name: Running the dependencies in the virtual env
-  command: bash /tmp/virtualenv-setup.sh
-    args:
-      chdir: "/home/{{ansible+ssh_user}}"
+  command: bash -lc "bash /tmp/virtualenv-setup.sh" chdir="/home/{{ansible_ssh_user}}"

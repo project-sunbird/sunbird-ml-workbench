@@ -1,0 +1,2 @@
+[ml-workbench]
+IP ansible_ssh_user=test ansible_ssh_key_file=~/.ssh/keyFile

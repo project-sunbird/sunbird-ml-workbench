@@ -1,27 +1,11 @@
-#
-# ML-Workbench Dockerfile
-#
+FROM python:3.6.5 as buildml
+WORKDIR /home/
+RUN apt update && git clone https://github.com/SMYALTAMASH/sunbird-ml-workbench
+COPY app.go .
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o app .
 
-FROM aleenaraj/raj_ubuntu
-MAINTAINER Aleena Raj "aleenar@ilimi.in"
-
-# Setting up DS_DATA_HOME
-RUN mkdir /home/DS_DATA_HOME
-RUN mkdir /home/ML-Workbench
-
-# Setting the working directory
-WORKDIR /home
-
-ADD . /home/ML-Workbench
-
-ADD google_cred.json /home
-ADD credentials.ini /home
-
-# Setting the environment variable
-ENV GOOGLE_APPLICATION_CREDENTIALS /home/google_cred.json
-
-RUN pwd
-
-#Running MLWB
-RUN pip3 install -r /home/ML-Workbench/requirements.txt
-
+FROM python:3.6.5-apline  
+RUN apk update
+WORKDIR /home/
+COPY --from=buildml /go/src/github.com/alexellis/href-counter/app .
+CMD ["./app"]  
