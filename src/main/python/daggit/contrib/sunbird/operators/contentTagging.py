@@ -373,6 +373,10 @@ class KeywordExtraction(BaseOperator):
         cache_cred['host']=config["redis"]["host"]
         cache_cred['port']=config["redis"]["port"]
         cache_cred['password']=config["redis"]["password"]
+        tagme_cred = dict()
+        tagme_cred['gcube_token']=config['tagme credentials']['gcube_token']
+        tagme_cred['postman_token']=config['tagme credentials']['postman_token']                        
+
 
         taxonomy = self.inputs["pathTotaxonomy"].read()
         path_to_category_lookup = self.inputs["categoryLookup"].read_loc()
@@ -398,7 +402,8 @@ class KeywordExtraction(BaseOperator):
                path_to_category_lookup=path_to_category_lookup,
                update_corpus=update_corpus,
                filter_score_val=filter_score_val,
-               num_keywords=num_keywords)
+               num_keywords=num_keywords,
+               tagme_cred=tagme_cred)
             results = pool.map(
                 keywordExtraction_partial, [
                     dir for dir in os.listdir(content_to_text_path)])

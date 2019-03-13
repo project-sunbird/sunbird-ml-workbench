@@ -1077,31 +1077,52 @@ def custom_tokenizer(path_to_text_file):
     return text_df
 
 
-def tagme_text(text):
-    url = "https://tagme.d4science.org/tagme/tag"
+def tagme_text(text, tagme_cred):
+    try:
+        url = "https://tagme.d4science.org/tagme/tag"
 
-    querystring = {
-        "lang": "en",
-        "include_categories": True,
-        "gcube-token": "1e1f2881-62ec-4b3e-9036-9efe89347991-843339462",
-        "text": text}
-
-    headers = {
-        'gcube-token': "1e1f2881-62ec-4b3e-9036-9efe89347991-843339462",
-        'cache-control': "no-cache",
-        'postman-token': "98279373-78af-196e-c040-46238512c338"
-    }
-
-    response = requests.request(
-        "GET",
-        url,
-        headers=headers,
-        params=querystring).json()
-    df = pd.DataFrame(response['annotations'])
+        querystring = {
+            "lang": "en",
+            "include_categories": False,
+            "gcube-token": tagme_cred['gcube_token'],
+            "text": "test"}
+        headers = {
+            'cache-control': "no-cache",
+            'postman-token': tagme_cred['postman_token'] 
+        }
+        response = requests.request(
+            "GET",
+            url,
+            headers=headers,
+            params=querystring).json()
+        assert response['annotations']['spot'] == 'test'
+        connection_status = True 
+    except ConnectionError:
+        print("Unable to establish connection with Tagme")
+    if connection_status: 
+        try: 
+            url = "https://tagme.d4science.org/tagme/tag"
+            querystring = {
+                "lang": "en",
+                "include_categories": True,
+                "gcube-token": tagme_cred['gcube_token'],
+                "text": text}
+            headers = {
+                'cache-control': "no-cache",
+                'postman-token': tagme_cred['postman_token'] 
+            }
+            response = requests.request(
+                "GET",
+                url,
+                headers=headers,
+                params=querystring).json()
+            df = pd.DataFrame(response['annotations'])
+        except:
+            print("Tagme Failed")
     return df
 
 
-def run_tagme(path_to_text):
+def run_tagme(path_to_text,tagme_cred):
     file_ = open(path_to_text, "r")
     text = file_.readline()
     words = text.split(" ")
@@ -1113,13 +1134,13 @@ def run_tagme(path_to_text):
             (index_count + window_len - 1), len(words))])
         index_count += window_len
         if text:
-            response_list.append(tagme_text(text))
+            response_list.append(tagme_text(text,tagme_cred))
         response_df = pd.concat(response_list)
         response_df.reset_index(drop=True, inplace=True)
     return response_df
 
 
-def get_tagme_spots(path_to_text):
+def get_tagme_spots(path_to_text, tagme_cred):
     file_ = open(path_to_text, "r")
     text = file_.readline()
     # text = text.encode('utf-8').decode('ascii', 'ignore')
@@ -1131,7 +1152,7 @@ def get_tagme_spots(path_to_text):
         text = ' '.join(words[index_count:min(
             (index_count + window_len - 1), len(words))])
         index_count += window_len
-        response_list.append(tagme_text(text))
+        response_list.append(tagme_text(text,tagme_cred))
         response_df = pd.concat(response_list)
         response_df = response_df.drop_duplicates('spot')
         response_df.reset_index(drop=True, inplace=True)
@@ -1265,7 +1286,8 @@ def keyword_extraction_parallel(
         path_to_category_lookup,
         update_corpus,
         filter_score_val,
-        num_keywords):
+        num_keywords,
+        tagme_cred):
     """
     A custom function to parallelly extract keywords
     for all the Content texts in a folder.
@@ -1322,7 +1344,7 @@ def keyword_extraction_parallel(
                 if extract_keywords == "tagme" and filter_criteria == "dbpedia":
                     print("Tagme keyword extraction is running for {0}".format(
                         path_to_cid_transcript))
-                    tagme_response_df = run_tagme(path_to_cid_transcript)
+                    tagme_response_df = run_tagme(path_to_cid_transcript,tagme_cred)
                     keyword_filter_df = keyword_filter(tagme_response_df, cache_cred, path_to_category_lookup, subject, update_corpus, filter_score_val, num_keywords)
                     path_to_saved_keywords = os.path.join(path_to_keywords, "keywords.csv")
                     print("keyword_filter_df:", keyword_filter_df)
@@ -1331,7 +1353,7 @@ def keyword_extraction_parallel(
                 elif extract_keywords == "tagme" and filter_criteria == "none":
                     print("Tagme keyword extraction is running for {0}".format(
                         path_to_cid_transcript))
-                    tagme_df = get_tagme_spots(path_to_cid_transcript)
+                    tagme_df = get_tagme_spots(path_to_cid_transcript,tagme_cred)
                     path_to_saved_keywords = os.path.join(path_to_keywords, "keywords.csv")
                     tagme_df.to_csv(path_to_saved_keywords, index=False, encoding='utf-8')
                     logging.info(
@@ -1345,7 +1367,7 @@ def keyword_extraction_parallel(
                     flat_list = [item for sublist in list(
                         clean_keywords) for item in sublist]
                     taxonomy_keywords_set = set([cleantext(i) for i in flat_list])
-                    tagme_df = get_tagme_spots(path_to_cid_transcript)
+                    tagme_df = get_tagme_spots(path_to_cid_transcript,tagme_cred)
                     path_to_saved_keywords = os.path.join(path_to_keywords, "keywords.csv")
                     tagme_taxonomy_df = tagme_taxonomy_intersection_keywords(
                         tagme_df, taxonomy_keywords_set)
