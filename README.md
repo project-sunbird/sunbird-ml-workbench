@@ -25,9 +25,14 @@ If your solution has a long standing application, it is inevitable that the solu
 - virtualenv (run `pip install virtualenv` or visit https://virtualenv.pypa.io/en/stable/installation/)
 
 ### Installation
+#### Installation using Docker Container
+* Clone this repo and Run `docker build --no-cache -t dockerHubName/imageName:Version .` <br/>Change the dockerHubName, imageName, Version as per your requirement
+* The above command will install ML-WORKBENCH with all the dependent binaries, 
+
 #### Installation from binary
 1. The binary file is present at the following location `bin/`
 2. Install - `pip install  ML-Workbench/bin/daggit-0.5.0.tar.gz`
+
 #### Installation after build
 1. Clone the repository or download the zipped file from `https://github.com/project-suunbird/ML-Workbench.git`
 2. Change directory into ML-Workbench
@@ -46,6 +51,3 @@ If your solution has a long standing application, it is inevitable that the solu
 ## License
 
 [MIT License](LICENSE)
-
-
-
