@@ -1,0 +1,8 @@
+- name: Install Ansible Prereqs
+  hosts: ml-workbench
+  become: yes
+  gather_facts: no
+  pre_tasks:
+    - raw: "apt update && apt install python-minimal -y"
+  roles:
+    - provision-ml-workbench
