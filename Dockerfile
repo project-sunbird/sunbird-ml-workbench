@@ -5,6 +5,8 @@ RUN apt update \
     && apt install libhdf5-dev -y \
     && git clone https://github.com/SMYALTAMASH/sunbird-ml-workbench -b release-1.15 .         
 RUN bash -x build.sh                                                                                                                   
+
+######################################3
                                                                                                                                         
 FROM python:3.6.5                                                                                                                       
 WORKDIR /home/ml-workbench/
