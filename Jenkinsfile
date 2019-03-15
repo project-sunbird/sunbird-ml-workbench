@@ -30,7 +30,7 @@ node('build-slave') {
             echo "build_tag: " + build_tag
 
             stage('Build') {
-                sh("./build.sh ${build_tag} ${env.NODE_NAME} ${hub_org}")
+                sh("./dockerbuild.sh ${build_tag} ${env.NODE_NAME} ${hub_org}")
             }
 
             stage('ArchiveArtifacts') {
@@ -44,3 +44,4 @@ node('build-slave') {
         throw err
     }
 }
+

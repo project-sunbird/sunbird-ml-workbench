@@ -1,2 +1,0 @@
-[ml-workbench]
-127.0.0.1 ansible_ssh_user=test ansible_ssh_key_file=~/.ssh/keyFile
