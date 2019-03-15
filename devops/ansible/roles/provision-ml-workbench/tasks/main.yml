@@ -40,4 +40,3 @@
   shell: "docker network create --subnet {{subnet_range}} --driver overlay {{subnet_name}}"
   ignore_errors: true
   run_once: true
-
