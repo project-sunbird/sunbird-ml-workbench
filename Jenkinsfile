@@ -44,4 +44,3 @@ node('build-slave') {
         throw err
     }
 }
-
