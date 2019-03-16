@@ -89,13 +89,13 @@
 <li class="toctree-l3"><a class="reference internal" href="daggit.contrib.html">daggit.contrib package</a></li>
 <li class="toctree-l3 current"><a class="reference internal" href="daggit.core.html">daggit.core package</a><ul class="current">
 <li class="toctree-l4 current"><a class="reference internal" href="daggit.core.html#subpackages">Subpackages</a></li>
-<li class="toctree-l4"><a class="reference internal" href="daggit.core.html#module-contents">Module contents</a></li>
+<li class="toctree-l4"><a class="reference internal" href="daggit.core.html#module-daggit.core">Module contents</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="daggit.runtime.html">daggit.runtime package</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="daggit.html#module-contents">Module contents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="daggit.html#module-daggit">Module contents</a></li>
 </ul>
 </li>
 </ul>
@@ -171,11 +171,181 @@
 <div class="section" id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
 </div>
-<div class="section" id="daggit-core-io-io-module">
-<h2>daggit.core.io.io module<a class="headerlink" href="#daggit-core-io-io-module" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-daggit.core.io.io">
+<span id="daggit-core-io-io-module"></span><h2>daggit.core.io.io module<a class="headerlink" href="#module-daggit.core.io.io" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="daggit.core.io.io.CSV_Pandas">
+<em class="property">class </em><code class="descclassname">daggit.core.io.io.</code><code class="descname">CSV_Pandas</code><span class="sig-paren">(</span><em>data_pointer</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/io/io.html#CSV_Pandas"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.io.io.CSV_Pandas" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#daggit.core.io.io.DataType" title="daggit.core.io.io.DataType"><code class="xref py py-class docutils literal notranslate"><span class="pre">daggit.core.io.io.DataType</span></code></a></p>
+<dl class="method">
+<dt id="daggit.core.io.io.CSV_Pandas.read">
+<code class="descname">read</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/io/io.html#CSV_Pandas.read"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.io.io.CSV_Pandas.read" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="daggit.core.io.io.CSV_Pandas.write">
+<code class="descname">write</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/io/io.html#CSV_Pandas.write"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.io.io.CSV_Pandas.write" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="daggit.core.io.io.DataType">
+<em class="property">class </em><code class="descclassname">daggit.core.io.io.</code><code class="descname">DataType</code><span class="sig-paren">(</span><em>data_pointer</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/io/io.html#DataType"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.io.io.DataType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dl class="staticmethod">
+<dt id="daggit.core.io.io.DataType.get_temp_path">
+<em class="property">static </em><code class="descname">get_temp_path</code><span class="sig-paren">(</span><em>dag_id</em>, <em>task_id=None</em>, <em>data_alias=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/io/io.html#DataType.get_temp_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.io.io.DataType.get_temp_path" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="daggit.core.io.io.DataType.read">
+<code class="descname">read</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/io/io.html#DataType.read"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.io.io.DataType.read" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="daggit.core.io.io.DataType.write">
+<code class="descname">write</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/io/io.html#DataType.write"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.io.io.DataType.write" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="daggit.core.io.io.File_Txt">
+<em class="property">class </em><code class="descclassname">daggit.core.io.io.</code><code class="descname">File_Txt</code><span class="sig-paren">(</span><em>data_pointer</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/io/io.html#File_Txt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.io.io.File_Txt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#daggit.core.io.io.DataType" title="daggit.core.io.io.DataType"><code class="xref py py-class docutils literal notranslate"><span class="pre">daggit.core.io.io.DataType</span></code></a></p>
+<dl class="method">
+<dt id="daggit.core.io.io.File_Txt.location_specify">
+<code class="descname">location_specify</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/io/io.html#File_Txt.location_specify"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.io.io.File_Txt.location_specify" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="daggit.core.io.io.File_Txt.read">
+<code class="descname">read</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/io/io.html#File_Txt.read"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.io.io.File_Txt.read" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="daggit.core.io.io.File_Txt.write">
+<code class="descname">write</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/io/io.html#File_Txt.write"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.io.io.File_Txt.write" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="daggit.core.io.io.HDF_Pandas">
+<em class="property">class </em><code class="descclassname">daggit.core.io.io.</code><code class="descname">HDF_Pandas</code><span class="sig-paren">(</span><em>data_pointer</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/io/io.html#HDF_Pandas"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.io.io.HDF_Pandas" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#daggit.core.io.io.DataType" title="daggit.core.io.io.DataType"><code class="xref py py-class docutils literal notranslate"><span class="pre">daggit.core.io.io.DataType</span></code></a></p>
+<dl class="method">
+<dt id="daggit.core.io.io.HDF_Pandas.read">
+<code class="descname">read</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/io/io.html#HDF_Pandas.read"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.io.io.HDF_Pandas.read" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="daggit.core.io.io.HDF_Pandas.write">
+<code class="descname">write</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/io/io.html#HDF_Pandas.write"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.io.io.HDF_Pandas.write" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="daggit.core.io.io.KafkaCLI">
+<em class="property">class </em><code class="descclassname">daggit.core.io.io.</code><code class="descname">KafkaCLI</code><span class="sig-paren">(</span><em>configfile</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/io/io.html#KafkaCLI"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.io.io.KafkaCLI" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#daggit.core.io.io.KafkaDispatcher" title="daggit.core.io.io.KafkaDispatcher"><code class="xref py py-class docutils literal notranslate"><span class="pre">daggit.core.io.io.KafkaDispatcher</span></code></a></p>
+<dl class="method">
+<dt id="daggit.core.io.io.KafkaCLI.read">
+<code class="descname">read</code><span class="sig-paren">(</span><em>read_from_topic</em>, <em>groupID</em>, <em>offset_reset</em>, <em>session_timeout</em>, <em>auto_commit_enable</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/io/io.html#KafkaCLI.read"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.io.io.KafkaCLI.read" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="daggit.core.io.io.KafkaCLI.write">
+<code class="descname">write</code><span class="sig-paren">(</span><em>transaction_event</em>, <em>writeTotopic</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/io/io.html#KafkaCLI.write"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.io.io.KafkaCLI.write" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="daggit.core.io.io.KafkaDispatcher">
+<em class="property">class </em><code class="descclassname">daggit.core.io.io.</code><code class="descname">KafkaDispatcher</code><span class="sig-paren">(</span><em>configfile</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/io/io.html#KafkaDispatcher"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.io.io.KafkaDispatcher" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#daggit.core.io.io.DataType" title="daggit.core.io.io.DataType"><code class="xref py py-class docutils literal notranslate"><span class="pre">daggit.core.io.io.DataType</span></code></a></p>
+<dl class="method">
+<dt id="daggit.core.io.io.KafkaDispatcher.read">
+<code class="descname">read</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/io/io.html#KafkaDispatcher.read"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.io.io.KafkaDispatcher.read" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="daggit.core.io.io.KafkaDispatcher.write">
+<code class="descname">write</code><span class="sig-paren">(</span><em>transaction_event</em>, <em>writeTotopic</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/io/io.html#KafkaDispatcher.write"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.io.io.KafkaDispatcher.write" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="daggit.core.io.io.KafkaStreaming">
+<em class="property">class </em><code class="descclassname">daggit.core.io.io.</code><code class="descname">KafkaStreaming</code><span class="sig-paren">(</span><em>configfile</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/io/io.html#KafkaStreaming"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.io.io.KafkaStreaming" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#daggit.core.io.io.KafkaDispatcher" title="daggit.core.io.io.KafkaDispatcher"><code class="xref py py-class docutils literal notranslate"><span class="pre">daggit.core.io.io.KafkaDispatcher</span></code></a></p>
+<dl class="method">
+<dt id="daggit.core.io.io.KafkaStreaming.handler">
+<code class="descname">handler</code><span class="sig-paren">(</span><em>message</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/io/io.html#KafkaStreaming.handler"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.io.io.KafkaStreaming.handler" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="daggit.core.io.io.KafkaStreaming.read">
+<code class="descname">read</code><span class="sig-paren">(</span><em>app_name</em>, <em>read_from_topic</em>, <em>groupID</em>, <em>offset_reset</em>, <em>session_timeout</em>, <em>auto_commit_enable</em>, <em>batch_duration</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/io/io.html#KafkaStreaming.read"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.io.io.KafkaStreaming.read" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="daggit.core.io.io.KafkaStreaming.write">
+<code class="descname">write</code><span class="sig-paren">(</span><em>transaction_event</em>, <em>writeTotopic</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/io/io.html#KafkaStreaming.write"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.io.io.KafkaStreaming.write" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="daggit.core.io.io.Pandas_Dataframe">
+<em class="property">class </em><code class="descclassname">daggit.core.io.io.</code><code class="descname">Pandas_Dataframe</code><span class="sig-paren">(</span><em>data_pointer</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/io/io.html#Pandas_Dataframe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.io.io.Pandas_Dataframe" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#daggit.core.io.io.DataType" title="daggit.core.io.io.DataType"><code class="xref py py-class docutils literal notranslate"><span class="pre">daggit.core.io.io.DataType</span></code></a></p>
+<dl class="method">
+<dt id="daggit.core.io.io.Pandas_Dataframe.read">
+<code class="descname">read</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/io/io.html#Pandas_Dataframe.read"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.io.io.Pandas_Dataframe.read" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="daggit.core.io.io.Pandas_Dataframe.write">
+<code class="descname">write</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/io/io.html#Pandas_Dataframe.write"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.io.io.Pandas_Dataframe.write" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="daggit.core.io.io.Pickle_Obj">
+<em class="property">class </em><code class="descclassname">daggit.core.io.io.</code><code class="descname">Pickle_Obj</code><span class="sig-paren">(</span><em>data_pointer</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/io/io.html#Pickle_Obj"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.io.io.Pickle_Obj" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#daggit.core.io.io.DataType" title="daggit.core.io.io.DataType"><code class="xref py py-class docutils literal notranslate"><span class="pre">daggit.core.io.io.DataType</span></code></a></p>
+<dl class="method">
+<dt id="daggit.core.io.io.Pickle_Obj.read">
+<code class="descname">read</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/io/io.html#Pickle_Obj.read"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.io.io.Pickle_Obj.read" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="daggit.core.io.io.Pickle_Obj.write">
+<code class="descname">write</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/io/io.html#Pickle_Obj.write"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.io.io.Pickle_Obj.write" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="daggit.core.io.io.ReadDaggitTask_Folderpath">
+<em class="property">class </em><code class="descclassname">daggit.core.io.io.</code><code class="descname">ReadDaggitTask_Folderpath</code><span class="sig-paren">(</span><em>data_pointer</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/io/io.html#ReadDaggitTask_Folderpath"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.io.io.ReadDaggitTask_Folderpath" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#daggit.core.io.io.DataType" title="daggit.core.io.io.DataType"><code class="xref py py-class docutils literal notranslate"><span class="pre">daggit.core.io.io.DataType</span></code></a></p>
+<dl class="method">
+<dt id="daggit.core.io.io.ReadDaggitTask_Folderpath.read_loc">
+<code class="descname">read_loc</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/daggit/core/io/io.html#ReadDaggitTask_Folderpath.read_loc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#daggit.core.io.io.ReadDaggitTask_Folderpath.read_loc" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 </div>
-<div class="section" id="module-contents">
-<h2>Module contents<a class="headerlink" href="#module-contents" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-daggit.core.io">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-daggit.core.io" title="Permalink to this headline">¶</a></h2>
 </div>
 </div>
 

@@ -153,14 +153,18 @@
 <span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">import</span> <span class="nn">requests</span>
 <span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">configparser</span>
 <span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">partial</span>
+<span class="kn">from</span> <span class="nn">elasticsearch</span> <span class="k">import</span> <span class="n">Elasticsearch</span>
 
 <span class="kn">from</span> <span class="nn">daggit.core.io.io</span> <span class="k">import</span> <span class="n">Pandas_Dataframe</span><span class="p">,</span> <span class="n">File_Txt</span>
 <span class="kn">from</span> <span class="nn">daggit.core.io.io</span> <span class="k">import</span> <span class="n">ReadDaggitTask_Folderpath</span>
+<span class="kn">from</span> <span class="nn">daggit.core.io.io</span> <span class="k">import</span> <span class="n">KafkaDispatcher</span><span class="p">,</span> <span class="n">KafkaCLI</span>
 <span class="kn">from</span> <span class="nn">daggit.core.base.factory</span> <span class="k">import</span> <span class="n">BaseOperator</span>
+
 <span class="kn">from</span> <span class="nn">..operators.contentTaggingUtils</span> <span class="k">import</span> <span class="n">multimodal_text_enrichment</span>
 <span class="kn">from</span> <span class="nn">..operators.contentTaggingUtils</span> <span class="k">import</span> <span class="n">keyword_extraction_parallel</span>
 <span class="kn">from</span> <span class="nn">..operators.contentTaggingUtils</span> <span class="k">import</span> <span class="n">get_level_keywords</span>
@@ -168,6 +172,7 @@
 <span class="kn">from</span> <span class="nn">..operators.contentTaggingUtils</span> <span class="k">import</span> <span class="n">save_obj</span><span class="p">,</span> <span class="n">load_obj</span><span class="p">,</span> <span class="n">findFiles</span>
 <span class="kn">from</span> <span class="nn">..operators.contentTaggingUtils</span> <span class="k">import</span> <span class="n">merge_json</span>
 <span class="kn">from</span> <span class="nn">..operators.contentTaggingUtils</span> <span class="k">import</span> <span class="n">strip_word</span><span class="p">,</span> <span class="n">get_words</span>
+<span class="kn">from</span> <span class="nn">..operators.contentTaggingUtils</span> <span class="k">import</span> <span class="n">writeTokafka</span>
 <span class="kn">from</span> <span class="nn">..operators.contentTaggingUtils</span> <span class="k">import</span> <span class="n">dictionary_merge</span><span class="p">,</span> <span class="n">get_sorted_list</span>
 <span class="kn">from</span> <span class="nn">..operators.contentTaggingUtils</span> <span class="k">import</span> <span class="n">custom_listPreProc</span>
 <span class="kn">from</span> <span class="nn">..operators.contentTaggingUtils</span> <span class="k">import</span> <span class="n">df_feature_check</span><span class="p">,</span> <span class="n">identify_contentType</span>
@@ -177,51 +182,49 @@
 <span class="kn">from</span> <span class="nn">sklearn.feature_extraction.text</span> <span class="k">import</span> <span class="n">TfidfVectorizer</span>
 <span class="kn">from</span> <span class="nn">sklearn.feature_extraction.text</span> <span class="k">import</span> <span class="n">CountVectorizer</span>
 <span class="kn">from</span> <span class="nn">sklearn.metrics.pairwise</span> <span class="k">import</span> <span class="n">cosine_similarity</span>
-<span class="kn">from</span> <span class="nn">elasticsearch</span> <span class="k">import</span> <span class="n">Elasticsearch</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">partial</span><span class="p">,</span> <span class="n">reduce</span>
+<span class="kn">from</span> <span class="nn">kafka</span> <span class="k">import</span> <span class="n">KafkaProducer</span><span class="p">,</span> <span class="n">KafkaConsumer</span><span class="p">,</span> <span class="n">KafkaClient</span>
 
 
-<div class="viewcode-block" id="ContentmetaCreation"><a class="viewcode-back" href="../../../../../daggit.contrib.sunbird.operators.html#daggit.contrib.sunbird.operators.contentTagging.ContentmetaCreation">[docs]</a><span class="k">class</span> <span class="nc">ContentmetaCreation</span><span class="p">(</span><span class="n">BaseOperator</span><span class="p">):</span>
+<div class="viewcode-block" id="ContentToTextRead"><a class="viewcode-back" href="../../../../../daggit.contrib.sunbird.operators.html#daggit.contrib.sunbird.operators.contentTagging.ContentToTextRead">[docs]</a><span class="k">class</span> <span class="nc">ContentToTextRead</span><span class="p">(</span><span class="n">BaseOperator</span><span class="p">):</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;DS_DATA_HOME&quot;</span><span class="p">:</span> <span class="n">ReadDaggitTask_Folderpath</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
-                <span class="s2">&quot;pathTocredentials&quot;</span><span class="p">:</span> <span class="n">ReadDaggitTask_Folderpath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
-                <span class="s2">&quot;pathTotriggerJson&quot;</span><span class="p">:</span> <span class="n">ReadDaggitTask_Folderpath</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+        <span class="k">return</span> <span class="p">{</span>
+                <span class="s2">&quot;DS_DATA_HOME&quot;</span><span class="p">:</span> <span class="n">ReadDaggitTask_Folderpath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+                <span class="s2">&quot;localpathTocontentMeta&quot;</span><span class="p">:</span> <span class="n">ReadDaggitTask_Folderpath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+                <span class="s2">&quot;pathTocredentials&quot;</span><span class="p">:</span> <span class="n">ReadDaggitTask_Folderpath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
                 <span class="p">}</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">outputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;pathTocontentMeta&quot;</span><span class="p">:</span> <span class="n">File_Txt</span><span class="p">(</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;timestamp_folder&quot;</span><span class="p">:</span> <span class="n">File_Txt</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">])}</span>
 
-<div class="viewcode-block" id="ContentmetaCreation.run"><a class="viewcode-back" href="../../../../../daggit.contrib.sunbird.operators.html#daggit.contrib.sunbird.operators.contentTagging.ContentmetaCreation.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">copy_to</span><span class="p">,</span> <span class="n">file_name</span><span class="p">):</span>
+<div class="viewcode-block" id="ContentToTextRead.run"><a class="viewcode-back" href="../../../../../daggit.contrib.sunbird.operators.html#daggit.contrib.sunbird.operators.contentTagging.ContentToTextRead.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">range_start</span><span class="p">,</span>
+            <span class="n">range_end</span><span class="p">,</span>
+            <span class="n">num_of_processes</span><span class="p">,</span>
+            <span class="n">content_type</span><span class="p">):</span>
         <span class="n">DS_DATA_HOME</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="s2">&quot;DS_DATA_HOME&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">read_loc</span><span class="p">()</span>
         <span class="n">pathTocredentials</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="s2">&quot;pathTocredentials&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">read_loc</span><span class="p">()</span>
-        <span class="n">pathTotriggerJson</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="s2">&quot;pathTotriggerJson&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">read_loc</span><span class="p">()</span>
         <span class="n">timestr</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y%m</span><span class="si">%d</span><span class="s2">-%H%M%S&quot;</span><span class="p">)</span>
-        <span class="n">contentmeta_creation_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-            <span class="n">DS_DATA_HOME</span><span class="p">,</span> <span class="n">timestr</span><span class="p">,</span> <span class="s2">&quot;contentmeta_creation&quot;</span><span class="p">)</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">pathTotriggerJson</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_file</span><span class="p">:</span>
-            <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_file</span><span class="p">)</span>
-        <span class="c1"># reading credentials config file</span>
-        <span class="n">config</span> <span class="o">=</span> <span class="n">configparser</span><span class="o">.</span><span class="n">ConfigParser</span><span class="p">(</span><span class="n">allow_no_value</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="n">config</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">pathTocredentials</span><span class="p">)</span>
-        <span class="n">api_key</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;postman credentials&quot;</span><span class="p">][</span><span class="s2">&quot;api_key&quot;</span><span class="p">]</span>
-        <span class="n">data</span><span class="p">[</span><span class="s2">&quot;request&quot;</span><span class="p">][</span><span class="s1">&#39;filters&#39;</span><span class="p">][</span><span class="s1">&#39;lastUpdatedOn&#39;</span><span class="p">][</span><span class="s1">&#39;min&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">findDate</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;request&quot;</span><span class="p">][</span><span class="s1">&#39;filters&#39;</span><span class="p">][</span><span class="s1">&#39;lastUpdatedOn&#39;</span><span class="p">][</span><span class="s1">&#39;min&#39;</span><span class="p">],</span> <span class="n">DS_DATA_HOME</span><span class="p">)</span>
-        <span class="n">data</span><span class="p">[</span><span class="s2">&quot;request&quot;</span><span class="p">][</span><span class="s1">&#39;filters&#39;</span><span class="p">][</span><span class="s1">&#39;lastUpdatedOn&#39;</span><span class="p">][</span><span class="s1">&#39;max&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">findDate</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;request&quot;</span><span class="p">][</span><span class="s1">&#39;filters&#39;</span><span class="p">][</span><span class="s1">&#39;lastUpdatedOn&#39;</span><span class="p">][</span><span class="s1">&#39;max&#39;</span><span class="p">],</span> <span class="n">DS_DATA_HOME</span><span class="p">)</span>
-        <span class="n">url</span> <span class="o">=</span> <span class="s2">&quot;https://api.ekstep.in/composite/v3/search&quot;</span>
-        <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s1">&#39;content-type&#39;</span><span class="p">:</span> <span class="s2">&quot;application/json&quot;</span><span class="p">,</span>
-            <span class="s1">&#39;authorization&#39;</span><span class="p">:</span> <span class="n">api_key</span><span class="p">,</span>
-            <span class="s1">&#39;cache-control&#39;</span><span class="p">:</span> <span class="s2">&quot;no-cache&quot;</span><span class="p">,</span>
-            <span class="s1">&#39;postman-token&#39;</span><span class="p">:</span> <span class="s2">&quot;6252f362-2e2d-0f90-26b5-87345f599f72&quot;</span>
-            <span class="p">}</span>
-        <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s2">&quot;POST&quot;</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span> <span class="n">json</span><span class="o">=</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
-        <span class="n">content_meta</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">response</span><span class="p">[</span><span class="s1">&#39;result&#39;</span><span class="p">][</span><span class="s1">&#39;content&#39;</span><span class="p">])</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">contentmeta_creation_path</span><span class="p">):</span>
-            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">contentmeta_creation_path</span><span class="p">)</span>
+        <span class="n">path_to_timestamp_folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">DS_DATA_HOME</span><span class="p">,</span> <span class="n">timestr</span><span class="p">)</span>
+        <span class="n">content_to_text_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="n">path_to_timestamp_folder</span><span class="p">,</span> <span class="s2">&quot;content_to_text&quot;</span><span class="p">)</span>
+        <span class="c1"># content dump:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">content_to_text_path</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">content_to_text_path</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;content_to_text: &quot;</span><span class="p">,</span> <span class="n">content_to_text_path</span><span class="p">)</span>
+        
+        <span class="n">contentmeta_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="s2">&quot;localpathTocontentMeta&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">read_loc</span><span class="p">()</span>
+        <span class="c1"># move the content meta to timestamp folder[destination folder]</span>
+        <span class="c1">#for the time being experiment with copy: change it later.</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">contentmeta_path</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path_to_timestamp_folder</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">contentmeta_path</span><span class="p">)[</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="n">moved_contentmeta_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path_to_timestamp_folder</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">contentmeta_path</span><span class="p">)[</span><span class="mi">1</span><span class="p">])</span>
+        
+        <span class="n">content_meta</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">moved_contentmeta_path</span><span class="p">)</span>
         <span class="k">if</span> <span class="s2">&quot;derived_contentType&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">content_meta</span><span class="o">.</span><span class="n">columns</span><span class="p">):</span>
             <span class="n">content_meta</span><span class="p">[</span><span class="s2">&quot;derived_contentType&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
             <span class="k">for</span> <span class="n">row_ind</span><span class="p">,</span> <span class="n">artifact_url</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">content_meta</span><span class="p">[</span><span class="s2">&quot;artifactUrl&quot;</span><span class="p">]):</span>
@@ -231,39 +234,6 @@
                     <span class="k">pass</span>
         <span class="n">content_meta</span> <span class="o">=</span> <span class="n">content_meta</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">notnull</span><span class="p">(</span><span class="n">content_meta</span><span class="p">[</span><span class="s1">&#39;derived_contentType&#39;</span><span class="p">])]</span>
         <span class="n">content_meta</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="n">content_meta</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">contentmeta_creation_path</span><span class="p">,</span> <span class="n">file_name</span><span class="o">+</span><span class="s2">&quot;.csv&quot;</span><span class="p">))</span>
-        <span class="k">if</span> <span class="n">copy_to</span><span class="p">:</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">content_meta</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">copy_to</span><span class="p">,</span> <span class="n">file_name</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;.csv&quot;</span><span class="p">)</span>
-            <span class="k">except</span> <span class="ne">IOError</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Error: Invalid copy_to location&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;pathTocontentMeta&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">contentmeta_creation_path</span><span class="p">,</span> <span class="n">file_name</span> <span class="o">+</span> <span class="s2">&quot;.csv&quot;</span><span class="p">))</span></div></div>
-
-
-<div class="viewcode-block" id="ContentToText"><a class="viewcode-back" href="../../../../../daggit.contrib.sunbird.operators.html#daggit.contrib.sunbird.operators.contentTagging.ContentToText">[docs]</a><span class="k">class</span> <span class="nc">ContentToText</span><span class="p">(</span><span class="n">BaseOperator</span><span class="p">):</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="p">{</span>
-                <span class="s2">&quot;pathTocredentials&quot;</span><span class="p">:</span> <span class="n">ReadDaggitTask_Folderpath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
-                <span class="s2">&quot;pathTocontentMeta&quot;</span><span class="p">:</span> <span class="n">File_Txt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-                <span class="p">}</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">outputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;timestamp_folder&quot;</span><span class="p">:</span> <span class="n">File_Txt</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">])}</span>
-
-<div class="viewcode-block" id="ContentToText.run"><a class="viewcode-back" href="../../../../../daggit.contrib.sunbird.operators.html#daggit.contrib.sunbird.operators.contentTagging.ContentToText.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span>
-            <span class="bp">self</span><span class="p">,</span>
-            <span class="n">range_start</span><span class="p">,</span>
-            <span class="n">range_end</span><span class="p">,</span>
-            <span class="n">num_of_processes</span><span class="p">,</span>
-            <span class="n">subset_contentMeta_by</span><span class="p">,</span>
-            <span class="n">content_type</span><span class="p">):</span>
-        <span class="n">pathTocredentials</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="s2">&quot;pathTocredentials&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">read_loc</span><span class="p">()</span>
-        <span class="n">path_to_content_meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="s2">&quot;pathTocontentMeta&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
-        <span class="n">content_meta</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">path_to_content_meta</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;timestamp_folder&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">location_specify</span><span class="p">())</span>
         <span class="n">oldwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
         <span class="n">contentMeta_mandatory_fields</span> <span class="o">=</span> <span class="p">[</span>
@@ -272,18 +242,14 @@
             <span class="s1">&#39;downloadUrl&#39;</span><span class="p">,</span>
             <span class="s1">&#39;gradeLevel&#39;</span><span class="p">,</span>
             <span class="s1">&#39;identifier&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;keywords&#39;</span><span class="p">,</span>
             <span class="s1">&#39;language&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;subject&#39;</span><span class="p">]</span>
+            <span class="s1">&#39;subject&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;graph_id&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;nodeType&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;objectType&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;node_id&#39;</span><span class="p">]</span>
         <span class="k">assert</span> <span class="n">df_feature_check</span><span class="p">(</span><span class="n">content_meta</span><span class="p">,</span> <span class="n">contentMeta_mandatory_fields</span><span class="p">)</span>
-        <span class="n">path_to_timestamp_folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">path_to_content_meta</span><span class="p">)[</span><span class="mi">0</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="n">timestr</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">path_to_timestamp_folder</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
-        <span class="n">content_to_text_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-            <span class="n">path_to_timestamp_folder</span><span class="p">,</span> <span class="s2">&quot;content_to_text&quot;</span><span class="p">)</span>
-        <span class="c1"># content dump:</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">content_to_text_path</span><span class="p">):</span>
-            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">content_to_text_path</span><span class="p">)</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;content_to_text: &quot;</span><span class="p">,</span> <span class="n">content_to_text_path</span><span class="p">)</span>
+
         <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;CTT_CONTENT_TO_TEXT_START&quot;</span><span class="p">)</span>
         <span class="c1"># read content meta:</span>
         <span class="k">if</span> <span class="n">content_meta</span><span class="o">.</span><span class="n">columns</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;0&quot;</span><span class="p">:</span>
@@ -310,16 +276,16 @@
         <span class="c1"># subset contentMeta:</span>
         <span class="c1"># content_meta = content_meta[content_meta[&quot;derived_contentType&quot;].isin(</span>
         <span class="c1">#     subset_contentMeta_by.split(&quot;, &quot;))]</span>
-        <span class="c1"># content_meta.reset_index(drop=True, inplace=True)</span>
+        <span class="n">content_meta</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">range_start</span> <span class="o">==</span> <span class="s2">&quot;START&quot;</span><span class="p">:</span>
             <span class="n">range_start</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">if</span> <span class="n">range_end</span> <span class="o">==</span> <span class="s2">&quot;END&quot;</span><span class="p">:</span>
-            <span class="n">range_end</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">content_meta</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span>
+            <span class="n">range_end</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">content_meta</span><span class="p">)</span>
         <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
             <span class="s2">&quot;CTT_Config: content_meta from </span><span class="si">{0}</span><span class="s2"> to </span><span class="si">{1}</span><span class="s2"> created in: </span><span class="si">{2}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
                 <span class="n">range_start</span><span class="p">,</span> <span class="n">range_end</span><span class="p">,</span> <span class="n">content_to_text_path</span><span class="p">))</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Number of processes: &quot;</span><span class="p">,</span> <span class="n">num_of_processes</span><span class="p">)</span>
-        <span class="c1"># Reading from a config file</span>
+
         <span class="n">status</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">pathTocredentials</span><span class="p">):</span>
             <span class="k">try</span><span class="p">:</span>
@@ -364,148 +330,13 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;timestamp_folder&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">path_to_timestamp_folder</span><span class="p">)</span></div></div>
 
 
-<div class="viewcode-block" id="ContentToTextRead"><a class="viewcode-back" href="../../../../../daggit.contrib.sunbird.operators.html#daggit.contrib.sunbird.operators.contentTagging.ContentToTextRead">[docs]</a><span class="k">class</span> <span class="nc">ContentToTextRead</span><span class="p">(</span><span class="n">BaseOperator</span><span class="p">):</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="p">{</span>
-                <span class="s2">&quot;DS_DATA_HOME&quot;</span><span class="p">:</span> <span class="n">ReadDaggitTask_Folderpath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
-                <span class="s2">&quot;pathTocredentials&quot;</span><span class="p">:</span> <span class="n">ReadDaggitTask_Folderpath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
-                <span class="s2">&quot;localpathTocontentMeta&quot;</span><span class="p">:</span> <span class="n">Pandas_Dataframe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
-                <span class="p">}</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">outputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;timestamp_folder&quot;</span><span class="p">:</span> <span class="n">File_Txt</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">])}</span>
-
-<div class="viewcode-block" id="ContentToTextRead.run"><a class="viewcode-back" href="../../../../../daggit.contrib.sunbird.operators.html#daggit.contrib.sunbird.operators.contentTagging.ContentToTextRead.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span>
-            <span class="bp">self</span><span class="p">,</span>
-            <span class="n">range_start</span><span class="p">,</span>
-            <span class="n">range_end</span><span class="p">,</span>
-            <span class="n">num_of_processes</span><span class="p">,</span>
-            <span class="n">subset_contentMeta_by</span><span class="p">,</span>
-            <span class="n">content_type</span><span class="p">):</span>
-        <span class="n">DS_DATA_HOME</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="s2">&quot;DS_DATA_HOME&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">read_loc</span><span class="p">()</span>
-        <span class="n">pathTocredentials</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="s2">&quot;pathTocredentials&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">read_loc</span><span class="p">()</span>
-        <span class="n">content_meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="s2">&quot;localpathTocontentMeta&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
-        <span class="k">if</span> <span class="s2">&quot;derived_contentType&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">content_meta</span><span class="o">.</span><span class="n">columns</span><span class="p">):</span>
-            <span class="n">content_meta</span><span class="p">[</span><span class="s2">&quot;derived_contentType&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
-            <span class="k">for</span> <span class="n">row_ind</span><span class="p">,</span> <span class="n">artifact_url</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">content_meta</span><span class="p">[</span><span class="s2">&quot;artifactUrl&quot;</span><span class="p">]):</span>
-                <span class="k">try</span><span class="p">:</span>
-                    <span class="n">content_meta</span><span class="p">[</span><span class="s2">&quot;derived_contentType&quot;</span><span class="p">][</span><span class="n">row_ind</span><span class="p">]</span> <span class="o">=</span> <span class="n">identify_contentType</span><span class="p">(</span><span class="n">artifact_url</span><span class="p">)</span>
-                <span class="k">except</span> <span class="ne">BaseException</span><span class="p">:</span>
-                    <span class="k">pass</span>
-        <span class="n">content_meta</span> <span class="o">=</span> <span class="n">content_meta</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">notnull</span><span class="p">(</span><span class="n">content_meta</span><span class="p">[</span><span class="s1">&#39;derived_contentType&#39;</span><span class="p">])]</span>
-        <span class="n">content_meta</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;timestamp_folder&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">location_specify</span><span class="p">())</span>
-        <span class="n">oldwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
-        <span class="n">contentMeta_mandatory_fields</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="s1">&#39;artifactUrl&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;derived_contentType&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;downloadUrl&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;gradeLevel&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;identifier&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;keywords&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;language&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;subject&#39;</span><span class="p">]</span>
-        <span class="k">assert</span> <span class="n">df_feature_check</span><span class="p">(</span><span class="n">content_meta</span><span class="p">,</span> <span class="n">contentMeta_mandatory_fields</span><span class="p">)</span>
-        <span class="n">timestr</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y%m</span><span class="si">%d</span><span class="s2">-%H%M%S&quot;</span><span class="p">)</span>
-        <span class="n">path_to_timestamp_folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">DS_DATA_HOME</span><span class="p">,</span> <span class="n">timestr</span><span class="p">)</span>
-        <span class="n">content_to_text_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-            <span class="n">path_to_timestamp_folder</span><span class="p">,</span> <span class="s2">&quot;content_to_text&quot;</span><span class="p">)</span>
-        <span class="c1"># content dump:</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">content_to_text_path</span><span class="p">):</span>
-            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">content_to_text_path</span><span class="p">)</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;content_to_text: &quot;</span><span class="p">,</span> <span class="n">content_to_text_path</span><span class="p">)</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;CTT_CONTENT_TO_TEXT_START&quot;</span><span class="p">)</span>
-        <span class="c1"># read content meta:</span>
-        <span class="k">if</span> <span class="n">content_meta</span><span class="o">.</span><span class="n">columns</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;0&quot;</span><span class="p">:</span>
-            <span class="n">content_meta</span> <span class="o">=</span> <span class="n">content_meta</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s2">&quot;0&quot;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-
-        <span class="c1"># check for duplicates in the meta</span>
-        <span class="k">if</span> <span class="nb">list</span><span class="p">(</span><span class="n">content_meta</span><span class="p">[</span><span class="n">content_meta</span><span class="o">.</span><span class="n">duplicated</span><span class="p">(</span>
-                <span class="p">[</span><span class="s1">&#39;artifactUrl&#39;</span><span class="p">],</span> <span class="n">keep</span><span class="o">=</span><span class="kc">False</span><span class="p">)][</span><span class="s2">&quot;artifactUrl&quot;</span><span class="p">])</span> <span class="o">!=</span> <span class="p">[]:</span>
-            <span class="n">content_meta</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="s2">&quot;artifactUrl&quot;</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-            <span class="n">content_meta</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-        <span class="c1"># dropna from artifactUrl feature and reset the index:</span>
-        <span class="n">content_meta</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;artifactUrl&quot;</span><span class="p">],</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="n">content_meta</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-        <span class="c1"># time the run</span>
-        <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-            <span class="s1">&#39;Contents detected in the content meta: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">content_meta</span><span class="p">)))</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-            <span class="s2">&quot;----Running Content_to_Text for contents from </span><span class="si">{0}</span><span class="s2"> to </span><span class="si">{1}</span><span class="s2">:&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                <span class="n">range_start</span><span class="p">,</span> <span class="n">range_end</span><span class="p">))</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;time started: </span><span class="si">{0}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">start</span><span class="p">))</span>
-        <span class="c1"># subset contentMeta:</span>
-        <span class="n">content_meta</span> <span class="o">=</span> <span class="n">content_meta</span><span class="p">[</span><span class="n">content_meta</span><span class="p">[</span><span class="s2">&quot;derived_contentType&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span>
-            <span class="n">subset_contentMeta_by</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;, &quot;</span><span class="p">))]</span>
-        <span class="n">content_meta</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">range_start</span> <span class="o">==</span> <span class="s2">&quot;START&quot;</span><span class="p">:</span>
-            <span class="n">range_start</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="k">if</span> <span class="n">range_end</span> <span class="o">==</span> <span class="s2">&quot;END&quot;</span><span class="p">:</span>
-            <span class="n">range_end</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">content_meta</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-            <span class="s2">&quot;CTT_Config: content_meta from </span><span class="si">{0}</span><span class="s2"> to </span><span class="si">{1}</span><span class="s2"> created in: </span><span class="si">{2}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                <span class="n">range_start</span><span class="p">,</span> <span class="n">range_end</span><span class="p">,</span> <span class="n">content_to_text_path</span><span class="p">))</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Number of processes: &quot;</span><span class="p">,</span> <span class="n">num_of_processes</span><span class="p">)</span>
-
-        <span class="n">status</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">pathTocredentials</span><span class="p">):</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">config</span> <span class="o">=</span> <span class="n">configparser</span><span class="o">.</span><span class="n">ConfigParser</span><span class="p">(</span><span class="n">allow_no_value</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-                <span class="n">config</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">pathTocredentials</span><span class="p">)</span>
-                <span class="n">status</span> <span class="o">=</span> <span class="kc">True</span>
-                <span class="k">try</span><span class="p">:</span>
-                    <span class="n">path_to_googlecred</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;google application credentials&#39;</span><span class="p">][</span><span class="s2">&quot;GOOGLE_APPLICATION_CREDENTIALS&quot;</span><span class="p">]</span>
-                    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path_to_googlecred</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">cred_json</span><span class="p">:</span>
-                        <span class="n">GOOGLE_APPLICATION_CREDENTIALS</span> <span class="o">=</span> <span class="n">cred_json</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
-                <span class="k">except</span> <span class="ne">BaseException</span><span class="p">:</span>
-                    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Invalid GOOGLE_APPLICATION_CREDENTIALS in config.&quot;</span><span class="p">)</span>
-                    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;***Checking for GOOGLE_APPLICATION_CREDENTIALS environment variable&quot;</span><span class="p">)</span>
-                    <span class="n">status</span> <span class="o">=</span> <span class="kc">False</span>
-            <span class="k">except</span> <span class="ne">BaseException</span><span class="p">:</span>
-                <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Invalid config file&quot;</span><span class="p">)</span>
-                <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;***Checking for GOOGLE_APPLICATION_CREDENTIALS environment variable&quot;</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">status</span><span class="p">:</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">GOOGLE_APPLICATION_CREDENTIALS</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;GOOGLE_APPLICATION_CREDENTIALS&#39;</span><span class="p">]</span>
-                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">GOOGLE_APPLICATION_CREDENTIALS</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-                    <span class="n">GOOGLE_APPLICATION_CREDENTIALS</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
-            <span class="k">except</span> <span class="ne">BaseException</span><span class="p">:</span>
-                <span class="n">GOOGLE_APPLICATION_CREDENTIALS</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
-                <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Not a valid google credential&quot;</span><span class="p">)</span> 
-
-        <span class="n">result</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="n">multimodal_text_enrichment</span><span class="p">(</span>
-                <span class="n">i</span><span class="p">,</span>
-                <span class="n">timestr</span><span class="p">,</span>
-                <span class="n">content_meta</span><span class="p">,</span>
-                <span class="n">content_type</span><span class="p">,</span>
-                <span class="n">content_to_text_path</span><span class="p">,</span>
-                <span class="n">GOOGLE_APPLICATION_CREDENTIALS</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span>
-                <span class="n">range_start</span><span class="p">,</span>
-                <span class="n">range_end</span><span class="p">,)]</span>
-        <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
-        <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">oldwd</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Current directory c2t: &quot;</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">())</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;timestamp_folder path:&quot;</span><span class="p">,</span> <span class="n">path_to_timestamp_folder</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;timestamp_folder&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">path_to_timestamp_folder</span><span class="p">)</span></div></div>
-
-
 <div class="viewcode-block" id="KeywordExtraction"><a class="viewcode-back" href="../../../../../daggit.contrib.sunbird.operators.html#daggit.contrib.sunbird.operators.contentTagging.KeywordExtraction">[docs]</a><span class="k">class</span> <span class="nc">KeywordExtraction</span><span class="p">(</span><span class="n">BaseOperator</span><span class="p">):</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;pathTotaxonomy&quot;</span><span class="p">:</span> <span class="n">Pandas_Dataframe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
-                <span class="s2">&quot;categoryLookup&quot;</span><span class="p">:</span> <span class="n">ReadDaggitTask_Folderpath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
-                <span class="s2">&quot;timestamp_folder&quot;</span><span class="p">:</span> <span class="n">File_Txt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">2</span><span class="p">]),</span>
-                <span class="s2">&quot;pathTocorpus&quot;</span><span class="p">:</span> <span class="n">ReadDaggitTask_Folderpath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;timestamp_folder&quot;</span><span class="p">:</span> <span class="n">File_Txt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+                <span class="s2">&quot;pathTocredentials&quot;</span><span class="p">:</span> <span class="n">ReadDaggitTask_Folderpath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+                <span class="s2">&quot;categoryLookup&quot;</span><span class="p">:</span> <span class="n">ReadDaggitTask_Folderpath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
                 <span class="p">}</span>
 
     <span class="nd">@property</span>
@@ -516,9 +347,20 @@
 <div class="viewcode-block" id="KeywordExtraction.run"><a class="viewcode-back" href="../../../../../daggit.contrib.sunbird.operators.html#daggit.contrib.sunbird.operators.contentTagging.KeywordExtraction.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">extract_keywords</span><span class="p">,</span> <span class="n">filter_criteria</span><span class="p">,</span> <span class="n">update_corpus</span><span class="p">,</span> <span class="n">filter_score_val</span><span class="p">,</span> <span class="n">num_keywords</span><span class="p">):</span>
         <span class="k">assert</span> <span class="n">extract_keywords</span> <span class="o">==</span> <span class="s2">&quot;tagme&quot;</span> <span class="ow">or</span> <span class="n">extract_keywords</span> <span class="o">==</span> <span class="s2">&quot;text_token&quot;</span>
         <span class="k">assert</span> <span class="n">filter_criteria</span> <span class="o">==</span> <span class="s2">&quot;none&quot;</span> <span class="ow">or</span> <span class="n">filter_criteria</span> <span class="o">==</span> <span class="s2">&quot;taxonomy&quot;</span> <span class="ow">or</span> <span class="n">filter_criteria</span> <span class="o">==</span> <span class="s2">&quot;dbpedia&quot;</span>
-        <span class="n">taxonomy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="s2">&quot;pathTotaxonomy&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="n">pathTocredentials</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="s2">&quot;pathTocredentials&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">read_loc</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;***************pathTocredentials: &quot;</span><span class="p">,</span> <span class="n">pathTocredentials</span><span class="p">)</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">configparser</span><span class="o">.</span><span class="n">ConfigParser</span><span class="p">(</span><span class="n">allow_no_value</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">pathTocredentials</span><span class="p">)</span>
+        <span class="n">cache_cred</span><span class="o">=</span><span class="nb">dict</span><span class="p">()</span>
+        <span class="n">cache_cred</span><span class="p">[</span><span class="s1">&#39;host&#39;</span><span class="p">]</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;redis&quot;</span><span class="p">][</span><span class="s2">&quot;host&quot;</span><span class="p">]</span>
+        <span class="n">cache_cred</span><span class="p">[</span><span class="s1">&#39;port&#39;</span><span class="p">]</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;redis&quot;</span><span class="p">][</span><span class="s2">&quot;port&quot;</span><span class="p">]</span>
+        <span class="n">cache_cred</span><span class="p">[</span><span class="s1">&#39;password&#39;</span><span class="p">]</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;redis&quot;</span><span class="p">][</span><span class="s2">&quot;password&quot;</span><span class="p">]</span>
+        
+        <span class="n">tagme_cred</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="n">tagme_cred</span><span class="p">[</span><span class="s1">&#39;gcube_token&#39;</span><span class="p">]</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;tagme credentials&#39;</span><span class="p">][</span><span class="s1">&#39;gcube_token&#39;</span><span class="p">]</span>
+        <span class="n">tagme_cred</span><span class="p">[</span><span class="s1">&#39;postman_token&#39;</span><span class="p">]</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;tagme credentials&#39;</span><span class="p">][</span><span class="s1">&#39;postman_token&#39;</span><span class="p">]</span>                        
+
         <span class="n">path_to_category_lookup</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="s2">&quot;categoryLookup&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">read_loc</span><span class="p">()</span>
-        <span class="n">path_to_corpus</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="s2">&quot;pathTocorpus&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">read_loc</span><span class="p">()</span>
         <span class="n">timestamp_folder</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="s2">&quot;timestamp_folder&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
         <span class="n">timestr</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">timestamp_folder</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;****timestamp folder:&quot;</span><span class="p">,</span> <span class="n">timestamp_folder</span><span class="p">)</span>
@@ -534,14 +376,14 @@
                <span class="n">keyword_extraction_parallel</span><span class="p">,</span>
                <span class="n">timestr</span><span class="o">=</span><span class="n">timestr</span><span class="p">,</span>
                <span class="n">content_to_text_path</span><span class="o">=</span><span class="n">content_to_text_path</span><span class="p">,</span>
-               <span class="n">taxonomy</span><span class="o">=</span><span class="n">taxonomy</span><span class="p">,</span>
                <span class="n">extract_keywords</span><span class="o">=</span><span class="n">extract_keywords</span><span class="p">,</span>
                <span class="n">filter_criteria</span><span class="o">=</span><span class="n">filter_criteria</span><span class="p">,</span>
-               <span class="n">path_to_corpus</span><span class="o">=</span><span class="n">path_to_corpus</span><span class="p">,</span>
+               <span class="n">cache_cred</span><span class="o">=</span><span class="n">cache_cred</span><span class="p">,</span>
                <span class="n">path_to_category_lookup</span><span class="o">=</span><span class="n">path_to_category_lookup</span><span class="p">,</span>
                <span class="n">update_corpus</span><span class="o">=</span><span class="n">update_corpus</span><span class="p">,</span>
                <span class="n">filter_score_val</span><span class="o">=</span><span class="n">filter_score_val</span><span class="p">,</span>
-               <span class="n">num_keywords</span><span class="o">=</span><span class="n">num_keywords</span><span class="p">)</span>
+               <span class="n">num_keywords</span><span class="o">=</span><span class="n">num_keywords</span><span class="p">,</span>
+               <span class="n">tagme_cred</span><span class="o">=</span><span class="n">tagme_cred</span><span class="p">)</span>
             <span class="n">results</span> <span class="o">=</span> <span class="n">pool</span><span class="o">.</span><span class="n">map</span><span class="p">(</span>
                 <span class="n">keywordExtraction_partial</span><span class="p">,</span> <span class="p">[</span>
                     <span class="nb">dir</span> <span class="k">for</span> <span class="nb">dir</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">content_to_text_path</span><span class="p">)])</span>
@@ -589,7 +431,53 @@
                     <span class="nb">id</span><span class="o">=</span><span class="n">cid</span><span class="p">,</span>
                     <span class="n">body</span><span class="o">=</span><span class="n">autotagging_json</span><span class="p">)</span></div></div>
 
+<div class="viewcode-block" id="WriteToKafkaTopic"><a class="viewcode-back" href="../../../../../daggit.contrib.sunbird.operators.html#daggit.contrib.sunbird.operators.contentTagging.WriteToKafkaTopic">[docs]</a><span class="k">class</span> <span class="nc">WriteToKafkaTopic</span><span class="p">(</span><span class="n">BaseOperator</span><span class="p">):</span>
 
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;path_to_contentKeywords&quot;</span><span class="p">:</span> <span class="n">File_Txt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+                <span class="s2">&quot;pathTocredentials&quot;</span><span class="p">:</span> <span class="n">ReadDaggitTask_Folderpath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                <span class="p">}</span>
+
+<div class="viewcode-block" id="WriteToKafkaTopic.run"><a class="viewcode-back" href="../../../../../daggit.contrib.sunbird.operators.html#daggit.contrib.sunbird.operators.contentTagging.WriteToKafkaTopic.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">write_to_kafkaTopic</span><span class="p">):</span>
+        <span class="n">path_to_contentKeywords</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="s2">&quot;path_to_contentKeywords&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="n">pathTocredentials</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="s2">&quot;pathTocredentials&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">read_loc</span><span class="p">()</span>
+        <span class="n">timestamp_folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">path_to_contentKeywords</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">timestr</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">timestamp_folder</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">epoch_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">mktime</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">timestr</span><span class="p">,</span> <span class="s2">&quot;%Y%m</span><span class="si">%d</span><span class="s2">-%H%M%S&quot;</span><span class="p">))</span>
+        <span class="n">content_to_textpath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">timestamp_folder</span><span class="p">,</span> <span class="s2">&quot;content_to_text&quot;</span><span class="p">)</span>
+        <span class="n">cid_name</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">content_to_textpath</span><span class="p">)</span> <span class="k">if</span> <span class="n">i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;.DS_Store&#39;</span><span class="p">]]</span>
+        <span class="k">for</span> <span class="n">cid</span> <span class="ow">in</span> <span class="n">cid_name</span><span class="p">:</span>
+            <span class="n">merge_json_list</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">json_file</span> <span class="o">=</span> <span class="n">findFiles</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">content_to_textpath</span><span class="p">,</span> <span class="n">cid</span><span class="p">),</span> <span class="p">[</span><span class="s2">&quot;json&quot;</span><span class="p">])</span>
+            <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">json_file</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">file</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">in</span> <span class="p">[</span>
+                        <span class="s2">&quot;ML_keyword_info.json&quot;</span><span class="p">,</span> <span class="s2">&quot;ML_content_info.json&quot;</span><span class="p">]:</span>
+                    <span class="n">merge_json_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+            <span class="n">ignore_list</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;ets&quot;</span><span class="p">]</span>
+            <span class="n">dict_list</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">merge_json_list</span><span class="p">:</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;UTF-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">info</span><span class="p">:</span>
+                    <span class="n">new_json</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">info</span><span class="p">)</span>
+                    <span class="p">[</span><span class="n">new_json</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">ignore</span><span class="p">)</span> <span class="k">for</span> <span class="n">ignore</span> <span class="ow">in</span> <span class="n">ignore_list</span> <span class="k">if</span> <span class="n">ignore</span> <span class="ow">in</span> <span class="n">new_json</span><span class="o">.</span><span class="n">keys</span><span class="p">()]</span>
+                <span class="n">dict_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_json</span><span class="p">)</span>
+            <span class="c1"># merge the nested jsons:-</span>
+            <span class="n">autotagging_json</span> <span class="o">=</span> <span class="n">reduce</span><span class="p">(</span><span class="n">merge_json</span><span class="p">,</span> <span class="n">dict_list</span><span class="p">)</span>
+            <span class="n">autotagging_json</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;ets&quot;</span><span class="p">:</span> <span class="n">epoch_time</span><span class="p">})</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">timestamp_folder</span><span class="p">,</span> <span class="s2">&quot;content_to_text&quot;</span><span class="p">,</span> <span class="n">cid</span><span class="p">,</span> <span class="s2">&quot;autoTagging_json.json&quot;</span><span class="p">),</span> <span class="s2">&quot;w+&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">main_json</span><span class="p">:</span>
+                <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">autotagging_json</span><span class="p">,</span> <span class="n">main_json</span><span class="p">,</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+            <span class="c1"># writing to kafka topic:-</span>
+            <span class="n">kafka_cli</span> <span class="o">=</span> <span class="n">KafkaCLI</span><span class="p">(</span><span class="n">pathTocredentials</span><span class="p">)</span>
+            <span class="n">status</span> <span class="o">=</span> <span class="n">kafka_cli</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">autotagging_json</span><span class="p">,</span> <span class="n">write_to_kafkaTopic</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">status</span><span class="p">:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;******Transaction event successfully pushed to topic:</span><span class="si">{0}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">write_to_kafkaTopic</span><span class="p">))</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;******Error pushing the event&quot;</span><span class="p">)</span>
+        <span class="c1"># Remove the timestamp folder:-</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">timestamp_folder</span><span class="p">)</span></div></div>
+
+            
 <div class="viewcode-block" id="CorpusCreation"><a class="viewcode-back" href="../../../../../daggit.contrib.sunbird.operators.html#daggit.contrib.sunbird.operators.contentTagging.CorpusCreation">[docs]</a><span class="k">class</span> <span class="nc">CorpusCreation</span><span class="p">(</span><span class="n">BaseOperator</span><span class="p">):</span>
 
     <span class="nd">@property</span>

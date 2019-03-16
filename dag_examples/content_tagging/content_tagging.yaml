@@ -4,29 +4,21 @@ owner: sunbird
 inputs:
   DS_DATA_HOME: /home/DS_DATA_HOME
   pathTocredentials: inputs/credentials.ini
-  pathTotaxonomy: inputs/taxonomy.csv
+  localpathTocontentMeta: /home/DS_DATA_HOME/content_meta.csv
   categoryLookup: inputs/category_lookup.yaml
-  pathTotriggerJson: inputs/Trigger_node_ip.json
 
 outputs:
   dummy: /home/DS_HOME
 
 graph:
-  - node_name: contentmeta_creation
-    inputs: [DS_DATA_HOME, pathTocredentials, pathTotriggerJson]
-    outputs: [pathTocontentMeta]
-    operation: contentTagging.ContentmetaCreation
-    arguments:
-      copy_to: /home/DS_DATA_HOME
-      file_name: contentMeta
 
   - node_name: content_to_text
-    inputs: [pathTocredentials, contentmeta_creation.pathTocontentMeta]
+    inputs: [DS_DATA_HOME, localpathTocontentMeta, pathTocredentials]
     outputs: [timestamp_folder]
-    operation: contentTagging.ContentToText
+    operation: contentTagging.ContentToTextRead
     arguments:
-      range_start: 0
-      range_end: 2
+      range_start: START
+      range_end: END
       num_of_processes: 1
       content_type:
         youtube:
@@ -52,7 +44,7 @@ graph:
           ecml_index_to_text: none
 
   - node_name: keyword_extraction
-    inputs: [pathTotaxonomy, categoryLookup, content_to_text.timestamp_folder, pathTocredentials]
+    inputs: [content_to_text.timestamp_folder,  pathTocredentials, categoryLookup]
     outputs: [pathTocontentKeywords]
     operation: contentTagging.KeywordExtraction 
     arguments: 
@@ -63,63 +55,8 @@ graph:
       num_keywords: 5
 
   - node_name: writeToKafka
-    inputs: [keyword_extraction.pathTocontentKeywords]
+    inputs: [keyword_extraction.pathTocontentKeywords, pathTocredentials]
     outputs: []
     operation: contentTagging.WriteToKafkaTopic
     arguments:
-      kafka_broker: localhost:9092
-      kafkaTopic_writeTo: update_event
-
-  - node_name: corpus_creation
-    inputs: [pathTotaxonomy, keyword_extraction.pathTocontentKeywords]
-    outputs: [root_path, path_to_corpus]
-    operation: contentTagging.CorpusCreation
-    arguments:
-      keyword_folder_name: tagme_dbpedia
-      update_corpus: True
-      word_preprocess: 
-         delimitter: "_"
-         method: stem_lem
-
-  - node_name: content_taxonomy_scoring
-    inputs: [contentmeta_creation.pathTocontentMeta, pathTotaxonomy, corpus_creation.root_path, corpus_creation.path_to_corpus]
-    outputs: [path_to_timestampFolder, path_to_distMeasure, path_to_domain_level]
-    operation: contentTagging.ContentTaxonomyScoring
-    arguments:
-      keyword_extract_filter_by: tagme_dbpedia
-      phrase_split: True
-      min_words: 2
-      distanceMeasure: jaccard
-      embedding_method: none
-      delimitter: "_"
-      filter_by:
-        contentMeta:
-          column: subject
-          alignment_depth: none
-        taxonomy:
-          column: Subject
-          alignment_depth: Chapter Name
-
-  - node_name: predict_tag
-    inputs: [content_taxonomy_scoring.path_to_timestampFolder]
-    outputs: [path_to_predictedTags]
-    operation: contentTagging.PredictTag
-    arguments:
-      window: 5
-
-  - node_name: generate_observed_tag
-    inputs: [contentmeta_creation.pathTocontentMeta, pathTotaxonomy, content_taxonomy_scoring.path_to_timestampFolder]
-    outputs: [path_to_timestampFolder, path_to_observedtag, path_to_predictedtag]
-    operation: contentTagging.GenerateObservedTag
-    arguments:
-      window: 5
-      level: Chapter Name
-      tax_known_tag: Grade
-      content_known_tag: gradeLevel
-
-  - node_name: evaluation
-    inputs: [generate_observed_tag.path_to_timestampFolder, generate_observed_tag.path_to_observedtag, generate_observed_tag.path_to_predictedtag]
-    outputs: [path_to_agg_precision, path_to_nonagg_precision]
-    operation: contentTagging.Evaluation
-    arguments:
-      window: 5
+      write_to_kafkaTopic: new_topic
