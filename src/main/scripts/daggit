@@ -70,7 +70,7 @@ def init(graph):
         #     read_file = file.readlines()
         #     new_lines = []
         #     for line in read_file:
-        #         #- Strip white spaces
+        #         # Strip white spaces
         #         line = line.strip()
         #         if line == graph_location:
         #             pass

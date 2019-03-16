@@ -714,50 +714,7 @@ def convert_pdf_to_txt(path_to_pdf_file):
     return text
 
 
-# def pdf_to_text(method, path_to_assets, pdf_url):
-#     text = ""
-#     number_of_pages = 0
-#     logging.info("PTT_START")
-#     if method == "PyPDF2":
-#         logging.info("PTT_METHOD: {0}".format(method))
-#         pdf_names = findFiles(path_to_assets, ['.pdf'])
-#         text = ""
-#         for j in range(0, len(pdf_names) + 1):
-#             if (len(pdf_names) == 0 and pdf_url.endswith('pdf')):
-#                 r = requests.get(pdf_url)
-#                 f = io.BytesIO(r.content)
-#                 read_pdf = PdfFileReader(f)
-#                 number_of_pages = read_pdf.getNumPages()
-#             elif j < (len(pdf_names)):
-#                 pdf_files = pdf_names[j]
-#                 text = ""
-#                 text = convert_pdf_to_txt(pdf_files)
-#                 number_of_pages = 0
-#                 # f = open(pdf_files, 'rb')
-#                 # read_pdf = PdfFileReader(f)
-#                 # number_of_pages = read_pdf.getNumPages()
-#             else:
-#                 number_of_pages = 0
-#             if number_of_pages > 0:
-#                 for i in range(number_of_pages):
-#                     page = read_pdf.getPage(i)
-#                     page_content = page.extractText()
-#                     text += page_content
-#         processed_txt = cleantext(text)
-#         text = ''.join([i for i in processed_txt if not i.isdigit()])
-#         text = ' '.join(text.split())
-#     if method == "none":
-#         logging.info("PDF_NOT_PERFORMED")
-
-#     logging.info("PTT_STOP")
-#     text_dict = {"text": text, "no_of_pages": number_of_pages}
-#     return text_dict
-
-
 def pdf_to_text(method, path_to_assets, pdf_url):
-    """
-
-    """
     text = ""
     number_of_pages = 0
     logging.info("PTT_START")
@@ -940,124 +897,114 @@ def multimodal_text_enrichment(
     logging.info("MTT_START_FOR_CID {0}".format(id_name))
     logging.info("MTT_START_FOR_URL {0}".format(url))
     # start text extraction pipeline:
-    # try:
-    start = time.time()
-    path_to_id = download_to_local(
-        type_of_url, url, content_to_text_path, id_name)
-    print("path_to_id", path_to_id)
-    path_to_assets = os.path.join(path_to_id, "assets")
-    if type_of_url != "pdf":
-        path_to_audio = video_to_speech(
-            content_type[type_of_url]["video_to_speech"],
-            path_to_assets)
-        print(path_to_audio)
-    if len(findFiles(path_to_assets, ["mp3"])) > 0:
-        audio = AudioSegment.from_mp3(findFiles(path_to_assets, ["mp3"])[0])
-        duration = round(len(audio) / 1000)
-    else:
-        duration = 0
-    textExtraction_pipeline = [
-        (speech_to_text,
-         (content_type[type_of_url]["speech_to_text"],
-          path_to_assets, GOOGLE_APPLICATION_CREDENTIALS)),
-        (image_to_text,
-         (content_type[type_of_url]["image_to_text"],
-          path_to_assets)),
-        (pdf_to_text,
-         (content_type[type_of_url]["pdf_to_text"],
-          path_to_assets,
-          url)),
-        (ecml_index_to_text,
-         (content_type[type_of_url]["ecml_index_to_text"],
-          path_to_id))]
-    path_to_transcript = os.path.join(path_to_id, "enriched_text.txt")
-    text = ""
-    for method, param_tuple in textExtraction_pipeline:
-        text += method(*param_tuple)["text"]
-    # Adding description and title to the text only for PDF content
-    if type_of_url == "pdf":
-        text += content_meta["name"].iloc[index] + " " + content_meta["description"].iloc[index]
-    if os.path.exists(path_to_id) and text:
-        with open(path_to_transcript, "w") as myTextFile:
-            myTextFile.write(text)
-    # num_of_PDFpages = pdf_to_text("none", path_to_assets, url)["no_of_pages"]
-    # Reading pdata
-    airflow_home = os.getenv('AIRFLOW_HOME', os.path.expanduser('~/airflow'))
-    dag_location = os.path.join(airflow_home, 'dags')
-    print("AIRFLOW_HOME: ", dag_location)
-    filename = os.path.join(dag_location, 'graph_location')
-    f = open(filename, "r")
-    pdata = f.read()
-    f.close()
+    try:
+        start = time.time()
+        path_to_id = download_to_local(
+            type_of_url, url, content_to_text_path, id_name)
+        print("path_to_id", path_to_id)
+        path_to_assets = os.path.join(path_to_id, "assets")
+        if type_of_url != "pdf":
+            path_to_audio = video_to_speech(
+                content_type[type_of_url]["video_to_speech"],
+                path_to_assets)
+            print(path_to_audio)
+        if len(findFiles(path_to_assets, ["mp3"])) > 0:
+            audio = AudioSegment.from_mp3(findFiles(path_to_assets, ["mp3"])[0])
+            duration = round(len(audio) / 1000)
+        else:
+            duration = 0
+        textExtraction_pipeline = [
+            (speech_to_text,
+             (content_type[type_of_url]["speech_to_text"],
+              path_to_assets, GOOGLE_APPLICATION_CREDENTIALS)),
+            (image_to_text,
+             (content_type[type_of_url]["image_to_text"],
+              path_to_assets)),
+            (pdf_to_text,
+             (content_type[type_of_url]["pdf_to_text"],
+              path_to_assets,
+              url)),
+            (ecml_index_to_text,
+             (content_type[type_of_url]["ecml_index_to_text"],
+              path_to_id))]
+        path_to_transcript = os.path.join(path_to_id, "enriched_text.txt")
+        text = ""
+        for method, param_tuple in textExtraction_pipeline:
+            text += method(*param_tuple)["text"]
+        # Adding description and title to the text only for PDF content
+        # if type_of_url == "pdf":
+        #     text += content_meta["name"].iloc[index] + " " + content_meta["description"].iloc[index]
+        if os.path.exists(path_to_id) and text:
+            with open(path_to_transcript, "w") as myTextFile:
+                myTextFile.write(text)
+        # num_of_PDFpages = pdf_to_text("none", path_to_assets, url)["no_of_pages"]
+        # Reading pdata
+        airflow_home = os.getenv('AIRFLOW_HOME', os.path.expanduser('~/airflow'))
+        dag_location = os.path.join(airflow_home, 'dags')
+        print("AIRFLOW_HOME: ", dag_location)
+        filename = os.path.join(dag_location, 'graph_location')
+        f = open(filename, "r")
+        pdata = f.read()
+        f.close()
 
-    # estimating ets:
-    epoch_time = time.mktime(time.strptime(timestr, "%Y%m%d-%H%M%S"))
-    domain = content_meta["subject"][index]
-    object_type = content_meta["objectType"][index]
-    template = ""
-    plugin_used = []
-    num_of_stages = 0
-    # only for type ecml
-    if type_of_url == "ecml":
-        plugin_used = ecml_index_to_text("parse", path_to_id)["plugin_used"]
-        num_of_stages = ecml_index_to_text("parse", path_to_id)["num_stage"]
+        # estimating ets:
+        epoch_time = time.mktime(time.strptime(timestr, "%Y%m%d-%H%M%S"))
+        domain = content_meta["subject"][index]
+        graph_id = content_meta["graph_id"][index]
+        object_type = content_meta["objectType"][index]
+        node_type = content_meta["nodeType"][index]
+        node_graph_id = content_meta["node_id"][index]
+        template = ""
+        plugin_used = []
+        num_of_stages = 0
+        # only for type ecml
+        if type_of_url == "ecml":
+            plugin_used = ecml_index_to_text("parse", path_to_id)["plugin_used"]
+            num_of_stages = ecml_index_to_text("parse", path_to_id)["num_stage"]
 
-    mnt_output_dict = {
-                'ETS': int(epoch_time),
-                'content_id': id_name,
-                'content_type': type_of_url,
-                'domain': domain,
-                'medium': language_detection(text),
-                'duration': duration,
-                'plugin_used': plugin_used,
-                'num_of_stages': num_of_stages,
-                'template': template,
-                'text': text,
-                'pdata': pdata,
-                'commit_id': ""
-            }
-    
-    mnt_output_dict_new =  { "ets" : int(epoch_time), #Event generation time in epoch
-                            "nodeUniqueId" : id_name, #content id
-                            "operationType": "UPDATE", #default to UPDATE
-                            "nodeType": "DATA_NODE", #default to DATA_NODE
-                            "graphId": domain, #default to domain
-                            "objectType": object_type, #object type - content, worksheet, textbook, collection etc
-                            "nodeGraphId": 0, #default to 0
-                            "transactionData" : {
-                                "properties" : {
-                                    "tags": {
-                                        "system_contentType": type_of_url, #can be "youtube", "ecml", "pdf"
-                                        "system_medium": language_detection(text), #generated using google language detection api
-                                        "duration": {
-                                            "video" : "", #video duration in seconds
-                                            "stage" : ""#can be derived from usage data
-                                        },
-                                        "num_stage" : num_of_stages, #pdf: number of pages, ecml:number of stages, video:1
-                                        "system_plugins" : plugin_used, #id's of plugin used in Content
-                                        "system_templates" : template, #id's of templates used in Content
-                                        "text": text,
-                                        },
-                                    "version": pdata, #yaml version
-                                    "uri": "" #git commit id
+      
+        
+        mnt_output_dict_new =  { "ets" : int(epoch_time), # Event generation time in epoch
+                                "nodeUniqueId" : id_name, # content id
+                                "operationType": "UPDATE", # default to UPDATE
+                                "nodeType": node_type, # default to DATA_NODE
+                                "graphId": graph_id, # default to domain
+                                "objectType": object_type, # object type - content, worksheet, textbook, collection etc
+                                "nodeGraphId": int(node_graph_id), # default to 0
+                                "transactionData" : {
+                                    "properties" : {
+                                        "tags": {
+                                            "system_contentType": type_of_url, # can be "youtube", "ecml", "pdf"
+                                            "system_medium": language_detection(text), # generated using google language detection api
+                                            "duration": {
+                                                "video" : "", # video duration in seconds
+                                                "stage" : ""# can be derived from usage data
+                                            },
+                                            "num_stage" : num_of_stages, # pdf: number of pages, ecml:number of stages, video:1
+                                            "system_plugins" : plugin_used, # ids of plugin used in Content
+                                            "system_templates" : template, # ids of templates used in Content
+                                            "text": text,
+                                            "subject": domain
+                                            },
+                                        "version": pdata, # yaml version
+                                        "uri": "R.1.15.1" # git commit id
+                                         }
                                      }
                                  }
-                             }
-    with open(os.path.join(path_to_id, "ML_content_info.json"), "w") as info:
-        mnt_json_dump = json.dump(
-            mnt_output_dict_new, info, indent=4) # sort_keys=True,
-        print(mnt_json_dump)
-    stop = time.time()
-    time_consumed = stop-start
-    time_consumed_minutes = time_consumed/60.0
-    print("time taken in sec for text enrichment for cid -----> {0} : {1}".format(id_name, time_consumed))
-    print("time taken in minutes for text enrichment for cid -----> {0} : {1}".format(id_name, time_consumed_minutes))
-    logging.info("MTT_TRANSCRIPT_PATH_CREATED: {0}".format(path_to_transcript))
-    logging.info("MTT_CONTENT_ID_READ: {0}".format(id_name))
-    logging.info("MTT_STOP_FOR_URL {0}".format(url))
-    #return os.path.join(path_to_id, "ML_content_info.json")
-# except BaseException:
-#         logging.info("TextEnrichment failed for url:{0} with id:{1}".format(url, id_name))
+        with open(os.path.join(path_to_id, "ML_content_info.json"), "w") as info:
+            mnt_json_dump = json.dump(
+                mnt_output_dict_new, info, indent=4) # sort_keys=True,
+            print(mnt_json_dump)
+        stop = time.time()
+        time_consumed = stop-start
+        time_consumed_minutes = time_consumed/60.0
+        print("time taken in sec for text enrichment for cid -----> {0} : {1}".format(id_name, time_consumed))
+        print("time taken in minutes for text enrichment for cid -----> {0} : {1}".format(id_name, time_consumed_minutes))
+        logging.info("MTT_TRANSCRIPT_PATH_CREATED: {0}".format(path_to_transcript))
+        logging.info("MTT_CONTENT_ID_READ: {0}".format(id_name))
+        logging.info("MTT_STOP_FOR_URL {0}".format(url))
+    except BaseException:
+            logging.info("TextEnrichment failed for url:{0} with id:{1}".format(url, id_name))
 
 
 def custom_tokenizer(path_to_text_file):
@@ -1095,7 +1042,9 @@ def tagme_text(text, tagme_cred):
             url,
             headers=headers,
             params=querystring).json()
-        assert response['annotations']['spot'] == 'test'
+        df = pd.DataFrame(response['annotations'])
+
+        assert len(df)>0
         connection_status = True 
     except ConnectionError:
         print("Unable to establish connection with Tagme")
@@ -1122,7 +1071,7 @@ def tagme_text(text, tagme_cred):
     return df
 
 
-def run_tagme(path_to_text,tagme_cred):
+def run_tagme(path_to_text, tagme_cred):
     file_ = open(path_to_text, "r")
     text = file_.readline()
     words = text.split(" ")
@@ -1134,7 +1083,7 @@ def run_tagme(path_to_text,tagme_cred):
             (index_count + window_len - 1), len(words))])
         index_count += window_len
         if text:
-            response_list.append(tagme_text(text,tagme_cred))
+            response_list.append(tagme_text(text, tagme_cred))
         response_df = pd.concat(response_list)
         response_df.reset_index(drop=True, inplace=True)
     return response_df
@@ -1143,7 +1092,6 @@ def run_tagme(path_to_text,tagme_cred):
 def get_tagme_spots(path_to_text, tagme_cred):
     file_ = open(path_to_text, "r")
     text = file_.readline()
-    # text = text.encode('utf-8').decode('ascii', 'ignore')
     words = text.split(" ")
     index_count = 0
     window_len = 700
@@ -1152,7 +1100,7 @@ def get_tagme_spots(path_to_text, tagme_cred):
         text = ' '.join(words[index_count:min(
             (index_count + window_len - 1), len(words))])
         index_count += window_len
-        response_list.append(tagme_text(text,tagme_cred))
+        response_list.append(tagme_text(text, tagme_cred))
         response_df = pd.concat(response_list)
         response_df = response_df.drop_duplicates('spot')
         response_df.reset_index(drop=True, inplace=True)
@@ -1236,6 +1184,7 @@ def keyword_filter(tagme_response_df, cache_cred, path_to_category_lookup, subje
             if score:
                 score_df = pd.DataFrame({'keyword': [keyword], 'dbpedia_score': [score]})
             else:
+                # need to change:-
                 with open(path_to_category_lookup, 'r') as stream:
                     subject_ls = yaml.load(stream)[subject]
                 dbpedia_categories = tagme_response_df['dbpedia_categories'][ind]
@@ -1271,7 +1220,6 @@ def keyword_filter(tagme_response_df, cache_cred, path_to_category_lookup, subje
             keyword_df = keyword_df.sort_values('dbpedia_score', ascending=[False]).iloc[0:int(num_keywords)]
         except BaseException:
             print("Error: Invalid num_keywords. Unable to filter. ")
-    # keyword_relatedness_df.iloc[0:4]['KEYWORDS'].to_csv(Path_to_keywords + "KEYWORDS.csv")
     return keyword_df
 
 
@@ -1279,7 +1227,6 @@ def keyword_extraction_parallel(
         dir,
         timestr,
         content_to_text_path,
-        taxonomy,
         extract_keywords,
         filter_criteria,
         cache_cred,
@@ -1321,8 +1268,8 @@ def keyword_extraction_parallel(
     if os.path.exists(content_info_json_loc):
         with open(content_info_json_loc, "r") as json_loc:
             content_info = json.load(json_loc)
-        #subject = content_info["domain"]
-        subject = content_info["graphId"]
+        # subject = content_info["domain"]
+        subject = content_info["transactionData"]["properties"]["tags"]["subject"]
     else:
         subject = "none"
     logging.info("Subject of the id: {0}".format(subject))
@@ -1344,7 +1291,7 @@ def keyword_extraction_parallel(
                 if extract_keywords == "tagme" and filter_criteria == "dbpedia":
                     print("Tagme keyword extraction is running for {0}".format(
                         path_to_cid_transcript))
-                    tagme_response_df = run_tagme(path_to_cid_transcript,tagme_cred)
+                    tagme_response_df = run_tagme(path_to_cid_transcript, tagme_cred)
                     keyword_filter_df = keyword_filter(tagme_response_df, cache_cred, path_to_category_lookup, subject, update_corpus, filter_score_val, num_keywords)
                     path_to_saved_keywords = os.path.join(path_to_keywords, "keywords.csv")
                     print("keyword_filter_df:", keyword_filter_df)
@@ -1353,7 +1300,7 @@ def keyword_extraction_parallel(
                 elif extract_keywords == "tagme" and filter_criteria == "none":
                     print("Tagme keyword extraction is running for {0}".format(
                         path_to_cid_transcript))
-                    tagme_df = get_tagme_spots(path_to_cid_transcript,tagme_cred)
+                    tagme_df = get_tagme_spots(path_to_cid_transcript, tagme_cred)
                     path_to_saved_keywords = os.path.join(path_to_keywords, "keywords.csv")
                     tagme_df.to_csv(path_to_saved_keywords, index=False, encoding='utf-8')
                     logging.info(
@@ -1367,7 +1314,7 @@ def keyword_extraction_parallel(
                     flat_list = [item for sublist in list(
                         clean_keywords) for item in sublist]
                     taxonomy_keywords_set = set([cleantext(i) for i in flat_list])
-                    tagme_df = get_tagme_spots(path_to_cid_transcript,tagme_cred)
+                    tagme_df = get_tagme_spots(path_to_cid_transcript, tagme_cred)
                     path_to_saved_keywords = os.path.join(path_to_keywords, "keywords.csv")
                     tagme_taxonomy_df = tagme_taxonomy_intersection_keywords(
                         tagme_df, taxonomy_keywords_set)
@@ -1441,7 +1388,7 @@ def keyword_extraction_parallel(
                                         "system_keywords": keywords_dpediaScore,
                                         },
                                     "version": pdata, #yaml version
-                                    "uri": ""
+                                    "uri": "R.1.15.1"
                                      }
                                 }
                            }

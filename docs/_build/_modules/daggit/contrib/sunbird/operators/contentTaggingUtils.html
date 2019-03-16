@@ -159,6 +159,8 @@
 <span class="kn">from</span> <span class="nn">pdfminer.converter</span> <span class="k">import</span> <span class="n">HTMLConverter</span><span class="p">,</span> <span class="n">TextConverter</span><span class="p">,</span> <span class="n">XMLConverter</span>
 <span class="kn">from</span> <span class="nn">pdfminer.layout</span> <span class="k">import</span> <span class="n">LAParams</span>
 <span class="kn">from</span> <span class="nn">pdfminer.pdfpage</span> <span class="k">import</span> <span class="n">PDFPage</span>
+<span class="kn">from</span> <span class="nn">kafka</span> <span class="k">import</span> <span class="n">KafkaProducer</span><span class="p">,</span> <span class="n">KafkaConsumer</span><span class="p">,</span> <span class="n">KafkaClient</span>
+
 <span class="kn">import</span> <span class="nn">yaml</span>
 <span class="kn">import</span> <span class="nn">glob</span>
 <span class="kn">from</span> <span class="nn">PyPDF2</span> <span class="k">import</span> <span class="n">PdfFileReader</span>
@@ -180,6 +182,7 @@
 <span class="kn">import</span> <span class="nn">requests</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">redis</span>
 <span class="kn">import</span> <span class="nn">xml.etree.ElementTree</span> <span class="k">as</span> <span class="nn">ET</span>
 <span class="kn">from</span> <span class="nn">dateutil.parser</span> <span class="k">import</span> <span class="n">parse</span>
 <span class="kn">from</span> <span class="nn">SPARQLWrapper</span> <span class="k">import</span> <span class="n">SPARQLWrapper</span><span class="p">,</span> <span class="n">JSON</span>
@@ -283,31 +286,6 @@
             <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">zip_file</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">BaseException</span><span class="p">:</span>
             <span class="n">bugs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">zip_file</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="merge_json"><a class="viewcode-back" href="../../../../../daggit.contrib.sunbird.operators.html#daggit.contrib.sunbird.operators.contentTaggingUtils.merge_json">[docs]</a><span class="k">def</span> <span class="nf">merge_json</span><span class="p">(</span><span class="n">merge_json_loc_list</span><span class="p">):</span>
-    <span class="n">ignore_list</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;ETS&quot;</span><span class="p">]</span>
-    <span class="n">dict_list</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">merge_json_loc_list</span><span class="p">:</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;UTF-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">info</span><span class="p">:</span>
-            <span class="n">new_json</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">info</span><span class="p">)</span>
-            <span class="p">[</span><span class="n">new_json</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">ignore</span><span class="p">)</span> <span class="k">for</span> <span class="n">ignore</span> <span class="ow">in</span> <span class="n">ignore_list</span> <span class="k">if</span> <span class="n">ignore</span> <span class="ow">in</span> <span class="n">new_json</span><span class="o">.</span><span class="n">keys</span><span class="p">()]</span>
-        <span class="n">dict_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_json</span><span class="p">)</span>
-    <span class="n">merge_dict</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="k">for</span> <span class="n">dictionary</span> <span class="ow">in</span> <span class="n">dict_list</span><span class="p">:</span>
-        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">dictionary</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">merge_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-                <span class="nb">print</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
-                <span class="k">try</span><span class="p">:</span>
-                    <span class="k">assert</span> <span class="n">dictionary</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="o">==</span> <span class="n">merge_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
-                    <span class="nb">print</span><span class="p">(</span><span class="n">merge_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">))</span>
-                    <span class="n">merge_dict</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">k</span><span class="p">:</span> <span class="n">dictionary</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">)})</span>
-                <span class="k">except</span> <span class="ne">BaseException</span><span class="p">:</span>
-                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Trying to merge keys with different values&quot;</span><span class="p">)</span>
-                    <span class="k">pass</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">merge_dict</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">k</span><span class="p">:</span> <span class="n">dictionary</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">)})</span>
-    <span class="k">return</span> <span class="n">merge_dict</span></div>
 
 
 <div class="viewcode-block" id="ekstep_ecar_unzip"><a class="viewcode-back" href="../../../../../daggit.contrib.sunbird.operators.html#daggit.contrib.sunbird.operators.contentTaggingUtils.ekstep_ecar_unzip">[docs]</a><span class="k">def</span> <span class="nf">ekstep_ecar_unzip</span><span class="p">(</span><span class="n">download_location</span><span class="p">,</span> <span class="n">copy_location</span><span class="p">):</span>
@@ -772,15 +750,19 @@
 
 <div class="viewcode-block" id="video_to_speech"><a class="viewcode-back" href="../../../../../daggit.contrib.sunbird.operators.html#daggit.contrib.sunbird.operators.contentTaggingUtils.video_to_speech">[docs]</a><span class="k">def</span> <span class="nf">video_to_speech</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="n">path_to_assets</span><span class="p">):</span>
     <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;VTS_START&#39;</span><span class="p">)</span>
-    <span class="n">video_names</span> <span class="o">=</span> <span class="n">findFiles</span><span class="p">(</span><span class="n">path_to_assets</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;mp4&#39;</span><span class="p">])</span>
+    <span class="n">video_names</span> <span class="o">=</span> <span class="n">findFiles</span><span class="p">(</span><span class="n">path_to_assets</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;mp4&#39;</span><span class="p">,</span> <span class="s1">&#39;webm&#39;</span><span class="p">])</span>
     <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;...detected </span><span class="si">{0}</span><span class="s1"> video files&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">video_names</span><span class="p">))))</span>
     <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;ffmpeg&quot;</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">video_names</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;VTS_START_FOR_METHOD: </span><span class="si">{0}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">method</span><span class="p">))</span>
 
         <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">video_names</span><span class="p">:</span>
             <span class="c1"># ffmpy wrapper to convert mp4 to mp3:</span>
-            <span class="n">ff</span> <span class="o">=</span> <span class="n">ffmpy</span><span class="o">.</span><span class="n">FFmpeg</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="p">{</span><span class="n">file</span><span class="p">:</span> <span class="kc">None</span><span class="p">},</span> <span class="n">outputs</span><span class="o">=</span><span class="p">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-                <span class="n">file</span><span class="p">[:</span><span class="o">-</span><span class="mi">4</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;.mp3&quot;</span><span class="p">):</span> <span class="s1">&#39;-vn -ar 44100 -ac 2 -ab 192 -f mp3&#39;</span><span class="p">})</span>
+            <span class="k">if</span> <span class="s2">&quot;webm&quot;</span> <span class="ow">in</span> <span class="n">file</span><span class="p">:</span>
+                <span class="n">ff</span> <span class="o">=</span> <span class="n">ffmpy</span><span class="o">.</span><span class="n">FFmpeg</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="p">{</span><span class="n">file</span><span class="p">:</span> <span class="kc">None</span><span class="p">},</span> <span class="n">outputs</span><span class="o">=</span><span class="p">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                    <span class="n">file</span><span class="p">[:</span><span class="o">-</span><span class="mi">5</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;.mp3&quot;</span><span class="p">):</span> <span class="s1">&#39;-vn -ar 44100 -ac 2 -ab 192 -f mp3&#39;</span><span class="p">})</span>
+            <span class="k">else</span><span class="p">:</span>    
+                <span class="n">ff</span> <span class="o">=</span> <span class="n">ffmpy</span><span class="o">.</span><span class="n">FFmpeg</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="p">{</span><span class="n">file</span><span class="p">:</span> <span class="kc">None</span><span class="p">},</span> <span class="n">outputs</span><span class="o">=</span><span class="p">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                    <span class="n">file</span><span class="p">[:</span><span class="o">-</span><span class="mi">4</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;.mp3&quot;</span><span class="p">):</span> <span class="s1">&#39;-vn -ar 44100 -ac 2 -ab 192 -f mp3&#39;</span><span class="p">})</span>
             <span class="n">ff</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
             <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
                     <span class="n">path_to_assets</span><span class="p">,</span> <span class="n">file</span><span class="p">[:</span><span class="o">-</span><span class="mi">4</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;.mp3&quot;</span><span class="p">)):</span>
@@ -880,54 +862,12 @@
     <span class="k">return</span> <span class="n">text</span></div>
 
 
-<span class="c1"># def pdf_to_text(method, path_to_assets, pdf_url):</span>
-<span class="c1">#     text = &quot;&quot;</span>
-<span class="c1">#     number_of_pages = 0</span>
-<span class="c1">#     logging.info(&quot;PTT_START&quot;)</span>
-<span class="c1">#     if method == &quot;PyPDF2&quot;:</span>
-<span class="c1">#         logging.info(&quot;PTT_METHOD: {0}&quot;.format(method))</span>
-<span class="c1">#         pdf_names = findFiles(path_to_assets, [&#39;.pdf&#39;])</span>
-<span class="c1">#         text = &quot;&quot;</span>
-<span class="c1">#         for j in range(0, len(pdf_names) + 1):</span>
-<span class="c1">#             if (len(pdf_names) == 0 and pdf_url.endswith(&#39;pdf&#39;)):</span>
-<span class="c1">#                 r = requests.get(pdf_url)</span>
-<span class="c1">#                 f = io.BytesIO(r.content)</span>
-<span class="c1">#                 read_pdf = PdfFileReader(f)</span>
-<span class="c1">#                 number_of_pages = read_pdf.getNumPages()</span>
-<span class="c1">#             elif j &lt; (len(pdf_names)):</span>
-<span class="c1">#                 pdf_files = pdf_names[j]</span>
-<span class="c1">#                 text = &quot;&quot;</span>
-<span class="c1">#                 text = convert_pdf_to_txt(pdf_files)</span>
-<span class="c1">#                 number_of_pages = 0</span>
-<span class="c1">#                 # f = open(pdf_files, &#39;rb&#39;)</span>
-<span class="c1">#                 # read_pdf = PdfFileReader(f)</span>
-<span class="c1">#                 # number_of_pages = read_pdf.getNumPages()</span>
-<span class="c1">#             else:</span>
-<span class="c1">#                 number_of_pages = 0</span>
-<span class="c1">#             if number_of_pages &gt; 0:</span>
-<span class="c1">#                 for i in range(number_of_pages):</span>
-<span class="c1">#                     page = read_pdf.getPage(i)</span>
-<span class="c1">#                     page_content = page.extractText()</span>
-<span class="c1">#                     text += page_content</span>
-<span class="c1">#         processed_txt = cleantext(text)</span>
-<span class="c1">#         text = &#39;&#39;.join([i for i in processed_txt if not i.isdigit()])</span>
-<span class="c1">#         text = &#39; &#39;.join(text.split())</span>
-<span class="c1">#     if method == &quot;none&quot;:</span>
-<span class="c1">#         logging.info(&quot;PDF_NOT_PERFORMED&quot;)</span>
-
-<span class="c1">#     logging.info(&quot;PTT_STOP&quot;)</span>
-<span class="c1">#     text_dict = {&quot;text&quot;: text, &quot;no_of_pages&quot;: number_of_pages}</span>
-<span class="c1">#     return text_dict</span>
-
-
 <div class="viewcode-block" id="pdf_to_text"><a class="viewcode-back" href="../../../../../daggit.contrib.sunbird.operators.html#daggit.contrib.sunbird.operators.contentTaggingUtils.pdf_to_text">[docs]</a><span class="k">def</span> <span class="nf">pdf_to_text</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="n">path_to_assets</span><span class="p">,</span> <span class="n">pdf_url</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
     <span class="n">number_of_pages</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;PTT_START&quot;</span><span class="p">)</span>
     <span class="n">pdf_names</span> <span class="o">=</span> <span class="n">findFiles</span><span class="p">(</span><span class="n">path_to_assets</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;.pdf&#39;</span><span class="p">])</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;-----&gt;pdf_names: &quot;</span><span class="p">,</span> <span class="n">pdf_names</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;PyPDF2&quot;</span><span class="p">:</span>
         <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;PTT_METHOD: </span><span class="si">{0}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">method</span><span class="p">))</span>
         <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">pdf_names</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
@@ -1011,7 +951,7 @@
                     <span class="k">try</span><span class="p">:</span>
                         <span class="k">if</span> <span class="n">child</span><span class="o">.</span><span class="n">tag</span> <span class="o">==</span> <span class="s1">&#39;config&#39;</span><span class="p">:</span> 
                             <span class="n">result</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\,&quot;</span><span class="p">,</span> <span class="n">child</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
-                            <span class="n">content</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">ast</span><span class="o">.</span><span class="n">literal_eval</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="mi">8</span><span class="p">][</span><span class="mi">7</span><span class="p">:]))</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span>
+                            <span class="n">content</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="mi">8</span><span class="p">][</span><span class="mi">7</span><span class="p">:])</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span>
                     <span class="k">except</span><span class="p">:</span>
                         <span class="k">pass</span>
                     <span class="n">alltext</span><span class="o">+=</span><span class="n">content</span>
@@ -1140,8 +1080,8 @@
         <span class="k">for</span> <span class="n">method</span><span class="p">,</span> <span class="n">param_tuple</span> <span class="ow">in</span> <span class="n">textExtraction_pipeline</span><span class="p">:</span>
             <span class="n">text</span> <span class="o">+=</span> <span class="n">method</span><span class="p">(</span><span class="o">*</span><span class="n">param_tuple</span><span class="p">)[</span><span class="s2">&quot;text&quot;</span><span class="p">]</span>
         <span class="c1"># Adding description and title to the text only for PDF content</span>
-        <span class="k">if</span> <span class="n">type_of_url</span> <span class="o">==</span> <span class="s2">&quot;pdf&quot;</span><span class="p">:</span>
-            <span class="n">text</span> <span class="o">+=</span> <span class="n">content_meta</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="n">content_meta</span><span class="p">[</span><span class="s2">&quot;description&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+        <span class="c1"># if type_of_url == &quot;pdf&quot;:</span>
+        <span class="c1">#     text += content_meta[&quot;name&quot;].iloc[index] + &quot; &quot; + content_meta[&quot;description&quot;].iloc[index]</span>
         <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path_to_id</span><span class="p">)</span> <span class="ow">and</span> <span class="n">text</span><span class="p">:</span>
             <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path_to_transcript</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">myTextFile</span><span class="p">:</span>
                 <span class="n">myTextFile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
@@ -1158,7 +1098,10 @@
         <span class="c1"># estimating ets:</span>
         <span class="n">epoch_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">mktime</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">timestr</span><span class="p">,</span> <span class="s2">&quot;%Y%m</span><span class="si">%d</span><span class="s2">-%H%M%S&quot;</span><span class="p">))</span>
         <span class="n">domain</span> <span class="o">=</span> <span class="n">content_meta</span><span class="p">[</span><span class="s2">&quot;subject&quot;</span><span class="p">][</span><span class="n">index</span><span class="p">]</span>
-
+        <span class="n">graph_id</span> <span class="o">=</span> <span class="n">content_meta</span><span class="p">[</span><span class="s2">&quot;graph_id&quot;</span><span class="p">][</span><span class="n">index</span><span class="p">]</span>
+        <span class="n">object_type</span> <span class="o">=</span> <span class="n">content_meta</span><span class="p">[</span><span class="s2">&quot;objectType&quot;</span><span class="p">][</span><span class="n">index</span><span class="p">]</span>
+        <span class="n">node_type</span> <span class="o">=</span> <span class="n">content_meta</span><span class="p">[</span><span class="s2">&quot;nodeType&quot;</span><span class="p">][</span><span class="n">index</span><span class="p">]</span>
+        <span class="n">node_graph_id</span> <span class="o">=</span> <span class="n">content_meta</span><span class="p">[</span><span class="s2">&quot;node_id&quot;</span><span class="p">][</span><span class="n">index</span><span class="p">]</span>
         <span class="n">template</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
         <span class="n">plugin_used</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">num_of_stages</span> <span class="o">=</span> <span class="mi">0</span>
@@ -1167,24 +1110,38 @@
             <span class="n">plugin_used</span> <span class="o">=</span> <span class="n">ecml_index_to_text</span><span class="p">(</span><span class="s2">&quot;parse&quot;</span><span class="p">,</span> <span class="n">path_to_id</span><span class="p">)[</span><span class="s2">&quot;plugin_used&quot;</span><span class="p">]</span>
             <span class="n">num_of_stages</span> <span class="o">=</span> <span class="n">ecml_index_to_text</span><span class="p">(</span><span class="s2">&quot;parse&quot;</span><span class="p">,</span> <span class="n">path_to_id</span><span class="p">)[</span><span class="s2">&quot;num_stage&quot;</span><span class="p">]</span>
 
-        <span class="n">mnt_output_dict</span> <span class="o">=</span> <span class="p">{</span>
-                    <span class="s1">&#39;ETS&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">epoch_time</span><span class="p">),</span>
-                    <span class="s1">&#39;content_id&#39;</span><span class="p">:</span> <span class="n">id_name</span><span class="p">,</span>
-                    <span class="s1">&#39;content_type&#39;</span><span class="p">:</span> <span class="n">type_of_url</span><span class="p">,</span>
-                    <span class="s1">&#39;domain&#39;</span><span class="p">:</span> <span class="n">domain</span><span class="p">,</span>
-                    <span class="s1">&#39;medium&#39;</span><span class="p">:</span> <span class="n">language_detection</span><span class="p">(</span><span class="n">text</span><span class="p">),</span>
-                    <span class="s1">&#39;duration&#39;</span><span class="p">:</span> <span class="n">duration</span><span class="p">,</span>
-                    <span class="s1">&#39;plugin_used&#39;</span><span class="p">:</span> <span class="n">plugin_used</span><span class="p">,</span>
-                    <span class="s1">&#39;num_of_stages&#39;</span><span class="p">:</span> <span class="n">num_of_stages</span><span class="p">,</span>
-                    <span class="s1">&#39;template&#39;</span><span class="p">:</span> <span class="n">template</span><span class="p">,</span>
-                    <span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="n">text</span><span class="p">,</span>
-                    <span class="s1">&#39;pdata&#39;</span><span class="p">:</span> <span class="n">pdata</span><span class="p">,</span>
-                    <span class="s1">&#39;commit_id&#39;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span>
-                <span class="p">}</span>
-
+      
+        
+        <span class="n">mnt_output_dict_new</span> <span class="o">=</span>  <span class="p">{</span> <span class="s2">&quot;ets&quot;</span> <span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">epoch_time</span><span class="p">),</span> <span class="c1"># Event generation time in epoch</span>
+                                <span class="s2">&quot;nodeUniqueId&quot;</span> <span class="p">:</span> <span class="n">id_name</span><span class="p">,</span> <span class="c1"># content id</span>
+                                <span class="s2">&quot;operationType&quot;</span><span class="p">:</span> <span class="s2">&quot;UPDATE&quot;</span><span class="p">,</span> <span class="c1"># default to UPDATE</span>
+                                <span class="s2">&quot;nodeType&quot;</span><span class="p">:</span> <span class="n">node_type</span><span class="p">,</span> <span class="c1"># default to DATA_NODE</span>
+                                <span class="s2">&quot;graphId&quot;</span><span class="p">:</span> <span class="n">graph_id</span><span class="p">,</span> <span class="c1"># default to domain</span>
+                                <span class="s2">&quot;objectType&quot;</span><span class="p">:</span> <span class="n">object_type</span><span class="p">,</span> <span class="c1"># object type - content, worksheet, textbook, collection etc</span>
+                                <span class="s2">&quot;nodeGraphId&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">node_graph_id</span><span class="p">),</span> <span class="c1"># default to 0</span>
+                                <span class="s2">&quot;transactionData&quot;</span> <span class="p">:</span> <span class="p">{</span>
+                                    <span class="s2">&quot;properties&quot;</span> <span class="p">:</span> <span class="p">{</span>
+                                        <span class="s2">&quot;tags&quot;</span><span class="p">:</span> <span class="p">{</span>
+                                            <span class="s2">&quot;system_contentType&quot;</span><span class="p">:</span> <span class="n">type_of_url</span><span class="p">,</span> <span class="c1"># can be &quot;youtube&quot;, &quot;ecml&quot;, &quot;pdf&quot;</span>
+                                            <span class="s2">&quot;system_medium&quot;</span><span class="p">:</span> <span class="n">language_detection</span><span class="p">(</span><span class="n">text</span><span class="p">),</span> <span class="c1"># generated using google language detection api</span>
+                                            <span class="s2">&quot;duration&quot;</span><span class="p">:</span> <span class="p">{</span>
+                                                <span class="s2">&quot;video&quot;</span> <span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="c1"># video duration in seconds</span>
+                                                <span class="s2">&quot;stage&quot;</span> <span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="c1"># can be derived from usage data</span>
+                                            <span class="p">},</span>
+                                            <span class="s2">&quot;num_stage&quot;</span> <span class="p">:</span> <span class="n">num_of_stages</span><span class="p">,</span> <span class="c1"># pdf: number of pages, ecml:number of stages, video:1</span>
+                                            <span class="s2">&quot;system_plugins&quot;</span> <span class="p">:</span> <span class="n">plugin_used</span><span class="p">,</span> <span class="c1"># ids of plugin used in Content</span>
+                                            <span class="s2">&quot;system_templates&quot;</span> <span class="p">:</span> <span class="n">template</span><span class="p">,</span> <span class="c1"># ids of templates used in Content</span>
+                                            <span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="n">text</span><span class="p">,</span>
+                                            <span class="s2">&quot;subject&quot;</span><span class="p">:</span> <span class="n">domain</span>
+                                            <span class="p">},</span>
+                                        <span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="n">pdata</span><span class="p">,</span> <span class="c1"># yaml version</span>
+                                        <span class="s2">&quot;uri&quot;</span><span class="p">:</span> <span class="s2">&quot;R.1.15.1&quot;</span> <span class="c1"># git commit id</span>
+                                         <span class="p">}</span>
+                                     <span class="p">}</span>
+                                 <span class="p">}</span>
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path_to_id</span><span class="p">,</span> <span class="s2">&quot;ML_content_info.json&quot;</span><span class="p">),</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">info</span><span class="p">:</span>
             <span class="n">mnt_json_dump</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span>
-                <span class="n">mnt_output_dict</span><span class="p">,</span> <span class="n">info</span><span class="p">,</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+                <span class="n">mnt_output_dict_new</span><span class="p">,</span> <span class="n">info</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span> <span class="c1"># sort_keys=True,</span>
             <span class="nb">print</span><span class="p">(</span><span class="n">mnt_json_dump</span><span class="p">)</span>
         <span class="n">stop</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
         <span class="n">time_consumed</span> <span class="o">=</span> <span class="n">stop</span><span class="o">-</span><span class="n">start</span>
@@ -1194,9 +1151,8 @@
         <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;MTT_TRANSCRIPT_PATH_CREATED: </span><span class="si">{0}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">path_to_transcript</span><span class="p">))</span>
         <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;MTT_CONTENT_ID_READ: </span><span class="si">{0}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">id_name</span><span class="p">))</span>
         <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;MTT_STOP_FOR_URL </span><span class="si">{0}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">url</span><span class="p">))</span>
-        <span class="c1">#return os.path.join(path_to_id, &quot;ML_content_info.json&quot;)</span>
     <span class="k">except</span> <span class="ne">BaseException</span><span class="p">:</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;TextEnrichment failed for url:</span><span class="si">{0}</span><span class="s2"> with id:</span><span class="si">{1}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">id_name</span><span class="p">))</span></div>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;TextEnrichment failed for url:</span><span class="si">{0}</span><span class="s2"> with id:</span><span class="si">{1}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">id_name</span><span class="p">))</span></div>
 
 
 <div class="viewcode-block" id="custom_tokenizer"><a class="viewcode-back" href="../../../../../daggit.contrib.sunbird.operators.html#daggit.contrib.sunbird.operators.contentTaggingUtils.custom_tokenizer">[docs]</a><span class="k">def</span> <span class="nf">custom_tokenizer</span><span class="p">(</span><span class="n">path_to_text_file</span><span class="p">):</span>
@@ -1216,31 +1172,54 @@
     <span class="k">return</span> <span class="n">text_df</span></div>
 
 
-<div class="viewcode-block" id="tagme_text"><a class="viewcode-back" href="../../../../../daggit.contrib.sunbird.operators.html#daggit.contrib.sunbird.operators.contentTaggingUtils.tagme_text">[docs]</a><span class="k">def</span> <span class="nf">tagme_text</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
-    <span class="n">url</span> <span class="o">=</span> <span class="s2">&quot;https://tagme.d4science.org/tagme/tag&quot;</span>
+<div class="viewcode-block" id="tagme_text"><a class="viewcode-back" href="../../../../../daggit.contrib.sunbird.operators.html#daggit.contrib.sunbird.operators.contentTaggingUtils.tagme_text">[docs]</a><span class="k">def</span> <span class="nf">tagme_text</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">tagme_cred</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="s2">&quot;https://tagme.d4science.org/tagme/tag&quot;</span>
 
-    <span class="n">querystring</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">&quot;lang&quot;</span><span class="p">:</span> <span class="s2">&quot;en&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;include_categories&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-        <span class="s2">&quot;gcube-token&quot;</span><span class="p">:</span> <span class="s2">&quot;1e1f2881-62ec-4b3e-9036-9efe89347991-843339462&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="n">text</span><span class="p">}</span>
+        <span class="n">querystring</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;lang&quot;</span><span class="p">:</span> <span class="s2">&quot;en&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;include_categories&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="s2">&quot;gcube-token&quot;</span><span class="p">:</span> <span class="n">tagme_cred</span><span class="p">[</span><span class="s1">&#39;gcube_token&#39;</span><span class="p">],</span>
+            <span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="s2">&quot;test&quot;</span><span class="p">}</span>
+        <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;cache-control&#39;</span><span class="p">:</span> <span class="s2">&quot;no-cache&quot;</span><span class="p">,</span>
+            <span class="s1">&#39;postman-token&#39;</span><span class="p">:</span> <span class="n">tagme_cred</span><span class="p">[</span><span class="s1">&#39;postman_token&#39;</span><span class="p">]</span> 
+        <span class="p">}</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">request</span><span class="p">(</span>
+            <span class="s2">&quot;GET&quot;</span><span class="p">,</span>
+            <span class="n">url</span><span class="p">,</span>
+            <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span>
+            <span class="n">params</span><span class="o">=</span><span class="n">querystring</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">response</span><span class="p">[</span><span class="s1">&#39;annotations&#39;</span><span class="p">])</span>
 
-    <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s1">&#39;gcube-token&#39;</span><span class="p">:</span> <span class="s2">&quot;1e1f2881-62ec-4b3e-9036-9efe89347991-843339462&quot;</span><span class="p">,</span>
-        <span class="s1">&#39;cache-control&#39;</span><span class="p">:</span> <span class="s2">&quot;no-cache&quot;</span><span class="p">,</span>
-        <span class="s1">&#39;postman-token&#39;</span><span class="p">:</span> <span class="s2">&quot;98279373-78af-196e-c040-46238512c338&quot;</span>
-    <span class="p">}</span>
-
-    <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">request</span><span class="p">(</span>
-        <span class="s2">&quot;GET&quot;</span><span class="p">,</span>
-        <span class="n">url</span><span class="p">,</span>
-        <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span>
-        <span class="n">params</span><span class="o">=</span><span class="n">querystring</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
-    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">response</span><span class="p">[</span><span class="s1">&#39;annotations&#39;</span><span class="p">])</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">0</span>
+        <span class="n">connection_status</span> <span class="o">=</span> <span class="kc">True</span> 
+    <span class="k">except</span> <span class="ne">ConnectionError</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Unable to establish connection with Tagme&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">connection_status</span><span class="p">:</span> 
+        <span class="k">try</span><span class="p">:</span> 
+            <span class="n">url</span> <span class="o">=</span> <span class="s2">&quot;https://tagme.d4science.org/tagme/tag&quot;</span>
+            <span class="n">querystring</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;lang&quot;</span><span class="p">:</span> <span class="s2">&quot;en&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;include_categories&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                <span class="s2">&quot;gcube-token&quot;</span><span class="p">:</span> <span class="n">tagme_cred</span><span class="p">[</span><span class="s1">&#39;gcube_token&#39;</span><span class="p">],</span>
+                <span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="n">text</span><span class="p">}</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;cache-control&#39;</span><span class="p">:</span> <span class="s2">&quot;no-cache&quot;</span><span class="p">,</span>
+                <span class="s1">&#39;postman-token&#39;</span><span class="p">:</span> <span class="n">tagme_cred</span><span class="p">[</span><span class="s1">&#39;postman_token&#39;</span><span class="p">]</span> 
+            <span class="p">}</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">request</span><span class="p">(</span>
+                <span class="s2">&quot;GET&quot;</span><span class="p">,</span>
+                <span class="n">url</span><span class="p">,</span>
+                <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span>
+                <span class="n">params</span><span class="o">=</span><span class="n">querystring</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">response</span><span class="p">[</span><span class="s1">&#39;annotations&#39;</span><span class="p">])</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Tagme Failed&quot;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">df</span></div>
 
 
-<div class="viewcode-block" id="run_tagme"><a class="viewcode-back" href="../../../../../daggit.contrib.sunbird.operators.html#daggit.contrib.sunbird.operators.contentTaggingUtils.run_tagme">[docs]</a><span class="k">def</span> <span class="nf">run_tagme</span><span class="p">(</span><span class="n">path_to_text</span><span class="p">):</span>
+<div class="viewcode-block" id="run_tagme"><a class="viewcode-back" href="../../../../../daggit.contrib.sunbird.operators.html#daggit.contrib.sunbird.operators.contentTaggingUtils.run_tagme">[docs]</a><span class="k">def</span> <span class="nf">run_tagme</span><span class="p">(</span><span class="n">path_to_text</span><span class="p">,</span> <span class="n">tagme_cred</span><span class="p">):</span>
     <span class="n">file_</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">path_to_text</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span>
     <span class="n">text</span> <span class="o">=</span> <span class="n">file_</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
     <span class="n">words</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">)</span>
@@ -1252,16 +1231,15 @@
             <span class="p">(</span><span class="n">index_count</span> <span class="o">+</span> <span class="n">window_len</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">words</span><span class="p">))])</span>
         <span class="n">index_count</span> <span class="o">+=</span> <span class="n">window_len</span>
         <span class="k">if</span> <span class="n">text</span><span class="p">:</span>
-            <span class="n">response_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tagme_text</span><span class="p">(</span><span class="n">text</span><span class="p">))</span>
+            <span class="n">response_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tagme_text</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">tagme_cred</span><span class="p">))</span>
         <span class="n">response_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">response_list</span><span class="p">)</span>
         <span class="n">response_df</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">response_df</span></div>
 
 
-<div class="viewcode-block" id="get_tagme_spots"><a class="viewcode-back" href="../../../../../daggit.contrib.sunbird.operators.html#daggit.contrib.sunbird.operators.contentTaggingUtils.get_tagme_spots">[docs]</a><span class="k">def</span> <span class="nf">get_tagme_spots</span><span class="p">(</span><span class="n">path_to_text</span><span class="p">):</span>
+<div class="viewcode-block" id="get_tagme_spots"><a class="viewcode-back" href="../../../../../daggit.contrib.sunbird.operators.html#daggit.contrib.sunbird.operators.contentTaggingUtils.get_tagme_spots">[docs]</a><span class="k">def</span> <span class="nf">get_tagme_spots</span><span class="p">(</span><span class="n">path_to_text</span><span class="p">,</span> <span class="n">tagme_cred</span><span class="p">):</span>
     <span class="n">file_</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">path_to_text</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span>
     <span class="n">text</span> <span class="o">=</span> <span class="n">file_</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
-    <span class="c1"># text = text.encode(&#39;utf-8&#39;).decode(&#39;ascii&#39;, &#39;ignore&#39;)</span>
     <span class="n">words</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">)</span>
     <span class="n">index_count</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="n">window_len</span> <span class="o">=</span> <span class="mi">700</span>
@@ -1270,7 +1248,7 @@
         <span class="n">text</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">words</span><span class="p">[</span><span class="n">index_count</span><span class="p">:</span><span class="nb">min</span><span class="p">(</span>
             <span class="p">(</span><span class="n">index_count</span> <span class="o">+</span> <span class="n">window_len</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">words</span><span class="p">))])</span>
         <span class="n">index_count</span> <span class="o">+=</span> <span class="n">window_len</span>
-        <span class="n">response_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tagme_text</span><span class="p">(</span><span class="n">text</span><span class="p">))</span>
+        <span class="n">response_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tagme_text</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">tagme_cred</span><span class="p">))</span>
         <span class="n">response_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">response_list</span><span class="p">)</span>
         <span class="n">response_df</span> <span class="o">=</span> <span class="n">response_df</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">(</span><span class="s1">&#39;spot&#39;</span><span class="p">)</span>
         <span class="n">response_df</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -1331,57 +1309,55 @@
     <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="nb">bool</span><span class="p">(</span><span class="nb">sum</span><span class="p">([</span><span class="nb">int</span><span class="p">(</span><span class="nb">any</span><span class="p">([</span><span class="mi">1</span> <span class="k">if</span> <span class="p">((</span><span class="n">i</span> <span class="ow">in</span> <span class="n">j</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">j</span> <span class="ow">in</span> <span class="n">i</span><span class="p">))</span> <span class="k">else</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">dbpedia_prefix_cat</span><span class="p">]))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">subject_paths</span><span class="p">])))</span></div>
 
 
-<div class="viewcode-block" id="keyword_filter"><a class="viewcode-back" href="../../../../../daggit.contrib.sunbird.operators.html#daggit.contrib.sunbird.operators.contentTaggingUtils.keyword_filter">[docs]</a><span class="k">def</span> <span class="nf">keyword_filter</span><span class="p">(</span><span class="n">tagme_response_df</span><span class="p">,</span> <span class="n">path_to_corpus</span><span class="p">,</span> <span class="n">path_to_category_lookup</span><span class="p">,</span> <span class="n">subject</span><span class="p">,</span> <span class="n">update_corpus</span><span class="p">,</span> <span class="n">filter_score_val</span><span class="p">,</span> <span class="n">num_keywords</span><span class="p">):</span>
+<div class="viewcode-block" id="keyword_filter"><a class="viewcode-back" href="../../../../../daggit.contrib.sunbird.operators.html#daggit.contrib.sunbird.operators.contentTaggingUtils.keyword_filter">[docs]</a><span class="k">def</span> <span class="nf">keyword_filter</span><span class="p">(</span><span class="n">tagme_response_df</span><span class="p">,</span> <span class="n">cache_cred</span><span class="p">,</span> <span class="n">path_to_category_lookup</span><span class="p">,</span> <span class="n">subject</span><span class="p">,</span> <span class="n">update_corpus</span><span class="p">,</span> <span class="n">filter_score_val</span><span class="p">,</span> <span class="n">num_keywords</span><span class="p">):</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;subject:&quot;</span><span class="p">,</span> <span class="n">subject</span><span class="p">)</span>
-
-    <span class="n">corpus_lookup_filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path_to_corpus</span><span class="p">,</span> <span class="n">subject</span> <span class="o">+</span> <span class="s2">&quot;.csv&quot;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Lookup corpus :&quot;</span><span class="o">+</span><span class="n">corpus_lookup_filename</span><span class="p">)</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">corpus_lookup_filename</span><span class="p">)):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;port&#39;</span><span class="p">,</span> <span class="s1">&#39;host&#39;</span><span class="p">,</span> <span class="s1">&#39;password&#39;</span><span class="p">]:</span>
+            <span class="k">assert</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">cache_cred</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+            <span class="n">cache_status</span><span class="o">=</span><span class="kc">True</span> 
+    <span class="k">except</span><span class="p">:</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Creating :&quot;</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">corpus_lookup_filename</span><span class="p">))</span>
-            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">corpus_lookup_filename</span><span class="p">))</span>
-        <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>  <span class="c1"># Guard against race condition</span>
-            <span class="k">if</span> <span class="n">exc</span><span class="o">.</span><span class="n">errno</span> <span class="o">!=</span> <span class="n">errno</span><span class="o">.</span><span class="n">EEXIST</span><span class="p">:</span>
-                <span class="k">raise</span>
-    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">corpus_lookup_filename</span><span class="p">):</span>
-        <span class="n">lookup_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path_to_corpus</span><span class="p">,</span> <span class="n">subject</span> <span class="o">+</span> <span class="s2">&quot;.csv&quot;</span><span class="p">))</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">lookup_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">&#39;keyword&#39;</span><span class="p">:</span> <span class="p">[],</span> <span class="s1">&#39;dbpedia_score&#39;</span><span class="p">:</span> <span class="p">[]})</span>
-        <span class="n">lookup_df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">corpus_lookup_filename</span><span class="p">)</span>
-    <span class="n">keyword_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">&#39;keyword&#39;</span><span class="p">:</span> <span class="p">[],</span> <span class="s1">&#39;dbpedia_score&#39;</span><span class="p">:</span> <span class="p">[]})</span>
-    <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">tagme_response_df</span><span class="p">)):</span>
-        <span class="n">keyword</span> <span class="o">=</span> <span class="n">tagme_response_df</span><span class="p">[</span><span class="s1">&#39;spot&#39;</span><span class="p">][</span><span class="n">ind</span><span class="p">]</span>
+            <span class="n">r</span><span class="o">=</span><span class="n">redis</span><span class="o">.</span><span class="n">redis</span><span class="p">(</span><span class="n">host</span><span class="o">=</span><span class="n">cache_cred</span><span class="p">[</span><span class="s1">&#39;host&#39;</span><span class="p">],</span> <span class="n">port</span><span class="o">=</span><span class="n">cache_cred</span><span class="p">[</span><span class="s1">&#39;port&#39;</span><span class="p">])</span>
+            <span class="n">r</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;test&quot;</span><span class="p">,</span><span class="s2">&quot;test&quot;</span><span class="p">)</span>
+            <span class="n">cache_cred</span><span class="p">[</span><span class="s2">&quot;password&quot;</span><span class="p">]</span><span class="o">=</span><span class="s2">&quot;&quot;</span>
+            <span class="n">cache_status</span><span class="o">=</span><span class="kc">True</span> 
+        <span class="k">except</span> <span class="ne">IOError</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Unable to establish connection with redis cache.&quot;</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">keyword</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">lookup_df</span><span class="p">[</span><span class="s1">&#39;keyword&#39;</span><span class="p">]):</span>
-            <span class="n">lookup_df</span> <span class="o">=</span> <span class="n">lookup_df</span><span class="p">[</span><span class="n">lookup_df</span><span class="p">[</span><span class="s1">&#39;keyword&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">keyword</span><span class="p">]</span>
-            <span class="n">relatedness</span> <span class="o">=</span> <span class="n">lookup_df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;dbpedia_score&#39;</span><span class="p">]</span>
-            <span class="n">score_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">&#39;keyword&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">keyword</span><span class="p">],</span> <span class="s1">&#39;dbpedia_score&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">relatedness</span><span class="p">]})</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path_to_category_lookup</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">stream</span><span class="p">:</span>
-                <span class="n">subject_ls</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">stream</span><span class="p">)[</span><span class="n">subject</span><span class="p">]</span>
-            <span class="n">dbpedia_categories</span> <span class="o">=</span> <span class="n">tagme_response_df</span><span class="p">[</span><span class="s1">&#39;dbpedia_categories&#39;</span><span class="p">][</span><span class="n">ind</span><span class="p">]</span>
-            <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="k">for</span> <span class="n">cat</span> <span class="ow">in</span> <span class="n">dbpedia_categories</span><span class="p">:</span>
-                    <span class="n">dbpedia_prefix_cat</span> <span class="o">=</span> <span class="n">getTaxonomy</span><span class="p">(</span><span class="n">cat</span><span class="p">)</span>
-                    <span class="n">status</span> <span class="o">=</span> <span class="n">checkSubject</span><span class="p">(</span><span class="n">dbpedia_prefix_cat</span><span class="p">,</span> <span class="n">subject_ls</span><span class="p">)</span>
-                    <span class="n">count</span> <span class="o">+=</span> <span class="n">status</span>
-                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">dbpedia_categories</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                    <span class="n">relatedness</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">count</span><span class="p">)</span><span class="o">/</span><span class="nb">float</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dbpedia_categories</span><span class="p">))</span>
-                <span class="k">else</span><span class="p">:</span>
+    <span class="n">keyword_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">&#39;keyword&#39;</span><span class="p">:</span> <span class="p">[],</span> <span class="s1">&#39;dbpedia_score&#39;</span><span class="p">:</span> <span class="p">[]})</span>
+    <span class="k">if</span> <span class="n">cache_status</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">tagme_response_df</span><span class="p">)):</span>
+            <span class="n">keyword</span> <span class="o">=</span> <span class="n">tagme_response_df</span><span class="p">[</span><span class="s1">&#39;spot&#39;</span><span class="p">][</span><span class="n">ind</span><span class="p">]</span>
+            <span class="n">score</span><span class="o">=</span><span class="n">getRediskey</span><span class="p">(</span><span class="n">subject</span><span class="o">+</span><span class="s2">&quot;.&quot;</span><span class="o">+</span><span class="n">keyword</span><span class="p">,</span> <span class="n">cache_cred</span><span class="p">[</span><span class="s1">&#39;host&#39;</span><span class="p">],</span> <span class="n">cache_cred</span><span class="p">[</span><span class="s1">&#39;port&#39;</span><span class="p">],</span> <span class="n">cache_cred</span><span class="p">[</span><span class="s1">&#39;password&#39;</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">score</span><span class="p">:</span>
+                <span class="n">score_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">&#39;keyword&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">keyword</span><span class="p">],</span> <span class="s1">&#39;dbpedia_score&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">score</span><span class="p">]})</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># need to change:-</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path_to_category_lookup</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">stream</span><span class="p">:</span>
+                    <span class="n">subject_ls</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">stream</span><span class="p">)[</span><span class="n">subject</span><span class="p">]</span>
+                <span class="n">dbpedia_categories</span> <span class="o">=</span> <span class="n">tagme_response_df</span><span class="p">[</span><span class="s1">&#39;dbpedia_categories&#39;</span><span class="p">][</span><span class="n">ind</span><span class="p">]</span>
+                <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">cat</span> <span class="ow">in</span> <span class="n">dbpedia_categories</span><span class="p">:</span>
+                        <span class="n">dbpedia_prefix_cat</span> <span class="o">=</span> <span class="n">getTaxonomy</span><span class="p">(</span><span class="n">cat</span><span class="p">)</span>
+                        <span class="n">status</span> <span class="o">=</span> <span class="n">checkSubject</span><span class="p">(</span><span class="n">dbpedia_prefix_cat</span><span class="p">,</span> <span class="n">subject_ls</span><span class="p">)</span>
+                        <span class="n">count</span> <span class="o">+=</span> <span class="n">status</span>
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">dbpedia_categories</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="n">relatedness</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">count</span><span class="p">)</span><span class="o">/</span><span class="nb">float</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dbpedia_categories</span><span class="p">))</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">relatedness</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="k">except</span> <span class="ne">BaseException</span><span class="p">:</span>
                     <span class="n">relatedness</span> <span class="o">=</span> <span class="mi">0</span>
-            <span class="k">except</span> <span class="ne">BaseException</span><span class="p">:</span>
-                <span class="n">relatedness</span> <span class="o">=</span> <span class="mi">0</span>
-            <span class="n">score_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">&#39;keyword&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">keyword</span><span class="p">],</span> <span class="s1">&#39;dbpedia_score&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">relatedness</span><span class="p">]})</span>
-        <span class="n">keyword_df</span> <span class="o">=</span> <span class="n">keyword_df</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">score_df</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">score_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">&#39;keyword&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">keyword</span><span class="p">],</span> <span class="s1">&#39;dbpedia_score&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">relatedness</span><span class="p">]})</span>
+            <span class="n">keyword_df</span> <span class="o">=</span> <span class="n">keyword_df</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">score_df</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
     <span class="c1"># preprocessing</span>
     <span class="n">keyword_df</span><span class="p">[</span><span class="s1">&#39;keyword&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">((</span><span class="n">keyword_df</span><span class="p">[</span><span class="s1">&#39;keyword&#39;</span><span class="p">]))</span> <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">!=</span> <span class="s1">&#39;nan&#39;</span><span class="p">]</span>
     <span class="k">if</span> <span class="n">update_corpus</span><span class="p">:</span>
             <span class="n">corpus_update_df</span> <span class="o">=</span> <span class="n">keyword_df</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">(</span><span class="s1">&#39;keyword&#39;</span><span class="p">)</span>
             <span class="n">corpus_update_df</span> <span class="o">=</span> <span class="n">corpus_update_df</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span>
-            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">corpus_lookup_filename</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-                <span class="n">corpus_update_df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">ind</span><span class="p">,</span><span class="n">val</span> <span class="ow">in</span> <span class="n">corpus_update_df</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+                    <span class="n">setRediskey</span><span class="p">(</span><span class="n">subject</span><span class="o">+</span><span class="s2">&quot;.&quot;</span><span class="o">+</span><span class="n">val</span><span class="p">[</span><span class="s1">&#39;keyword&#39;</span><span class="p">],</span> <span class="n">val</span><span class="p">[</span><span class="s1">&#39;dbpedia_score&#39;</span><span class="p">],</span> <span class="n">cache_cred</span><span class="p">[</span><span class="s1">&#39;host&#39;</span><span class="p">],</span> <span class="n">cache_cred</span><span class="p">[</span><span class="s1">&#39;port&#39;</span><span class="p">],</span> <span class="n">cache_cred</span><span class="p">[</span><span class="s1">&#39;password&#39;</span><span class="p">])</span>          
     <span class="k">if</span> <span class="n">filter_score_val</span><span class="p">:</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">keyword_df</span> <span class="o">=</span> <span class="n">keyword_df</span><span class="p">[</span><span class="n">keyword_df</span><span class="p">[</span><span class="s1">&#39;dbpedia_score&#39;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="nb">float</span><span class="p">(</span><span class="n">filter_score_val</span><span class="p">)]</span>  <span class="c1">### from yaml#filtered_keyword_df</span>
@@ -1392,7 +1368,6 @@
             <span class="n">keyword_df</span> <span class="o">=</span> <span class="n">keyword_df</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s1">&#39;dbpedia_score&#39;</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="p">[</span><span class="kc">False</span><span class="p">])</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="nb">int</span><span class="p">(</span><span class="n">num_keywords</span><span class="p">)]</span>
         <span class="k">except</span> <span class="ne">BaseException</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Error: Invalid num_keywords. Unable to filter. &quot;</span><span class="p">)</span>
-    <span class="c1"># keyword_relatedness_df.iloc[0:4][&#39;KEYWORDS&#39;].to_csv(Path_to_keywords + &quot;KEYWORDS.csv&quot;)</span>
     <span class="k">return</span> <span class="n">keyword_df</span></div>
 
 
@@ -1400,14 +1375,14 @@
         <span class="nb">dir</span><span class="p">,</span>
         <span class="n">timestr</span><span class="p">,</span>
         <span class="n">content_to_text_path</span><span class="p">,</span>
-        <span class="n">taxonomy</span><span class="p">,</span>
         <span class="n">extract_keywords</span><span class="p">,</span>
         <span class="n">filter_criteria</span><span class="p">,</span>
-        <span class="n">path_to_corpus</span><span class="p">,</span>
+        <span class="n">cache_cred</span><span class="p">,</span>
         <span class="n">path_to_category_lookup</span><span class="p">,</span>
         <span class="n">update_corpus</span><span class="p">,</span>
         <span class="n">filter_score_val</span><span class="p">,</span>
-        <span class="n">num_keywords</span><span class="p">):</span>
+        <span class="n">num_keywords</span><span class="p">,</span>
+        <span class="n">tagme_cred</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A custom function to parallelly extract keywords</span>
 <span class="sd">    for all the Content texts in a folder.</span>
@@ -1441,7 +1416,8 @@
     <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">content_info_json_loc</span><span class="p">):</span>
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">content_info_json_loc</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_loc</span><span class="p">:</span>
             <span class="n">content_info</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_loc</span><span class="p">)</span>
-        <span class="n">subject</span> <span class="o">=</span> <span class="n">content_info</span><span class="p">[</span><span class="s2">&quot;domain&quot;</span><span class="p">]</span>
+        <span class="c1"># subject = content_info[&quot;domain&quot;]</span>
+        <span class="n">subject</span> <span class="o">=</span> <span class="n">content_info</span><span class="p">[</span><span class="s2">&quot;transactionData&quot;</span><span class="p">][</span><span class="s2">&quot;properties&quot;</span><span class="p">][</span><span class="s2">&quot;tags&quot;</span><span class="p">][</span><span class="s2">&quot;subject&quot;</span><span class="p">]</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">subject</span> <span class="o">=</span> <span class="s2">&quot;none&quot;</span>
     <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Subject of the id: </span><span class="si">{0}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">subject</span><span class="p">))</span>
@@ -1463,8 +1439,8 @@
                 <span class="k">if</span> <span class="n">extract_keywords</span> <span class="o">==</span> <span class="s2">&quot;tagme&quot;</span> <span class="ow">and</span> <span class="n">filter_criteria</span> <span class="o">==</span> <span class="s2">&quot;dbpedia&quot;</span><span class="p">:</span>
                     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Tagme keyword extraction is running for </span><span class="si">{0}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
                         <span class="n">path_to_cid_transcript</span><span class="p">))</span>
-                    <span class="n">tagme_response_df</span> <span class="o">=</span> <span class="n">run_tagme</span><span class="p">(</span><span class="n">path_to_cid_transcript</span><span class="p">)</span>
-                    <span class="n">keyword_filter_df</span> <span class="o">=</span> <span class="n">keyword_filter</span><span class="p">(</span><span class="n">tagme_response_df</span><span class="p">,</span> <span class="n">path_to_corpus</span><span class="p">,</span> <span class="n">path_to_category_lookup</span><span class="p">,</span> <span class="n">subject</span><span class="p">,</span> <span class="n">update_corpus</span><span class="p">,</span> <span class="n">filter_score_val</span><span class="p">,</span> <span class="n">num_keywords</span><span class="p">)</span>
+                    <span class="n">tagme_response_df</span> <span class="o">=</span> <span class="n">run_tagme</span><span class="p">(</span><span class="n">path_to_cid_transcript</span><span class="p">,</span> <span class="n">tagme_cred</span><span class="p">)</span>
+                    <span class="n">keyword_filter_df</span> <span class="o">=</span> <span class="n">keyword_filter</span><span class="p">(</span><span class="n">tagme_response_df</span><span class="p">,</span> <span class="n">cache_cred</span><span class="p">,</span> <span class="n">path_to_category_lookup</span><span class="p">,</span> <span class="n">subject</span><span class="p">,</span> <span class="n">update_corpus</span><span class="p">,</span> <span class="n">filter_score_val</span><span class="p">,</span> <span class="n">num_keywords</span><span class="p">)</span>
                     <span class="n">path_to_saved_keywords</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path_to_keywords</span><span class="p">,</span> <span class="s2">&quot;keywords.csv&quot;</span><span class="p">)</span>
                     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;keyword_filter_df:&quot;</span><span class="p">,</span> <span class="n">keyword_filter_df</span><span class="p">)</span>
                     <span class="n">keyword_filter_df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">path_to_saved_keywords</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
@@ -1472,7 +1448,7 @@
                 <span class="k">elif</span> <span class="n">extract_keywords</span> <span class="o">==</span> <span class="s2">&quot;tagme&quot;</span> <span class="ow">and</span> <span class="n">filter_criteria</span> <span class="o">==</span> <span class="s2">&quot;none&quot;</span><span class="p">:</span>
                     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Tagme keyword extraction is running for </span><span class="si">{0}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
                         <span class="n">path_to_cid_transcript</span><span class="p">))</span>
-                    <span class="n">tagme_df</span> <span class="o">=</span> <span class="n">get_tagme_spots</span><span class="p">(</span><span class="n">path_to_cid_transcript</span><span class="p">)</span>
+                    <span class="n">tagme_df</span> <span class="o">=</span> <span class="n">get_tagme_spots</span><span class="p">(</span><span class="n">path_to_cid_transcript</span><span class="p">,</span> <span class="n">tagme_cred</span><span class="p">)</span>
                     <span class="n">path_to_saved_keywords</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path_to_keywords</span><span class="p">,</span> <span class="s2">&quot;keywords.csv&quot;</span><span class="p">)</span>
                     <span class="n">tagme_df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">path_to_saved_keywords</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
                     <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
@@ -1486,7 +1462,7 @@
                     <span class="n">flat_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">item</span> <span class="k">for</span> <span class="n">sublist</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span>
                         <span class="n">clean_keywords</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">sublist</span><span class="p">]</span>
                     <span class="n">taxonomy_keywords_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="n">cleantext</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">flat_list</span><span class="p">])</span>
-                    <span class="n">tagme_df</span> <span class="o">=</span> <span class="n">get_tagme_spots</span><span class="p">(</span><span class="n">path_to_cid_transcript</span><span class="p">)</span>
+                    <span class="n">tagme_df</span> <span class="o">=</span> <span class="n">get_tagme_spots</span><span class="p">(</span><span class="n">path_to_cid_transcript</span><span class="p">,</span> <span class="n">tagme_cred</span><span class="p">)</span>
                     <span class="n">path_to_saved_keywords</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path_to_keywords</span><span class="p">,</span> <span class="s2">&quot;keywords.csv&quot;</span><span class="p">)</span>
                     <span class="n">tagme_taxonomy_df</span> <span class="o">=</span> <span class="n">tagme_taxonomy_intersection_keywords</span><span class="p">(</span>
                         <span class="n">tagme_df</span><span class="p">,</span> <span class="n">taxonomy_keywords_set</span><span class="p">)</span>
@@ -1548,17 +1524,26 @@
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;AIRFLOW_HOME: &quot;</span><span class="p">,</span> <span class="n">dag_location</span><span class="p">)</span>
     <span class="c1"># estimating ets:</span>
     <span class="n">epoch_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">mktime</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">timestr</span><span class="p">,</span> <span class="s2">&quot;%Y%m</span><span class="si">%d</span><span class="s2">-%H%M%S&quot;</span><span class="p">))</span>
-    <span class="n">kep_output_dict</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">kep_output_dict</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;ets&#39;</span><span class="p">:</span>  <span class="nb">int</span><span class="p">(</span><span class="n">epoch_time</span><span class="p">),</span>
                         <span class="s1">&#39;keywords&#39;</span><span class="p">:</span> <span class="n">keywords_dpediaScore</span><span class="p">,</span>
-                        <span class="s1">&#39;content_id&#39;</span><span class="p">:</span> <span class="nb">dir</span><span class="p">,</span>
                         <span class="s2">&quot;pdata&quot;</span><span class="p">:</span> <span class="n">pdata</span><span class="p">,</span>
-                        <span class="s2">&quot;commit_id&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
-                        <span class="s2">&quot;ETS&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">epoch_time</span><span class="p">)</span>
+                        <span class="s2">&quot;commit_id&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span>
                         <span class="p">}</span>
+    <span class="n">kep_output_dict_new</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;ets&quot;</span> <span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">epoch_time</span><span class="p">),</span> <span class="c1">#Event generation time in epoch</span>
+                            <span class="s2">&quot;transactionData&quot;</span> <span class="p">:</span> <span class="p">{</span>
+                                <span class="s2">&quot;properties&quot;</span> <span class="p">:</span> <span class="p">{</span>
+                                    <span class="s2">&quot;tags&quot;</span><span class="p">:</span> <span class="p">{</span>
+                                        <span class="s2">&quot;system_keywords&quot;</span><span class="p">:</span> <span class="n">keywords_dpediaScore</span><span class="p">,</span>
+                                        <span class="p">},</span>
+                                    <span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="n">pdata</span><span class="p">,</span> <span class="c1">#yaml version</span>
+                                    <span class="s2">&quot;uri&quot;</span><span class="p">:</span> <span class="s2">&quot;R.1.15.1&quot;</span>
+                                     <span class="p">}</span>
+                                <span class="p">}</span>
+                           <span class="p">}</span>
 
     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path_to_id</span><span class="p">,</span> <span class="s2">&quot;ML_keyword_info.json&quot;</span><span class="p">),</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">info</span><span class="p">:</span>
         <span class="n">kep_json_dump</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span>
-            <span class="n">kep_output_dict</span><span class="p">,</span> <span class="n">info</span><span class="p">,</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+            <span class="n">kep_output_dict_new</span><span class="p">,</span> <span class="n">info</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span> <span class="c1"># sort_keys=True,</span>
         <span class="nb">print</span><span class="p">(</span><span class="n">kep_json_dump</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">content_to_text_path</span></div>
 
@@ -1869,6 +1854,68 @@
         <span class="k">return</span> <span class="n">CustomDateFormater</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">x_date</span><span class="p">,</span> <span class="n">fileloc</span><span class="o">=</span><span class="n">DS_DATA_HOME</span><span class="p">,</span> <span class="n">datepattern</span><span class="o">=</span><span class="s1">&#39;%Y%m</span><span class="si">%d</span><span class="s1">-%H%M%S&#39;</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">CustomDateFormater</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">x_date</span><span class="p">,</span> <span class="n">datepattern</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%d</span><span class="s2">-%m-%Y&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="setRediskey"><a class="viewcode-back" href="../../../../../daggit.contrib.sunbird.operators.html#daggit.contrib.sunbird.operators.contentTaggingUtils.setRediskey">[docs]</a><span class="k">def</span> <span class="nf">setRediskey</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="p">,</span> <span class="n">password</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function writes a key value pair into Redis cache. It is a wrapper on set operation of redis-py.</span>
+
+<span class="sd">    :param key(str): The key.</span>
+<span class="sd">    :param val(str): The value assigned to key.</span>
+<span class="sd">    :param host(str): redis server host. default:&#39;localhost&#39;.</span>
+<span class="sd">    :param port(str): redis server port. default: 6379&#39;.</span>
+<span class="sd">    :param password(str): redis server password. default: None.</span>
+<span class="sd">    :returns: The detected language for the given text.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">redis</span><span class="o">.</span><span class="n">StrictRedis</span><span class="p">(</span><span class="n">host</span><span class="o">=</span><span class="n">redis_host</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="n">redis_port</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="n">redis_password</span><span class="p">,</span> <span class="n">decode_responses</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>   
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
+        
+<div class="viewcode-block" id="getRediskey"><a class="viewcode-back" href="../../../../../daggit.contrib.sunbird.operators.html#daggit.contrib.sunbird.operators.contentTaggingUtils.getRediskey">[docs]</a><span class="k">def</span> <span class="nf">getRediskey</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="p">,</span> <span class="n">password</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function reads the value from Redis cache based on the key. It is a wrapper on  get operation of redis-py .</span>
+
+<span class="sd">    :param key(str): The key.</span>
+<span class="sd">    :param host(str): redis server host. default:&#39;localhost&#39;.</span>
+<span class="sd">    :param port(str): redis server port. default: 6379&#39;.</span>
+<span class="sd">    :param password(str): redis server password. default: None.</span>
+<span class="sd">    :returns: The detected language for the given text.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">redis</span><span class="o">.</span><span class="n">StrictRedis</span><span class="p">(</span><span class="n">host</span><span class="o">=</span><span class="n">redis_host</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="n">redis_port</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="n">redis_password</span><span class="p">,</span> <span class="n">decode_responses</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>     
+        <span class="k">return</span> <span class="n">msg</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="merge_json"><a class="viewcode-back" href="../../../../../daggit.contrib.sunbird.operators.html#daggit.contrib.sunbird.operators.contentTaggingUtils.merge_json">[docs]</a><span class="k">def</span> <span class="nf">merge_json</span><span class="p">(</span><span class="n">dict1</span><span class="p">,</span> <span class="n">dict2</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+   <span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="n">path</span> <span class="o">=</span> <span class="p">[]</span>
+   <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">dict2</span><span class="p">:</span>
+       <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">dict1</span><span class="p">:</span>
+           <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dict1</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dict2</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="nb">dict</span><span class="p">):</span>
+               <span class="n">merge_json</span><span class="p">(</span><span class="n">dict1</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">dict2</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">path</span> <span class="o">+</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">key</span><span class="p">)])</span>
+           <span class="k">elif</span> <span class="n">dict1</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">==</span> <span class="n">dict2</span><span class="p">[</span><span class="n">key</span><span class="p">]:</span>
+               <span class="k">pass</span> <span class="c1"># same leaf value</span>
+           <span class="k">else</span><span class="p">:</span>
+               <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;Conflict at </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="s1">&#39;.&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span> <span class="o">+</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">key</span><span class="p">)]))</span>
+       <span class="k">else</span><span class="p">:</span>
+           <span class="n">dict1</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">dict2</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+   <span class="k">return</span> <span class="n">dict1</span></div>
+
+
+<div class="viewcode-block" id="writeTokafka"><a class="viewcode-back" href="../../../../../daggit.contrib.sunbird.operators.html#daggit.contrib.sunbird.operators.contentTaggingUtils.writeTokafka">[docs]</a><span class="k">def</span> <span class="nf">writeTokafka</span><span class="p">(</span><span class="n">kafka_broker</span><span class="p">):</span>
+    <span class="n">connection_established</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">client</span> <span class="o">=</span> <span class="n">KafkaClient</span><span class="p">(</span><span class="n">kafka_broker</span><span class="p">)</span>
+        <span class="n">server_topics</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">topic_partitions</span>
+        <span class="n">connection_established</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="n">server_topics</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">connection_established</span></div>
 </pre></div>
 
            </div>
