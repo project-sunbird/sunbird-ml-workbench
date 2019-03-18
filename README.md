@@ -1,4 +1,4 @@
-# ML-Workbench	
+# ML-Workbench
 
 ## What is it?
 ML-Workbench is a way to create, collaborate and consume Machine Learning (ML) tools and processes. It creates a level of abstraction that enables its users to express a ML application as a Directed Acyclic Graph. Each vertex of the graph represents an operation on the incoming data, while the edges represent the data flow.
@@ -25,18 +25,11 @@ If your solution has a long standing application, it is inevitable that the solu
 - virtualenv (run `pip install virtualenv` or visit https://virtualenv.pypa.io/en/stable/installation/)
 
 ### Installation
-#### Installation using Docker Container
-* If using docker no need of having a virtualenv installed
-* 
-* Clone this repo and Run `docker build --no-cache -t dockerHubName/imageName:Version .` <br/>Change the dockerHubName, imageName, Version as per your requirement
-* The above command will install ML-WORKBENCH with all the dependent binaries, 
-
 #### Installation from binary
 1. The binary file is present at the following location `bin/`
 2. Install - `pip install  ML-Workbench/bin/daggit-0.5.0.tar.gz`
-
 #### Installation after build
-1. Clone the repository or download the zipped file from `https://github.com/project-suunbird/ML-Workbench.git`
+1. Clone the repository or download the zipped file from `https://github.com/ekstep/ML-Workbench.git`
 2. Change directory into ML-Workbench
 3. Run `bash build.sh`
 4. Install - `pip install  bin/daggit-0.5.0.tar.gz`
@@ -53,3 +46,6 @@ If your solution has a long standing application, it is inevitable that the solu
 ## License
 
 [MIT License](LICENSE)
+
+
+
