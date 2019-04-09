@@ -1,16 +1,16 @@
 from future.builtins import super
 from airflow.operators.python_operator import PythonOperator
 from airflow.utils.trigger_rule import TriggerRule
-from daggit.core.operators.operators_registry import get_op_callable
+from daggit.core.nodes.registry import get_node_callable
 
-#try editting trigger rules
+
 class DaggitPyOp(PythonOperator):
 
     def __init__(self, node, dag, *args, **kwargs):
 
         task_id = node.task_id
         # do import, search and load
-        concrete_op_object = get_op_callable(node.operation)(node)
+        concrete_op_object = get_node_callable(node.operation)(node)
         python_callable = getattr(concrete_op_object, '_run')
         op_kwargs = node.arguments
         super().__init__(

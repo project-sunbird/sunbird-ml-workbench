@@ -123,7 +123,7 @@ class Pandas_Dataframe(DataType):
                 mode='a')
 
 
-class CSV_Pandas(DataType):
+class CSV_Pandas(DataType): #provides interface for the operators 
 
     def read(self):
         return pd.read_csv(filepath_or_buffer=self.data_location)
