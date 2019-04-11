@@ -40,117 +40,47 @@ from dateutil.parser import parse
 from SPARQLWrapper import SPARQLWrapper, JSON
 logging.getLogger("requests").setLevel(logging.WARNING)
 
-nltk.download("stopwords")
-nltk.download("wordnet")
+# nltk.download("stopwords")
+# nltk.download("wordnet")
 stopwords = stopwords.words('english')
 
 
 pun_list = list(string.punctuation)
 
-
-def language_detection(text):
-
-    """
-    This function will take in an enriched text as input and
-    use google translate API to detect language of the text and returns it
-
-
-    :param text(str): The text for which the language need to be detected.
-    :returns: The detected language for the given text.
-    """
-    translate_client = translate.Client()
-    result = translate_client.detect_language(text)
-    return result["language"]
+from daggit.core.oplib.misc import embed_youtube_url_validation
+from daggit.core.oplib.nlp import clean_text, language_detection
+from daggit.core.oplib.nlp import clean_string_list
+from daggit.core.oplib.nlp import get_tokens
+from daggit.core.io.redis import setRediskey, getRediskey
+from daggit.core.io.files import findFiles
 
 
-def is_date(date_string):
 
-    """
-    This function  takes a string as an argument and check if the string is a valid date
-
-    :param date_string(str): A string
-    :returns: A boolean value. True if the string is a valid date and False if otherwise
-    """
+def download_file_to_folder(url_to_download, path_to_folder, file_name): #download_from_downloadUrl
+    download_dir = os.path.join(path_to_folder, 'temp' + file_name)
+    status = downloadZipFile(url_to_download, download_dir)
     try:
-        parse(date_string)
-        return True
-    except ValueError:
-        return False
-
-
-def downloadZipFile(url, directory):
-
-    """
-    Multimedia Content are stored in cloud in ecar or zip format.
-    This function downloads a zip file pointed by url location.
-    The user is expected to have access to the file pointed by url.
-    The extracted file is available in location specified by directory.
-
-    :param url(str): A valid url pointing to zipped Content location on cloud
-
-    :returns: Status of download.``True``for uccessful download and ``False`` for unsuccesful download
-    """
-    r = requests.get(url)
-    try:
-        z = zipfile.ZipFile(io.BytesIO(r.content))
-        z.extractall(directory)
-        return r.ok
+        if status:
+            unzip_files(download_dir)
+            ecar_unzip(
+                download_dir, os.path.join(
+                    path_to_folder, file_name))
+            path_to_file = os.path.join(path_to_folder, file_name)
+            return path_to_file
     except BaseException:
-        return False
+        print("Unavailable for download")
 
 
-def findFiles(directory, substrings):
-    """
-    Accio!!
-    For a given directory, the function looks for any occurance of a particular
-    file type mentioned by the substrings parameter.
 
-    :param directory(str): The path to a folder
-    :param substrings(list of strings): An array of extensions to be searched within the directory.
-                                        ``eg: jpg, png, webm, mp4``
-    :returns: List of paths to the detected files
-    """
-    ls = []
-    if isinstance(directory, str) and isinstance(substrings, list):
-        if os.path.isdir(directory):
-            for dirname, dirnames, filenames in os.walk(directory):
-                for filename in filenames:
-                    string = os.path.join(dirname, filename)
-                    for substring in substrings:
-                        if(string.find(substring) >= 0):
-                            ls.append(string)
-    return ls
-
-
-def unzip_files(directory):
-    """
-    This function iterates through all the files in a directory and unzip those that are zipped (.zip) to that same folder
-
-    :param directory(str): A directory or path to a folder
-    """
-    assert isinstance(directory, str)
-    zip_list = findFiles(directory, ['.zip'])
-    bugs = {}
-    for zip_file in zip_list:
-        try:
-            with zipfile.ZipFile(zip_file, 'r') as z:
-                z.extractall(directory)
-            os.remove(zip_file)
-        except BaseException:
-            bugs.append(zip_file)
-
-
-def ekstep_ecar_unzip(download_location, copy_location):
+def ecar_unzip(download_location, copy_location): #ekstep_ecar_unzip
     """
     This function unzips an ecar file(ekstep file format)
     and parses all the subfolder.
     All the files are copied into one of ``'assets','data','items'`` folder
     (same name as in downloaded folder is maintained)
     based on its location in the downloaded folder.
-
     :param download_location(str): A location in the disk where ekstep ecar resource file is downloaded
     :param copy_location(str): A disk location where the ecar is unwrapped
-
     """
     assert isinstance(download_location, str)
     assert isinstance(copy_location, str)
@@ -176,183 +106,10 @@ def ekstep_ecar_unzip(download_location, copy_location):
         shutil.rmtree(download_location)
 
 
-def download_from_downloadUrl(url_to_download, path_to_folder, file_name):
-    download_dir = os.path.join(path_to_folder, 'temp' + file_name)
-    status = downloadZipFile(url_to_download, download_dir)
-    try:
-        if status:
-            unzip_files(download_dir)
-            ekstep_ecar_unzip(
-                download_dir, os.path.join(
-                    path_to_folder, file_name))
-            path_to_file = os.path.join(path_to_folder, file_name)
-            return path_to_file
-    except BaseException:
-        print("Unavailable for download")
-
-
-def df_feature_check(df, mandatory_fields):
-    """
-    Check if columns are present in the dataframe.
-
-    :param df(dataframe): DataFrame that needs to be checked
-    :param mandatory_fields(list of strings): List of column names.``eg: jpg, png, webm, mp4``
-    :returns: ``True`` if all columns are present and ``False`` if not all columns are present
-    """
-    check = [0 if elem in list(df.columns) else 1 for elem in mandatory_fields]
-    if sum(check) > 0:
-        return False
-    else:
-        return True
-
-
-def cleantext(text):
-    """
-    Custom function to clean enriched text
-
-    :param text(str): Enriched ytext from Ekstep Content.
-    :returns: Cleaned text.
-    """
-    replace_char = [
-        "[",
-        "]",
-        "u'",
-        "None",
-        "Thank you",
-        "-",
-        "(",
-        ")",
-        "#",
-        "Done",
-        ">",
-        "<",
-        "-",
-        "|",
-        "/",
-        "\"",
-        "Hint",
-        "\n",
-        "'"]
-    for l in replace_char:
-        text = text.replace(l, "")
-    text = re.sub(' +', ' ', text)
-    return text
-
-
-def clean_text_tokens(text):
-    """
-    A custom preprocessor to tokenise and clean a text.
-    Used in Content enrichment pipeline.
-
-    Process:
-
-    * tokenise string using nltk word_tokenize()
-
-    * Remove stopwords
-
-    * Remove punctuations in words
-
-    * Remove digits and whitespaces
-
-    * Convert all words to lowercase
-
-    * Remove words of length
-
-    * Remove nan or empty string
-
-    :param text(str): The string to be tokenised.
-    :returns: List of cleaned tokenised words.
-    """
-    tokens = nltk.word_tokenize(text)
-    tokens = [token for token in tokens if token.lower() not in stopwords]
-    tokens = [token for token in tokens if token not in pun_list]
-    tokens = [re.sub(r'[0-9\.\W_]', '', token) for token in tokens]
-    tokens = [token.lower() for token in tokens]
-    tokens = [token for token in tokens if len(token) > 1]
-    tokens = [token for token in tokens if token]
-    return tokens
-
-
-def strip_word(word, delimitter):
-    """
-    Replace punctuations from string, punctuation and space in a word
-    with a DELIMITTER
-
-    :param word(str): Typically a word whose punctuations and space are removed.
-    :param DELIMITTER(str): String to replace punctuations.
-
-    :returns: Processed string.
-    """
-    delimitters = ["___", "__", " ", ",", "_", "-", ".", "/"] + \
-        list(set(string.punctuation))
-    for lim in delimitters:
-        word = word.replace(lim, delimitter)
-    return word
-
-
-def identify_contentType(url):
-
-    """
-    Given a URL for a content, it identifies the type of the content
-
-    :param url(str): URL
-
-    :returns: Type of the content
-    """
-    extensions = ['mp3', 'wav', 'jpeg', 'zip', 'jpg', 'mp4', 'webm', 'ecar', 'wav', 'png']
-    if ('youtu.be' in url) or ('youtube' in url):
-        return "youtube"
-    elif url.endswith('pdf'):
-        return "pdf"
-    elif any(url.endswith(x) for x in extensions):
-        return "ecml"
-    else:
-        return "unknown"
-
-
-def fetch_video_id(url):
-
-    """
-    Parse a youtube URL and generate video id
-
-    :param url(str): youtube video URL
-
-    :returns: Video id of the video URL
-    """
-    parse_url = urllib.parse.urlparse(url)
-    query = urllib.parse.parse_qs(parse_url.query)
-    return query["v"][0]
-
-
-def embed_youtube_url_validation(url):
-    """
-    Convert a broken youtube URL to custom youtube URL
-
-    :param url(str): Youtube URL
-
-    :returns: Custom youtube URL
-    """
-    youtube_regex = (
-        r'(https?://)?(www\.)?'
-        '(youtube|youtu|youtube-nocookie)\.(com|be)/'
-        '(watch\?v=|embed/|v/|.+\?v=)?([^&=%\?]{11})')
-
-    youtube_regex_match = re.match(youtube_regex, url)
-    if youtube_regex_match:
-        if youtube_regex_match.group(6) == "https://www":
-            return "https://www.youtube.com/watch?v=" + \
-                fetch_video_id(url.split("embed/")[1])[:11]
-        else:
-            return "https://www.youtube.com/watch?v=" + \
-                youtube_regex_match.group(6)
-
-
 def getImgTags(img_file_name):
     """
     Enables to detect text from an image file using Google cloud vision API
-
     :param img_file_name(str): Path to an image file
-
     :returns: Text detected from the image file
     """
     # Instantiates a client
@@ -376,7 +133,6 @@ def getImgTags(img_file_name):
 def url_to_audio_extraction(url, path):
     """
     Download audio in .mp3 format from a youtube URL and save it in a disk location.
-
     :param url(str): A youtube URL
     :returns: Path to the downloaded audio
     """
@@ -418,10 +174,8 @@ def audio_split(path_to_audiofile, path_to_split_audio):
     """
     Takes in an audiofile, split it as per the duration and
     returns the path to the split
-
     :param path_to_audiofile(str): The string is the path to the audio m4a file.
     :param path_to_split_audio(str): The path to save the audio segmented according to the duration.
-
     :returns: Path to audio segment for a given audio file.
     """
     if not os.path.exists(path_to_split_audio):
@@ -465,10 +219,8 @@ def audio_split(path_to_audiofile, path_to_split_audio):
 def getTexts(AUDIO_FILE, lan, GOOGLE_APPLICATION_CREDENTIALS):
     """
     Takes in an audiofile and return text of the given audio input
-
     :param AUDIO_FILE(str):     path to audio file in mp3 format
     :param lan(str): This attribute will set the language of the recognition
-
     :returns: Recognized text for the audio snippet
     """
     temp = AUDIO_FILE[:-4]
@@ -496,29 +248,13 @@ def getTexts(AUDIO_FILE, lan, GOOGLE_APPLICATION_CREDENTIALS):
     return mp3_dct
 
 
-def translate_english(text):
-    """Translates a given text into target language
-
-    :param text(str): Text that need to be translated
-
-    :returns: Text translated into a target language, say:``en(English)``
-    """
-    translate_client = translate.Client()
-    target = 'en'
-    translation = translate_client.translate(
-        text, target_language=target)
-    return translation['translatedText']
-
-
 def audio_to_text(path_to_audio_split_folder, GOOGLE_APPLICATION_CREDENTIALS):
 
     """
     This function takes in a folder of audios split as per its time duration and convert each audio into text
     in succession and returns the concatenated texts for a given audio split folder
-
     :param path_to_audio_split_folder(str): Path to a folder with the audio splits
     :param GOOGLE_APPLICATION_CREDENTIALS: Environment variable to designate path to CREDENTIALS json
-
     :returns: Concatenated text
     """
     text = ""
@@ -532,24 +268,6 @@ def audio_to_text(path_to_audio_split_folder, GOOGLE_APPLICATION_CREDENTIALS):
     return text
 
 
-# def text_conversion(path_to_audio_split_folder, path_to_text_folder):
-#     logging.info("TC_START for audio split folder: {0}". format(
-#         path_to_audio_split_folder))
-#     if not os.path.exists(path_to_text_folder):
-#         os.mkdir(path_to_text_folder)
-
-#     path_ = os.path.join(path_to_text_folder, "enriched_text.txt")
-#     print("type of audio to text: ", type(
-#         audio_to_text(path_to_audio_split_folder, GOOGLE_APPLICATION_CREDENTIALS)))
-#     with open(path_, "w") as myTextFile:
-#         myTextFile.write(audio_to_text(path_to_audio_split_folder, GOOGLE_APPLICATION_CREDENTIALS))
-
-#     logging.info("TC_TRANSCRIPT_PATH_CREATED: {0}".format(path_))
-#     logging.info("TC_STOP for audio split folder: {0}". format(
-#         path_to_audio_split_folder))
-#     return path_
-
-
 def getText_json(jdata, key):
     sdata = json.dumps(jdata)
     text_list = ([sdata[(m.start(0) + len(key) + 4):m.end(0) - 1]
@@ -557,13 +275,13 @@ def getText_json(jdata, key):
     return text_list
 
 
-def download_to_local(method, url_to_download, path_to_save, id_name):
+def download_content(method, url_to_download, path_to_save, id_name): #download_to_local
     logging.info("DTL_START_FOR_URL: {0}".format(url_to_download))
     path_to_id = ""
     if method == "ecml":
         logging.info("DTL_ECAR_URL: {0}".format(url_to_download))
         try:
-            path_to_id = download_from_downloadUrl(
+            path_to_id = download_file_to_folder(
                 url_to_download, path_to_save, id_name)
         except RuntimeError:
             logging.info("Skipped url: {0}".format(url_to_download))
@@ -588,7 +306,7 @@ def download_to_local(method, url_to_download, path_to_save, id_name):
     if method == "pdf":
         logging.info("DTL_PDF_URL: {0}".format(url_to_download))
         try:
-            path_to_id = download_from_downloadUrl(
+            path_to_id = download_file_to_folder(
                 url_to_download, path_to_save, id_name)
         except BaseException:
             logging.info("Skipped url: {0}".format(url_to_download))
@@ -689,9 +407,7 @@ def image_to_text(method, path_to_assets):
 def convert_pdf_to_txt(path_to_pdf_file):
     """
     A basic wrapper around PDF miner that parse a PDF file and extracts text from it.
-
     :param path_to_pdf_file(str): Path to a PDF file
-
     :returns: Text extracted from the PDF file
     """
     rsrcmgr = PDFResourceManager()
@@ -715,6 +431,8 @@ def convert_pdf_to_txt(path_to_pdf_file):
 
 
 def pdf_to_text(method, path_to_assets, pdf_url):
+    """
+    """
     text = ""
     number_of_pages = 0
     logging.info("PTT_START")
@@ -758,7 +476,7 @@ def pdf_to_text(method, path_to_assets, pdf_url):
             page = read_pdf.getPage(i)
             page_content = page.extractText()
             text += page_content
-    processed_txt = cleantext(text)
+    processed_txt = clean_text(text)
     text = ''.join([i for i in processed_txt if not i.isdigit()])
     text = ' '.join(text.split())
     logging.info("PTT_STOP")
@@ -788,6 +506,7 @@ def ecml_parser(ecml_file):
     plugin_used = list(set(plugin_used))
     num_stages = [i.tag for i in xmldoc.iter()].count('stage')
     return dict({'text': all_text, 'plugin': plugin_used, 'stages': num_stages})
+
 
 def modified_ecml_parser(ecml_file):
     tree = ET.parse(ecml_file)
@@ -876,7 +595,6 @@ def multimodal_text_enrichment(
     """
     A custom function to extract text from a given
     Content id in a Content meta dataframe extracted using Content V2 api
-
     Parameters
     ----------
     :param index(int): row id for the Content
@@ -886,7 +604,6 @@ def multimodal_text_enrichment(
      'language', 'subject']``
     :param content_type(str): Can be ``youtube, pdf, ecml, unknown``
     :param content_to_text_path(str): path to save the extracted text
-
     :returns: Path where text is saved
     """
     type_of_url = content_meta.iloc[index]["derived_contentType"]
@@ -899,7 +616,7 @@ def multimodal_text_enrichment(
     # start text extraction pipeline:
     try:
         start = time.time()
-        path_to_id = download_to_local(
+        path_to_id = download_content(
             type_of_url, url, content_to_text_path, id_name)
         print("path_to_id", path_to_id)
         path_to_assets = os.path.join(path_to_id, "assets")
@@ -932,8 +649,8 @@ def multimodal_text_enrichment(
         for method, param_tuple in textExtraction_pipeline:
             text += method(*param_tuple)["text"]
         # Adding description and title to the text only for PDF content
-        # if type_of_url == "pdf":
-        #     text += content_meta["name"].iloc[index] + " " + content_meta["description"].iloc[index]
+        if type_of_url == "pdf":
+            text += content_meta["name"].iloc[index] + " " + content_meta["description"].iloc[index]
         if os.path.exists(path_to_id) and text:
             with open(path_to_transcript, "w") as myTextFile:
                 myTextFile.write(text)
@@ -944,16 +661,14 @@ def multimodal_text_enrichment(
         print("AIRFLOW_HOME: ", dag_location)
         filename = os.path.join(dag_location, 'graph_location')
         f = open(filename, "r")
-        pdata = f.read()
+        lines = f.read().splitlines()
+        pdata = lines[-1]
         f.close()
 
         # estimating ets:
         epoch_time = time.mktime(time.strptime(timestr, "%Y%m%d-%H%M%S"))
         domain = content_meta["subject"][index]
-        graph_id = content_meta["graph_id"][index]
         object_type = content_meta["objectType"][index]
-        node_type = content_meta["nodeType"][index]
-        node_graph_id = content_meta["node_id"][index]
         template = ""
         plugin_used = []
         num_of_stages = 0
@@ -961,33 +676,30 @@ def multimodal_text_enrichment(
         if type_of_url == "ecml":
             plugin_used = ecml_index_to_text("parse", path_to_id)["plugin_used"]
             num_of_stages = ecml_index_to_text("parse", path_to_id)["num_stage"]
-
-      
         
-        mnt_output_dict_new =  { "ets" : int(epoch_time), # Event generation time in epoch
-                                "nodeUniqueId" : id_name, # content id
-                                "operationType": "UPDATE", # default to UPDATE
-                                "nodeType": node_type, # default to DATA_NODE
-                                "graphId": graph_id, # default to domain
-                                "objectType": object_type, # object type - content, worksheet, textbook, collection etc
-                                "nodeGraphId": int(node_graph_id), # default to 0
+        mnt_output_dict_new =  { "ets" : int(epoch_time), #Event generation time in epoch
+                                "nodeUniqueId" : id_name, #content id
+                                "operationType": "UPDATE", #default to UPDATE
+                                "nodeType": "DATA_NODE", #default to DATA_NODE
+                                "graphId": domain, #default to domain
+                                "objectType": object_type, #object type - content, worksheet, textbook, collection etc
+                                "nodeGraphId": 0, #default to 0
                                 "transactionData" : {
                                     "properties" : {
                                         "tags": {
-                                            "system_contentType": type_of_url, # can be "youtube", "ecml", "pdf"
-                                            "system_medium": language_detection(text), # generated using google language detection api
+                                            "system_contentType": type_of_url, #can be "youtube", "ecml", "pdf"
+                                            "system_medium": language_detection(text), #generated using google language detection api
                                             "duration": {
-                                                "video" : "", # video duration in seconds
-                                                "stage" : ""# can be derived from usage data
+                                                "video" : "", #video duration in seconds
+                                                "stage" : ""#can be derived from usage data
                                             },
-                                            "num_stage" : num_of_stages, # pdf: number of pages, ecml:number of stages, video:1
-                                            "system_plugins" : plugin_used, # ids of plugin used in Content
-                                            "system_templates" : template, # ids of templates used in Content
+                                            "num_stage" : num_of_stages, #pdf: number of pages, ecml:number of stages, video:1
+                                            "system_plugins" : plugin_used, #id's of plugin used in Content
+                                            "system_templates" : template, #id's of templates used in Content
                                             "text": text,
-                                            "subject": domain
                                             },
-                                        "version": pdata, # yaml version
-                                        "uri": "R.1.15.1" # git commit id
+                                        "version": pdata, #yaml version
+                                        "uri": "" #git commit id
                                          }
                                      }
                                  }
@@ -1003,25 +715,9 @@ def multimodal_text_enrichment(
         logging.info("MTT_TRANSCRIPT_PATH_CREATED: {0}".format(path_to_transcript))
         logging.info("MTT_CONTENT_ID_READ: {0}".format(id_name))
         logging.info("MTT_STOP_FOR_URL {0}".format(url))
+        return os.path.join(path_to_id, "ML_content_info.json")
     except BaseException:
             logging.info("TextEnrichment failed for url:{0} with id:{1}".format(url, id_name))
-
-
-def custom_tokenizer(path_to_text_file):
-    """
-    Given a text file uses custom_tokenizer function
-    to tokenise and write the tokenised words to a keywords.csv file.
-
-    :param path_to_text_file(str): Location of text file to be tokenised
-    :param path_to_text_tokens_folder(str): Location to write the tokenised words
-
-    :returns: A dataframe with a ``KEYWORDS`` column that contains tokenised keywords.
-    """
-    text = open(path_to_text_file, "r")
-    text_file = text.read()
-    text_list = clean_text_tokens(text_file)
-    text_df = pd.DataFrame(text_list, columns=['KEYWORDS'])
-    return text_df
 
 
 def tagme_text(text, tagme_cred):
@@ -1042,9 +738,7 @@ def tagme_text(text, tagme_cred):
             url,
             headers=headers,
             params=querystring).json()
-        df = pd.DataFrame(response['annotations'])
-
-        assert len(df)>0
+        assert response['annotations'][0]["spot"] == "test"
         connection_status = True 
     except ConnectionError:
         print("Unable to establish connection with Tagme")
@@ -1070,7 +764,6 @@ def tagme_text(text, tagme_cred):
             print("Tagme Failed")
     return df
 
-
 def run_tagme(path_to_text, tagme_cred):
     file_ = open(path_to_text, "r")
     text = file_.readline()
@@ -1092,6 +785,7 @@ def run_tagme(path_to_text, tagme_cred):
 def get_tagme_spots(path_to_text, tagme_cred):
     file_ = open(path_to_text, "r")
     text = file_.readline()
+    # text = text.encode('utf-8').decode('ascii', 'ignore')
     words = text.split(" ")
     index_count = 0
     window_len = 700
@@ -1184,7 +878,6 @@ def keyword_filter(tagme_response_df, cache_cred, path_to_category_lookup, subje
             if score:
                 score_df = pd.DataFrame({'keyword': [keyword], 'dbpedia_score': [score]})
             else:
-                # need to change:-
                 with open(path_to_category_lookup, 'r') as stream:
                     subject_ls = yaml.load(stream)[subject]
                 dbpedia_categories = tagme_response_df['dbpedia_categories'][ind]
@@ -1220,6 +913,7 @@ def keyword_filter(tagme_response_df, cache_cred, path_to_category_lookup, subje
             keyword_df = keyword_df.sort_values('dbpedia_score', ascending=[False]).iloc[0:int(num_keywords)]
         except BaseException:
             print("Error: Invalid num_keywords. Unable to filter. ")
+    # keyword_relatedness_df.iloc[0:4]['KEYWORDS'].to_csv(Path_to_keywords + "KEYWORDS.csv")
     return keyword_df
 
 
@@ -1242,22 +936,16 @@ def keyword_extraction_parallel(
     Part of Content enrichment pipeline.
     The funtion allows keyword extraction using TAGME or
     tokenising the words using nltk tokeniser.
-
     The extracted keywords can be filtered based on following criteria:
-
         - taxonomy: if the word is a taxonomy keyword
-
         - dbpedia: if the keyword is domain keyword based on dbpedia criteria
         (occurs under the domain ontolgy in wikipedia)
-
         - none
-
     :param dir(str): Name of the folder containing enriched_text.txt file inside it.
     :param content_to_text_path(str): Path to directory containing multiple Content id folders.
     :param taxonomy(str): Path to taxonomy file(csv)
     :param extract_keywords(str): can be ``tagme`` or ``text_token``
     :param filter_criteria(str): can be ``taxonomy`` or ``none``
-
     :returns: Path to extracted keywords.
     """
     print("*******dir*********:", dir)
@@ -1268,8 +956,8 @@ def keyword_extraction_parallel(
     if os.path.exists(content_info_json_loc):
         with open(content_info_json_loc, "r") as json_loc:
             content_info = json.load(json_loc)
-        # subject = content_info["domain"]
-        subject = content_info["transactionData"]["properties"]["tags"]["subject"]
+        #subject = content_info["domain"]
+        subject = content_info["graphId"]
     else:
         subject = "none"
     logging.info("Subject of the id: {0}".format(subject))
@@ -1280,85 +968,85 @@ def keyword_extraction_parallel(
         content_to_text_path, dir, "keywords", extract_keywords + "_" + filter_criteria)
     if os.path.isfile(path_to_cid_transcript):
         logging.info("Transcript present for cid: {0}".format(dir))
-        try:
-            if os.path.getsize(path_to_cid_transcript) > 0:
-                os.makedirs(path_to_keywords)
-                print("Path to transcripts ", path_to_cid_transcript)
-                print("Running keyword extraction for {0}".format(
+        # try:
+        if os.path.getsize(path_to_cid_transcript) > 0:
+            os.makedirs(path_to_keywords)
+            print("Path to transcripts ", path_to_cid_transcript)
+            print("Running keyword extraction for {0}".format(
+                path_to_cid_transcript))
+            print("---------------------------------------------")
+
+            if extract_keywords == "tagme" and filter_criteria == "dbpedia":
+                print("Tagme keyword extraction is running for {0}".format(
                     path_to_cid_transcript))
-                print("---------------------------------------------")
+                tagme_response_df = run_tagme(path_to_cid_transcript, tagme_cred)
+                keyword_filter_df = keyword_filter(tagme_response_df, cache_cred, path_to_category_lookup, subject, update_corpus, filter_score_val, num_keywords)
+                path_to_saved_keywords = os.path.join(path_to_keywords, "keywords.csv")
+                print("keyword_filter_df:", keyword_filter_df)
+                keyword_filter_df.to_csv(path_to_saved_keywords, index=False, encoding='utf-8')
 
-                if extract_keywords == "tagme" and filter_criteria == "dbpedia":
-                    print("Tagme keyword extraction is running for {0}".format(
-                        path_to_cid_transcript))
-                    tagme_response_df = run_tagme(path_to_cid_transcript, tagme_cred)
-                    keyword_filter_df = keyword_filter(tagme_response_df, cache_cred, path_to_category_lookup, subject, update_corpus, filter_score_val, num_keywords)
-                    path_to_saved_keywords = os.path.join(path_to_keywords, "keywords.csv")
-                    print("keyword_filter_df:", keyword_filter_df)
-                    keyword_filter_df.to_csv(path_to_saved_keywords, index=False, encoding='utf-8')
+            elif extract_keywords == "tagme" and filter_criteria == "none":
+                print("Tagme keyword extraction is running for {0}".format(
+                    path_to_cid_transcript))
+                tagme_df = get_tagme_spots(path_to_cid_transcript, tagme_cred)
+                path_to_saved_keywords = os.path.join(path_to_keywords, "keywords.csv")
+                tagme_df.to_csv(path_to_saved_keywords, index=False, encoding='utf-8')
+                logging.info(
+                    "Path to tagme tokens is {0}".format(path_to_saved_keywords))
 
-                elif extract_keywords == "tagme" and filter_criteria == "none":
-                    print("Tagme keyword extraction is running for {0}".format(
-                        path_to_cid_transcript))
-                    tagme_df = get_tagme_spots(path_to_cid_transcript, tagme_cred)
-                    path_to_saved_keywords = os.path.join(path_to_keywords, "keywords.csv")
-                    tagme_df.to_csv(path_to_saved_keywords, index=False, encoding='utf-8')
-                    logging.info(
-                        "Path to tagme tokens is {0}".format(path_to_saved_keywords))
+            elif extract_keywords == "tagme" and filter_criteria == "taxonomy":
+                print("Tagme intersection taxonomy keyword extraction is running for {0}".format(
+                    path_to_cid_transcript))
+                clean_keywords = map(get_words, list(taxonomy["Keywords"]))
+                clean_keywords = map(clean_string_list, clean_keywords)
+                flat_list = [item for sublist in list(
+                    clean_keywords) for item in sublist]
+                taxonomy_keywords_set = set([clean_text(i) for i in flat_list])
+                tagme_df = get_tagme_spots(path_to_cid_transcript, tagme_cred)
+                path_to_saved_keywords = os.path.join(path_to_keywords, "keywords.csv")
+                tagme_taxonomy_df = tagme_taxonomy_intersection_keywords(
+                    tagme_df, taxonomy_keywords_set)
+                tagme_taxonomy_df.to_csv(path_to_saved_keywords, index=False, encoding='utf-8')
+                print("Path to tagme taxonomy intersection tokens is {0}".format(
+                    path_to_saved_keywords))
 
-                elif extract_keywords == "tagme" and filter_criteria == "taxonomy":
-                    print("Tagme intersection taxonomy keyword extraction is running for {0}".format(
-                        path_to_cid_transcript))
-                    clean_keywords = map(get_words, list(taxonomy["Keywords"]))
-                    clean_keywords = map(clean_string_list, clean_keywords)
-                    flat_list = [item for sublist in list(
-                        clean_keywords) for item in sublist]
-                    taxonomy_keywords_set = set([cleantext(i) for i in flat_list])
-                    tagme_df = get_tagme_spots(path_to_cid_transcript, tagme_cred)
-                    path_to_saved_keywords = os.path.join(path_to_keywords, "keywords.csv")
-                    tagme_taxonomy_df = tagme_taxonomy_intersection_keywords(
-                        tagme_df, taxonomy_keywords_set)
-                    tagme_taxonomy_df.to_csv(path_to_saved_keywords, index=False, encoding='utf-8')
-                    print("Path to tagme taxonomy intersection tokens is {0}".format(
-                        path_to_saved_keywords))
+            elif extract_keywords == "text_token" and filter_criteria == "none":
+                print("Text tokens extraction running for {0}".format(
+                    path_to_cid_transcript))
+                text_df = get_tokens(
+                    path_to_cid_transcript)
+                path_to_saved_keywords = os.path.join(path_to_keywords, "keywords.csv")
+                text_df.to_csv(path_to_saved_keywords, index=False, encoding='utf-8')
+                print("Path to text tokens is {0}".format(
+                    path_to_saved_keywords))
 
-                elif extract_keywords == "text_token" and filter_criteria == "none":
-                    print("Text tokens extraction running for {0}".format(
-                        path_to_cid_transcript))
-                    text_df = custom_tokenizer(
-                        path_to_cid_transcript)
-                    path_to_saved_keywords = os.path.join(path_to_keywords, "keywords.csv")
-                    text_df.to_csv(path_to_saved_keywords, index=False, encoding='utf-8')
-                    print("Path to text tokens is {0}".format(
-                        path_to_saved_keywords))
-
-                elif extract_keywords == "text_token" and filter_criteria == "taxonomy":
-                    print("Text tokens intersection taxonomy running for {0}".format(
-                        path_to_cid_transcript))
-                    text_df = custom_tokenizer(
-                        path_to_cid_transcript)
-                    clean_keywords = map(get_words, list(taxonomy["Keywords"]))
-                    clean_keywords = map(clean_string_list, clean_keywords)
-                    flat_list = [item for sublist in list(
-                        clean_keywords) for item in sublist]
-                    taxonomy_keywords_set = set([cleantext(i) for i in flat_list])
-                    text_tax_df = text_token_taxonomy_intersection_keywords(
-                        text_df, taxonomy_keywords_set)
-                    path_to_saved_keywords = os.path.join(path_to_keywords, "keywords.csv")
-                    text_tax_df.to_csv(path_to_saved_keywords, index=False, encoding='utf-8')
-                    print("Path to text tokens intersection taxonomy is {0}".format(
-                        path_to_saved_keywords))
-
-                else:
-                    print("Invalid argument provided")
+            elif extract_keywords == "text_token" and filter_criteria == "taxonomy":
+                print("Text tokens intersection taxonomy running for {0}".format(
+                    path_to_cid_transcript))
+                text_df = get_tokens(
+                    path_to_cid_transcript)
+                clean_keywords = map(get_words, list(taxonomy["Keywords"]))
+                clean_keywords = map(clean_string_list, clean_keywords)
+                flat_list = [item for sublist in list(
+                    clean_keywords) for item in sublist]
+                taxonomy_keywords_set = set([clean_text(i) for i in flat_list])
+                text_tax_df = text_token_taxonomy_intersection_keywords(
+                    text_df, taxonomy_keywords_set)
+                path_to_saved_keywords = os.path.join(path_to_keywords, "keywords.csv")
+                text_tax_df.to_csv(path_to_saved_keywords, index=False, encoding='utf-8')
+                print("Path to text tokens intersection taxonomy is {0}".format(
+                    path_to_saved_keywords))
 
             else:
-                print("The text file {0} has no contents".format(
-                    path_to_cid_transcript))
+                print("Invalid argument provided")
 
-        except BaseException:
-            print("Raise exception for {0} ".format(path_to_cid_transcript))
-            logging.info("Raise exception for {0} ".format(path_to_cid_transcript))
+        else:
+            print("The text file {0} has no contents".format(
+                path_to_cid_transcript))
+
+        # except BaseException:
+        #     print("Raise exception for {0} ".format(path_to_cid_transcript))
+        #     logging.info("Raise exception for {0} ".format(path_to_cid_transcript))
     else:
         print("Transcripts doesnt exist for {0}".format(
             path_to_cid_transcript))
@@ -1371,7 +1059,9 @@ def keyword_extraction_parallel(
     dag_location = os.path.join(airflow_home, 'dags')
     filename = os.path.join(dag_location, 'graph_location')
     f = open(filename, "r")
-    pdata = f.read()
+    f = open(filename, "r")
+    lines = f.read().splitlines()
+    pdata = lines[-1]
     f.close()
     print("AIRFLOW_HOME: ", dag_location)
     # estimating ets:
@@ -1388,7 +1078,7 @@ def keyword_extraction_parallel(
                                         "system_keywords": keywords_dpediaScore,
                                         },
                                     "version": pdata, #yaml version
-                                    "uri": "R.1.15.1"
+                                    "uri": ""
                                      }
                                 }
                            }
@@ -1398,52 +1088,6 @@ def keyword_extraction_parallel(
             kep_output_dict_new, info, indent=4) # sort_keys=True,
         print(kep_json_dump)
     return content_to_text_path
-
-
-def clean_string_list(x_list):
-    x_list = list(map((str.lower), x_list))
-    x_clean = [i.lstrip() for i in x_list]
-    x_clean = [i.rstrip() for i in x_clean]
-    x_clean = list(filter(None, x_clean))
-    return x_clean
-
-
-def get_words(x):
-    if str(x) != 'nan':
-        x = x.split(', ')
-        return x
-    else:
-        return ""
-
-
-def custom_listPreProc(key_list, preproc, DELIMITTER):
-    key_list = [clean_string_list(x) for x in key_list]
-    key_list_clean = []
-    for x in key_list:
-        x = [strip_word(i, DELIMITTER) for i in x]
-        if preproc == 'stem_lem':
-            key_list_clean.append(stem_lem((x), DELIMITTER))
-        else:
-            print("unknown preproc")
-            return
-    return key_list_clean
-
-
-def stem_lem(keyword_list, DELIMITTER):
-    wordnet_lemmatizer = WordNetLemmatizer()
-    stemmer = PorterStemmer()
-    keyword_list = [item for item in keyword_list]
-    keyword_list = [i.split(DELIMITTER) for i in keyword_list]
-    lemma_ls_1 = [[wordnet_lemmatizer.lemmatize(
-        item, pos="n") for item in words] for words in keyword_list]
-    lemma_ls_2 = [[wordnet_lemmatizer.lemmatize(
-        item, pos="v") for item in words] for words in lemma_ls_1]
-    lemma_ls_3 = [[wordnet_lemmatizer.lemmatize(
-        item, pos="a") for item in words] for words in lemma_ls_2]
-    lemma_ls_4 = [[wordnet_lemmatizer.lemmatize(
-        item, pos="r") for item in words] for words in lemma_ls_3]
-    stemm_ls = [[stemmer.stem(item) for item in words] for words in lemma_ls_4]
-    return [DELIMITTER.join(i) for i in stemm_ls]
 
 
 def get_level_keywords(taxonomy_df, level):
@@ -1462,175 +1106,6 @@ def getGradedigits(class_x):
     for i in ["Class", "[", "]", " ", "class", "Grade", "grade"]:
         class_x = class_x.replace(i, "")
     return class_x
-
-
-def match_str_list(list1, list2):
-    intersection = 1.0 * (len(set(list1) & set(list2)))
-    union = 1.0 * (len(set(list1 + list2)))
-    if union != 0:
-        jaccard_index = intersection / union
-    else:
-        jaccard_index = 0
-    try:
-        cosine_similarity = intersection / (len(set(list1)) * len(set(list2)))
-    except BaseException:
-        cosine_similarity = 0
-    if len(set(list1)) != 0:
-        match_percent_l1 = float(intersection) / len(set(list1))
-    else:
-        match_percent_l1 = 0
-    if len(set(list2)) != 0:
-        match_percent_l2 = float(intersection) / len(set(list2))
-    else:
-        match_percent_l2 = 0
-    return {
-        'intersection': intersection,
-        'union': union,
-        'jaccard_index': jaccard_index,
-        'cosine_similarity': cosine_similarity,
-        'match_percent_l1': match_percent_l1,
-        'match_percent_l2': match_percent_l2}
-
-
-def normalize(v):
-    norm = np.linalg.norm(v)
-    if norm == 0:
-        return v
-    return v / norm
-
-
-def dictionary_merge(dict_ls):
-
-    keys_ls = [dictionary.keys() for dictionary in dict_ls]
-    keys_ls = set([elem for sublist in keys_ls for elem in sublist])
-    dict_all = {keys: pd.DataFrame() for keys in (keys_ls)}
-    for dictionary in dict_ls:
-        for keys in dictionary.keys():
-            dict_all[keys] = dict_all[keys].append(dictionary[keys])
-    return dict_all
-
-
-def get_sorted_list(x, order):
-    x_df = pd.DataFrame(x)
-    return list(x_df.sort_values(by=list(x_df.columns), ascending=order).index)
-
-
-def save_obj(obj, name):
-    with open(name + '.pkl', 'wb') as f:
-        pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
-
-
-def load_obj(name):
-    with open(name + '.pkl', 'rb') as f:
-        return pickle.load(f, encoding='latin1')
-
-
-def getPhrase(x_list, DELIMITTER):
-    # x_list=clean_string_list(x_list)
-    x_phrase = [i for i in x_list if DELIMITTER in i]
-    x_word = [item for item in x_list if item not in x_phrase]
-    return x_word, x_phrase
-
-
-def removeShortWords(mylist, wordlen):
-    return [item for item in mylist if len(item) > wordlen]
-
-
-def WordtoPhraseMatch(wordlist, phraselist, DELIMITTER):
-    phrasewords = [item.split(DELIMITTER) for item in phraselist]
-    match_count = 0
-    partial_match_list = []
-    wordlist_dynamic = wordlist[:]
-    for items in phrasewords:
-        word_count = 0
-        wordlist = wordlist_dynamic[:]
-        for word in wordlist:
-            if word in items:
-                word_count += 1
-                partial_match_list.append((word, DELIMITTER.join(items)))
-                wordlist_dynamic.remove(word)
-        match_count += int(bool(word_count))
-    return partial_match_list, match_count
-
-
-def jaccard_with_phrase(list1, list2):
-    DELIMITTER = "_"
-    intersection_words = []
-    list1 = list(set(list1))
-    list2 = list(set(list2))
-    list1 = removeShortWords(list1, 0)
-    list2 = removeShortWords(list2, 0)
-    list1_words, list1_phrases = getPhrase(list1, DELIMITTER)
-    list2_words, list2_phrases = getPhrase(list2, DELIMITTER)
-    intersection = 0
-    match_count = 0
-    # count matching words
-    exact_word_intersection = list(set(list1_words) & set(list2_words))
-    intersection_words.extend([(a, a) for a in exact_word_intersection])
-    exact_word_match = match_str_list(list1_words, list2_words)['intersection']
-    intersection = intersection + exact_word_match
-    match_count += exact_word_match
-    phraselist1 = list1_phrases
-    phraselist2 = list2_phrases
-    exact_phrase_intersection = []
-    for phrase1 in phraselist1:
-        for phrase2 in phraselist2:
-            if((phrase2 in phrase1) or (phrase1 in phrase2)):
-                exact_phrase_intersection.append((phrase1, phrase2))
-                list2_phrases.remove(phrase2)
-                break
-    exact_phrase_length = sum(
-        [min([(len(j.split(DELIMITTER))) for j in i]) for i in exact_phrase_intersection])
-    intersection += (2.0 * exact_phrase_length)
-    match_count += len(exact_phrase_intersection)
-    intersection_words.extend(exact_phrase_intersection)
-    non_matched_list1_words, non_matched_list2_words = list1_words, list2_words
-    non_matched_list1_phrases, non_matched_list2_phrases = list1_phrases, list2_phrases
-    if exact_word_intersection:
-        non_matched_list1_words = [
-            item for item in list1_words if str(item) not in exact_word_intersection]
-        non_matched_list2_words = [
-            item for item in list2_words if str(item) not in exact_word_intersection]
-    if exact_phrase_intersection:
-        non_matched_list1_phrases = [
-            word for item in exact_phrase_intersection for word in non_matched_list1_phrases if item[0] not in word]
-        non_matched_list2_phrases = [
-            word for item in exact_phrase_intersection for word in non_matched_list2_phrases if item[1] not in word]
-    partial_match_list1, count = WordtoPhraseMatch(
-        non_matched_list1_words, non_matched_list2_phrases, DELIMITTER)
-    match_count += count
-    if partial_match_list1:
-        non_matched_list1_words = [
-            word for item in partial_match_list1 for word in non_matched_list1_words if item[0] not in word]
-        non_matched_list2_phrases = [
-            word for item in partial_match_list1 for word in non_matched_list2_phrases if item[1] not in word]
-    intersection = intersection + len(partial_match_list1)
-    intersection_words.extend(partial_match_list1)
-    # Content phrase to taxonomy words
-    partial_match_list2, count = WordtoPhraseMatch(
-        non_matched_list2_words, non_matched_list1_phrases, DELIMITTER)
-    match_count += count
-    non_matched_list2_words = [
-        item[0] for item in partial_match_list2 if item[0] not in non_matched_list1_phrases]
-    intersection = intersection + len(partial_match_list2)
-    intersection_words.extend(partial_match_list2)
-    intersection_words = [el for el in intersection_words if el != []]
-
-    if (((len(list2)) != 0) & ((len(list1) + len(list2) - match_count) != 0)):
-        return {'jaccard': float(intersection) / float(len(list1) + len(list2) - match_count),
-                'match_percentage': float(intersection) / float(len(list2)),
-                'word_intersection': intersection_words}
-    elif ((len(list1) + len(list2) - match_count) == 0):
-
-        return {'jaccard': 0,
-                'match_percentage': float(intersection) / float(len(list2)),
-                'word_intersection': intersection_words}
-    elif (len(list2) == 0):
-        return {
-            'jaccard': float(intersection) / float(
-                len(list1) + len(list2) - match_count),
-            'match_percentage': 0,
-            'word_intersection': intersection_words}
 
 
 def precision_from_dictionary(predicted_df, observed_df, window_len):
@@ -1668,103 +1143,3 @@ def agg_precision_from_dictionary(predicted_dct, observed_dct, window_len):
         window[i] = 100.0 * count / len(predicted_val_list)
     return pd.DataFrame(window, columns=['Percent'])
 
-
-def CustomDateFormater(**kwargs):
-    import datetime
-    from datetime import date, timedelta
-    expected_args = ['x', 'fileloc', 'datepattern']
-    kwargsdict = dict()
-    for key in kwargs.keys():
-        if key in expected_args:
-            kwargsdict[key] = kwargs[key]
-        else:
-            raise Exception("Unexpected Argument")
-    if kwargsdict['x']:
-        x = kwargsdict['x']
-        if x == "today":
-            dateobj = date.today()
-        elif x == "yesterday":
-            dateobj = date.today()-timedelta(1)
-        elif x == "lastrun":
-            list_of_files = glob.glob(kwargsdict['fileloc']+"/*")
-            timestr_files = [file for file in list_of_files if is_date(os.path.split(file)[1])]
-            latest_file = max(timestr_files, key=os.path.getctime).split("/")[-1]
-            dateobj = datetime.datetime.strptime(latest_file, kwargsdict['datepattern'])
-        elif isinstance(x, str):
-            dateobj = datetime.datetime.strptime(x, kwargsdict['datepattern'])
-        elif isinstance(x, datetime.date):
-            dateobj = x
-        return dateobj.strftime('%Y-%m-%dT%H:%M:%S.000+0530')
-    else:
-        raise Exception("Require atleast 1 argument.")
-
-
-def findDate(x_date, DS_DATA_HOME):
-    if x_date in ['today', 'yesterday']:
-        return CustomDateFormater(x=x_date)
-    elif x_date == "lastrun":
-        return CustomDateFormater(x=x_date, fileloc=DS_DATA_HOME, datepattern='%Y%m%d-%H%M%S')
-    else:
-        return CustomDateFormater(x=x_date, datepattern="%d-%m-%Y")
-
-
-def setRediskey(key, val, host, port, password):
-
-    """
-    This function writes a key value pair into Redis cache. It is a wrapper on set operation of redis-py.
-
-    :param key(str): The key.
-    :param val(str): The value assigned to key.
-    :param host(str): redis server host. default:'localhost'.
-    :param port(str): redis server port. default: 6379'.
-    :param password(str): redis server password. default: None.
-    :returns: The detected language for the given text.
-    """
-    try:
-        r = redis.StrictRedis(host=redis_host, port=redis_port, password=redis_password, decode_responses=True)
-        msg = r.set(key, val)   
-    except Exception as e:
-        print(e)
-        
-def getRediskey(key, host, port, password):
-    """
-    This function reads the value from Redis cache based on the key. It is a wrapper on  get operation of redis-py .
-
-    :param key(str): The key.
-    :param host(str): redis server host. default:'localhost'.
-    :param port(str): redis server port. default: 6379'.
-    :param password(str): redis server password. default: None.
-    :returns: The detected language for the given text.
-    """
-    try:
-        r = redis.StrictRedis(host=redis_host, port=redis_port, password=redis_password, decode_responses=True)
-        msg = r.get(key)     
-        return msg
-    except Exception as e:
-        print(e)
-
-def merge_json(dict1, dict2, path=None):
-   if path is None: path = []
-   for key in dict2:
-       if key in dict1:
-           if isinstance(dict1[key], dict) and isinstance(dict2[key], dict):
-               merge_json(dict1[key], dict2[key], path + [str(key)])
-           elif dict1[key] == dict2[key]:
-               pass # same leaf value
-           else:
-               raise Exception('Conflict at %s' % '.'.join(path + [str(key)]))
-       else:
-           dict1[key] = dict2[key]
-   return dict1
-
-
-def writeTokafka(kafka_broker):
-    connection_established = False
-    try:
-        client = KafkaClient(kafka_broker)
-        server_topics = client.topic_partitions
-        connection_established = True
-        return server_topics
-    except Exception as e:
-        print(e)
-        return connection_established

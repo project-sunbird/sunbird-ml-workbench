@@ -3,9 +3,10 @@ owner: sunbird
 
 inputs:
   DS_DATA_HOME: /home/DS_DATA_HOME
-  pathTocredentials: inputs/credentials.ini
   localpathTocontentMeta: /home/DS_DATA_HOME/content_meta.csv
+  pathTocredentials: inputs/credentials.ini
   categoryLookup: inputs/category_lookup.yaml
+  pathTotaxonomy: inputs/taxonomy.csv
 
 outputs:
   dummy: /home/DS_HOME
@@ -15,8 +16,8 @@ graph:
   - node_name: content_to_text
     inputs: [DS_DATA_HOME, localpathTocontentMeta, pathTocredentials]
     outputs: [timestamp_folder]
-    operation: contentTagging.ContentToTextRead
-    arguments:
+    operation: taggingNodes.ContentToTextRead
+    arguments: 
       range_start: START
       range_end: END
       num_of_processes: 1
@@ -46,7 +47,7 @@ graph:
   - node_name: keyword_extraction
     inputs: [content_to_text.timestamp_folder,  pathTocredentials, categoryLookup]
     outputs: [pathTocontentKeywords]
-    operation: contentTagging.KeywordExtraction 
+    operation: taggingNodes.KeywordExtraction 
     arguments: 
       extract_keywords: tagme
       filter_criteria: dbpedia
@@ -57,6 +58,8 @@ graph:
   - node_name: writeToKafka
     inputs: [keyword_extraction.pathTocontentKeywords, pathTocredentials]
     outputs: []
-    operation: contentTagging.WriteToKafkaTopic
+    operation: taggingNodes.WriteToKafkaTopic
     arguments:
       write_to_kafkaTopic: new_topic
+
+  

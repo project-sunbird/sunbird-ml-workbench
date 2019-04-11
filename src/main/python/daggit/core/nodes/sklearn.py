@@ -2,10 +2,10 @@ from sklearn.pipeline import Pipeline
 
 from daggit.core.io.io import Pandas_Dataframe, File_Txt, Pickle_Obj
 from daggit.core.base.factory import BaseOperator
-from daggit.core.operators.operators_registry import get_op_callable
-from daggit.core.operators.etl import DFFeatureUnion, ColumnExtractor
-from daggit.core.operators.etl import DFMissingStr, DFOneHot
-from daggit.core.operators.etl import DFMissingNum
+from daggit.core.nodes.registry import get_node_callable
+from daggit.core.oplib.etl import DFFeatureUnion, ColumnExtractor
+from daggit.core.oplib.etl import DFMissingStr, DFOneHot
+from daggit.core.oplib.etl import DFMissingNum
 
 
 class CustomPreprocess(BaseOperator):
@@ -87,7 +87,7 @@ class CrossValidate(BaseOperator):
         X = preprocessed_train.drop(target_variable, axis=1).values
 
         imports = self.node.imports
-        model = get_op_callable(imports[0][1], module_path=imports[0][0])
+        model = get_node_callable(imports[0][1], module_path=imports[0][0])
 
         model_params = model_args['arguments']
         reg = model(**model_params)
@@ -115,7 +115,7 @@ class Splitters(BaseOperator):
         input_df = self.inputs['input_df'].read()
 
         imports = self.node.imports
-        model = get_op_callable(imports[0][1], module_path=imports[0][0])
+        model = get_node_callable(imports[0][1], module_path=imports[0][0])
 
         model_params = model_args['arguments']
 

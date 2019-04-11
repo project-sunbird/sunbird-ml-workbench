@@ -6,6 +6,7 @@ import json
 import requests
 import logging
 import shutil
+import nltk
 import pandas as pd
 import numpy as np
 import configparser
@@ -16,21 +17,21 @@ from daggit.core.io.io import Pandas_Dataframe, File_Txt
 from daggit.core.io.io import ReadDaggitTask_Folderpath
 from daggit.core.io.io import KafkaDispatcher, KafkaCLI
 from daggit.core.base.factory import BaseOperator
+from daggit.core.io.files import save_obj, load_obj, findFiles
+from daggit.core.oplib.misc import df_feature_check, identify_contentType
+from daggit.core.oplib.nlp import jaccard_with_phrase
+from daggit.core.oplib.misc import merge_json
+from daggit.core.oplib.nlp import strip_word, get_words
+from daggit.core.oplib.misc import dictionary_merge, get_sorted_list
+from daggit.core.oplib.nlp import custom_listPreProc
+from daggit.core.oplib.misc import CustomDateFormater, findDate
 
-from ..operators.contentTaggingUtils import multimodal_text_enrichment
-from ..operators.contentTaggingUtils import keyword_extraction_parallel
-from ..operators.contentTaggingUtils import get_level_keywords
-from ..operators.contentTaggingUtils import jaccard_with_phrase
-from ..operators.contentTaggingUtils import save_obj, load_obj, findFiles
-from ..operators.contentTaggingUtils import merge_json
-from ..operators.contentTaggingUtils import strip_word, get_words
-from ..operators.contentTaggingUtils import writeTokafka
-from ..operators.contentTaggingUtils import dictionary_merge, get_sorted_list
-from ..operators.contentTaggingUtils import custom_listPreProc
-from ..operators.contentTaggingUtils import df_feature_check, identify_contentType
-from ..operators.contentTaggingUtils import precision_from_dictionary
-from ..operators.contentTaggingUtils import agg_precision_from_dictionary
-from ..operators.contentTaggingUtils import CustomDateFormater, findDate
+from daggit.contrib.sunbird.oplib.taggingUtils import multimodal_text_enrichment
+from daggit.contrib.sunbird.oplib.taggingUtils import keyword_extraction_parallel
+from daggit.contrib.sunbird.oplib.taggingUtils import get_level_keywords
+from daggit.contrib.sunbird.oplib.taggingUtils import precision_from_dictionary
+from daggit.contrib.sunbird.oplib.taggingUtils import agg_precision_from_dictionary
+
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
@@ -39,9 +40,30 @@ from kafka import KafkaProducer, KafkaConsumer, KafkaClient
 
 
 class ContentToTextRead(BaseOperator):
+    """
+    An operator that extracts text for Content id within a specified range, in a Content meta dataframe
 
+    :param range_start: specifies the start index of the dataframe 
+    :type range_start: int
+    :param range_end: specifies the end index of the dataframe
+    :type range_end: int
+    :param num_of_processes: number of workers used to distribute the process
+    :type num_of_processes: int
+    :param content_type: Specifies  the type of the content and related parameters
+        Options are: ``{ youtube | pdf | ecml }
+    :type content_type: json
+    """
     @property
     def inputs(self):
+        """
+        Function that the ContentToTextRead operator defines while returning graph inputs
+
+        :returns: Inputs to the node of the Auto tagging graph
+            DS_DATA_HOME: a localpath where the folders get created
+            localpathTocontentMeta: path to content meta
+            pathTocredentials: path to config file with credentials 
+
+        """
         return {
                 "DS_DATA_HOME": ReadDaggitTask_Folderpath(self.node.inputs[0]),
                 "localpathTocontentMeta": ReadDaggitTask_Folderpath(self.node.inputs[1]),
@@ -50,6 +72,12 @@ class ContentToTextRead(BaseOperator):
 
     @property
     def outputs(self):
+        """
+        Function that the ContentToTextRead operator defines while returning graph outputs
+
+        :returns: Returns the path to timestamp folder in which auto tagging results get generated
+
+        """
         return {"timestamp_folder": File_Txt(
                 self.node.outputs[0])}
 
@@ -59,6 +87,12 @@ class ContentToTextRead(BaseOperator):
             range_end,
             num_of_processes,
             content_type):
+        """
+        This is the main method to derive when creating an operator. This takes in the parameters, 
+        runs text enrichment pipline and writes back the path to the 
+        timestamp folder with the content id and its enriched text to an h5 file that gets saved as an intermediate result  
+
+        """
         DS_DATA_HOME = self.inputs["DS_DATA_HOME"].read_loc()
         pathTocredentials = self.inputs["pathTocredentials"].read_loc()
         timestr = time.strftime("%Y%m%d-%H%M%S")
@@ -73,7 +107,7 @@ class ContentToTextRead(BaseOperator):
         contentmeta_path = self.inputs["localpathTocontentMeta"].read_loc()
         # move the content meta to timestamp folder[destination folder]
         #for the time being experiment with copy: change it later.
-        shutil.copy(contentmeta_path, os.path.join(path_to_timestamp_folder, os.path.split(contentmeta_path)[1]))
+        shutil.move(contentmeta_path, os.path.join(path_to_timestamp_folder, os.path.split(contentmeta_path)[1]))
         moved_contentmeta_path = os.path.join(path_to_timestamp_folder, os.path.split(contentmeta_path)[1])
         
         content_meta = pd.read_csv(moved_contentmeta_path)
@@ -183,7 +217,7 @@ class ContentToTextRead(BaseOperator):
 
 
 class KeywordExtraction(BaseOperator):
-
+    
     @property
     def inputs(self):
         return {"timestamp_folder": File_Txt(self.node.inputs[0]),
@@ -416,14 +450,14 @@ class ContentTaxonomyScoring(BaseOperator):
 
     @property
     def inputs(self):
-        return {"pathTocontentMeta": File_Txt(self.node.inputs[0]),
+        return {"localpathTocontentMeta": ReadDaggitTask_Folderpath(self.node.inputs[0]),
                 "pathTotaxonomy": Pandas_Dataframe(self.node.inputs[1]),
                 "root_path": File_Txt(self.node.inputs[2]),
                 "path_to_corpus": File_Txt(self.node.inputs[3])
 
                 }
 
-    @property  # how to write to a folder?
+    @property
     def outputs(self):
         return {"path_to_timestampFolder": File_Txt(self.node.outputs[0]),
                 "path_to_distMeasure": File_Txt(self.node.outputs[1]),
@@ -443,7 +477,7 @@ class ContentTaxonomyScoring(BaseOperator):
         contentmeta_level = filter_by["contentMeta"]["alignment_depth"]
         taxonomy_filterby_column = filter_by["taxonomy"]["column"]
         taxonomy_level = filter_by["taxonomy"]["alignment_depth"]
-        content_meta_loc = self.inputs["pathTocontentMeta"].read()
+        content_meta_loc = self.inputs["localpathTocontentMeta"].read_loc()
         taxonomy = self.inputs["pathTotaxonomy"].read()
         root_path = self.inputs["root_path"].read()
         corpus_folder = self.inputs["path_to_corpus"].read()
@@ -740,7 +774,7 @@ class GenerateObservedTag(BaseOperator):
 
     @property
     def inputs(self):
-        return {"pathTocontentMeta": File_Txt(self.node.inputs[0]),
+        return {"localpathTocontentMeta": ReadDaggitTask_Folderpath(self.node.inputs[0]),
                 "pathTotaxonomy": Pandas_Dataframe(self.node.inputs[1]),
                 "path_to_timestampFolder": File_Txt(self.node.inputs[2])
                 }
@@ -759,7 +793,7 @@ class GenerateObservedTag(BaseOperator):
 
     def run(self, window, level, tax_known_tag, content_known_tag):
 
-        content_meta_loc = self.inputs["pathTocontentMeta"].read()
+        content_meta_loc = self.inputs["localpathTocontentMeta"].read_loc()
         content_meta = pd.read_csv(content_meta_loc)
         content_meta = content_meta[pd.notnull(content_meta[content_known_tag])]
         taxonomy = self.inputs["pathTotaxonomy"].read()
