@@ -1,6 +1,6 @@
 import difflib
 import pandas as pd
-from daggit.contrib.sunbird.operators.contentTaggingUtils import get_tagme_spots
+from daggit.contrib.sunbird.oplib.taggingUtils import get_tagme_spots
 
 
 def sentence_similarity(sentence1, sentence2, threshold):

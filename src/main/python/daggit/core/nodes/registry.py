@@ -6,7 +6,7 @@ srcdir = 'src/main/python/daggit'
 abs_path = os.path.join(testdir, srcdir)
 
 
-def get_op_callable(operator, module_path=None):
+def get_node_callable(operator, module_path=None): #get_op_callable
     if module_path:
         module = importlib.import_module(module_path)
         return getattr(module, operator)
@@ -17,8 +17,8 @@ def get_op_callable(operator, module_path=None):
         module_path_list = []
         for root, dirs, _ in os.walk(abs_path):
             if len(dirs) > 0:
-                if "operators" in dirs:
-                    operator_dir = os.path.join(root, "operators")
+                if "nodes" in dirs:
+                    operator_dir = os.path.join(root, "nodes")
                     module_path_list.append(
                         operator_dir[operator_dir.find("daggit"):].replace("/", "."))
         for path in module_path_list:

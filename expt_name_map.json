@@ -1,0 +1,6 @@
+{
+        "diksha_content_keyword_tagging": "/dag_examples/content_tagging/content_tagging.yaml",
+        "housing_prices": "/dag_examples/housing_prices/housing_prices.yaml",
+        "iris_classification": "/dag_examples/iris_classification/iris_classification_graph.yaml",
+        "iris_classification_with_keras": "/dag_examples/iris_classification_with_keras/iris_classification_using_keras_graph.yaml"
+}

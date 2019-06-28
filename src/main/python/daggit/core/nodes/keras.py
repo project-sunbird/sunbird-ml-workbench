@@ -2,7 +2,7 @@ import importlib
 import pandas as pd
 from daggit.core.base.factory import BaseOperator
 from daggit.core.io.io import Pandas_Dataframe, Pickle_Obj, File_Txt
-from daggit.core.operators.operators_registry import get_op_callable
+from daggit.core.nodes.registry import get_node_callable
 
 
 def baseline_model_svm():
@@ -65,7 +65,7 @@ class train_svm_model(BaseOperator):
             for imp in importlist:
                 importlib.import_module(name=module_name, package=imp)
         print(self.node.imports)
-        model = get_op_callable(
+        model = get_node_callable(
             module_path=model_args['module_path'],
             operator=model_args['name'])
         model_params = model_args['arguments']

@@ -5,6 +5,8 @@ import glob
 import json
 import requests
 import logging
+import shutil
+import nltk
 import pandas as pd
 import numpy as np
 import configparser
@@ -13,98 +15,69 @@ from elasticsearch import Elasticsearch
 
 from daggit.core.io.io import Pandas_Dataframe, File_Txt
 from daggit.core.io.io import ReadDaggitTask_Folderpath
+from daggit.core.io.io import KafkaDispatcher, KafkaCLI
 from daggit.core.base.factory import BaseOperator
-from ..operators.contentTaggingUtils import multimodal_text_enrichment
-from ..operators.contentTaggingUtils import keyword_extraction_parallel
-from ..operators.contentTaggingUtils import get_level_keywords
-from ..operators.contentTaggingUtils import jaccard_with_phrase
-from ..operators.contentTaggingUtils import save_obj, load_obj, findFiles
-from ..operators.contentTaggingUtils import merge_json
-from ..operators.contentTaggingUtils import strip_word, get_words
-from ..operators.contentTaggingUtils import writeTokafka
-from ..operators.contentTaggingUtils import dictionary_merge, get_sorted_list
-from ..operators.contentTaggingUtils import custom_listPreProc
-from ..operators.contentTaggingUtils import df_feature_check, identify_contentType
-from ..operators.contentTaggingUtils import precision_from_dictionary
-from ..operators.contentTaggingUtils import agg_precision_from_dictionary
-from ..operators.contentTaggingUtils import CustomDateFormater, findDate
+from daggit.core.io.files import save_obj, load_obj, findFiles
+from daggit.core.oplib.misc import df_feature_check, identify_contentType
+from daggit.core.oplib.nlp import jaccard_with_phrase
+from daggit.core.oplib.misc import merge_json
+from daggit.core.oplib.nlp import strip_word, get_words
+from daggit.core.oplib.misc import dictionary_merge, get_sorted_list
+from daggit.core.oplib.nlp import custom_listPreProc
+from daggit.core.oplib.misc import CustomDateFormater, findDate
+
+from daggit.contrib.sunbird.oplib.taggingUtils import multimodal_text_enrichment
+from daggit.contrib.sunbird.oplib.taggingUtils import keyword_extraction_parallel
+from daggit.contrib.sunbird.oplib.taggingUtils import get_level_keywords
+from daggit.contrib.sunbird.oplib.taggingUtils import precision_from_dictionary
+from daggit.contrib.sunbird.oplib.taggingUtils import agg_precision_from_dictionary
+
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from functools import partial, reduce
 from kafka import KafkaProducer, KafkaConsumer, KafkaClient
 
-class ContentmetaCreation(BaseOperator):
 
+class ContentToTextRead(BaseOperator):
+    """
+    An operator that extracts text for Content id within a specified range, in a Content meta dataframe
+
+    :param range_start: specifies the start index of the dataframe 
+    :type range_start: int
+    :param range_end: specifies the end index of the dataframe
+    :type range_end: int
+    :param num_of_processes: number of workers used to distribute the process
+    :type num_of_processes: int
+    :param content_type: Specifies  the type of the content and related parameters
+        Options are: ``{ youtube | pdf | ecml }
+    :type content_type: json
+    """
     @property
     def inputs(self):
-        return {"DS_DATA_HOME": ReadDaggitTask_Folderpath(
-                self.node.inputs[0]),
-                "pathTocredentials": ReadDaggitTask_Folderpath(self.node.inputs[1]),
-                "pathTotriggerJson": ReadDaggitTask_Folderpath(
-                self.node.inputs[2])
-                }
+        """
+        Function that the ContentToTextRead operator defines while returning graph inputs
 
-    @property
-    def outputs(self):
-        return {"pathTocontentMeta": File_Txt(
-                self.node.outputs[0])}
+        :returns: Inputs to the node of the Auto tagging graph
+            DS_DATA_HOME: a localpath where the folders get created
+            localpathTocontentMeta: path to content meta
+            pathTocredentials: path to config file with credentials 
 
-    def run(self, copy_to, file_name):
-        DS_DATA_HOME = self.inputs["DS_DATA_HOME"].read_loc()
-        pathTocredentials = self.inputs["pathTocredentials"].read_loc()
-        pathTotriggerJson = self.inputs["pathTotriggerJson"].read_loc()
-        timestr = time.strftime("%Y%m%d-%H%M%S")
-        contentmeta_creation_path = os.path.join(
-            DS_DATA_HOME, timestr, "contentmeta_creation")
-        with open(pathTotriggerJson) as json_file:
-            data = json.load(json_file)
-        # reading credentials config file
-        config = configparser.ConfigParser(allow_no_value=True)
-        config.read(pathTocredentials)
-        api_key = config["postman credentials"]["api_key"]
-        data["request"]['filters']['lastUpdatedOn']['min'] = findDate(data["request"]['filters']['lastUpdatedOn']['min'], DS_DATA_HOME)
-        data["request"]['filters']['lastUpdatedOn']['max'] = findDate(data["request"]['filters']['lastUpdatedOn']['max'], DS_DATA_HOME)
-        url = "https://api.ekstep.in/composite/v3/search"
-        headers = {
-            'content-type': "application/json",
-            'authorization': api_key,
-            'cache-control': "no-cache",
-            'postman-token': "6252f362-2e2d-0f90-26b5-87345f599f72"
-            }
-        response = requests.request("POST", url, headers=headers, json=data).json()
-        content_meta = pd.DataFrame(response['result']['content'])
-        if not os.path.exists(contentmeta_creation_path):
-            os.makedirs(contentmeta_creation_path)
-        if "derived_contentType" not in list(content_meta.columns):
-            content_meta["derived_contentType"] = np.nan
-            for row_ind, artifact_url in enumerate(content_meta["artifactUrl"]):
-                try:
-                    content_meta["derived_contentType"][row_ind] = identify_contentType(artifact_url)
-                except BaseException:
-                    pass
-        content_meta = content_meta[pd.notnull(content_meta['derived_contentType'])]
-        content_meta.reset_index(inplace=True, drop=True)
-        content_meta.to_csv(os.path.join(contentmeta_creation_path, file_name+".csv"))
-        if copy_to:
-            try:
-                content_meta.to_csv(os.path.join(copy_to, file_name)+".csv")
-            except IOError:
-                print("Error: Invalid copy_to location")
-        self.outputs["pathTocontentMeta"].write(os.path.join(contentmeta_creation_path, file_name + ".csv"))
-
-
-class ContentToText(BaseOperator):
-
-    @property
-    def inputs(self):
+        """
         return {
-                "pathTocredentials": ReadDaggitTask_Folderpath(self.node.inputs[0]),
-                "pathTocontentMeta": File_Txt(self.node.inputs[1])
+                "DS_DATA_HOME": ReadDaggitTask_Folderpath(self.node.inputs[0]),
+                "localpathTocontentMeta": ReadDaggitTask_Folderpath(self.node.inputs[1]),
+                "pathTocredentials": ReadDaggitTask_Folderpath(self.node.inputs[2])
                 }
 
     @property
     def outputs(self):
+        """
+        Function that the ContentToTextRead operator defines while returning graph outputs
+
+        :returns: Returns the path to timestamp folder in which auto tagging results get generated
+
+        """
         return {"timestamp_folder": File_Txt(
                 self.node.outputs[0])}
 
@@ -114,9 +87,39 @@ class ContentToText(BaseOperator):
             range_end,
             num_of_processes,
             content_type):
+        """
+        This is the main method to derive when creating an operator. This takes in the parameters, 
+        runs text enrichment pipline and writes back the path to the 
+        timestamp folder with the content id and its enriched text to an h5 file that gets saved as an intermediate result  
+
+        """
+        DS_DATA_HOME = self.inputs["DS_DATA_HOME"].read_loc()
         pathTocredentials = self.inputs["pathTocredentials"].read_loc()
-        path_to_content_meta = self.inputs["pathTocontentMeta"].read()
-        content_meta = pd.read_csv(path_to_content_meta)
+        timestr = time.strftime("%Y%m%d-%H%M%S")
+        path_to_timestamp_folder = os.path.join(DS_DATA_HOME, timestr)
+        content_to_text_path = os.path.join(
+            path_to_timestamp_folder, "content_to_text")
+        # content dump:
+        if not os.path.exists(content_to_text_path):
+            os.makedirs(content_to_text_path)
+            print("content_to_text: ", content_to_text_path)
+        
+        contentmeta_path = self.inputs["localpathTocontentMeta"].read_loc()
+        # move the content meta to timestamp folder[destination folder]
+        #for the time being experiment with copy: change it later.
+        shutil.move(contentmeta_path, os.path.join(path_to_timestamp_folder, os.path.split(contentmeta_path)[1]))
+        moved_contentmeta_path = os.path.join(path_to_timestamp_folder, os.path.split(contentmeta_path)[1])
+        
+        content_meta = pd.read_csv(moved_contentmeta_path)
+        if "derived_contentType" not in list(content_meta.columns):
+            content_meta["derived_contentType"] = np.nan
+            for row_ind, artifact_url in enumerate(content_meta["artifactUrl"]):
+                try:
+                    content_meta["derived_contentType"][row_ind] = identify_contentType(artifact_url)
+                except BaseException:
+                    pass
+        content_meta = content_meta[pd.notnull(content_meta['derived_contentType'])]
+        content_meta.reset_index(inplace=True, drop=True)
         print(self.outputs["timestamp_folder"].location_specify())
         oldwd = os.getcwd()
         contentMeta_mandatory_fields = [
@@ -125,18 +128,14 @@ class ContentToText(BaseOperator):
             'downloadUrl',
             'gradeLevel',
             'identifier',
-            'keywords',
             'language',
-            'subject']
+            'subject',
+            'graph_id',
+            'nodeType',
+            'objectType',
+            'node_id']
         assert df_feature_check(content_meta, contentMeta_mandatory_fields)
-        path_to_timestamp_folder = os.path.split(os.path.split(path_to_content_meta)[0])[0]
-        timestr = os.path.split(path_to_timestamp_folder)[1]
-        content_to_text_path = os.path.join(
-            path_to_timestamp_folder, "content_to_text")
-        # content dump:
-        if not os.path.exists(content_to_text_path):
-            os.makedirs(content_to_text_path)
-            print("content_to_text: ", content_to_text_path)
+
         logging.info("CTT_CONTENT_TO_TEXT_START")
         # read content meta:
         if content_meta.columns[0] == "0":
@@ -160,16 +159,19 @@ class ContentToText(BaseOperator):
             "----Running Content_to_Text for contents from {0} to {1}:".format(
                 range_start, range_end))
         logging.info("time started: {0}".format(start))
-        
+        # subset contentMeta:
+        # content_meta = content_meta[content_meta["derived_contentType"].isin(
+        #     subset_contentMeta_by.split(", "))]
+        content_meta.reset_index(drop=True, inplace=True)
         if range_start == "START":
             range_start = 0
         if range_end == "END":
-            range_end = len(content_meta)-1
+            range_end = len(content_meta)
         logging.info(
             "CTT_Config: content_meta from {0} to {1} created in: {2}".format(
                 range_start, range_end, content_to_text_path))
         print("Number of processes: ", num_of_processes)
-        # Reading from a config file
+
         status = False
         if os.path.exists(pathTocredentials):
             try:
@@ -214,148 +216,13 @@ class ContentToText(BaseOperator):
         self.outputs["timestamp_folder"].write(path_to_timestamp_folder)
 
 
-class ContentToTextRead(BaseOperator):
-
-    @property
-    def inputs(self):
-        return {
-                "DS_DATA_HOME": ReadDaggitTask_Folderpath(self.node.inputs[0]),
-                "pathTocredentials": ReadDaggitTask_Folderpath(self.node.inputs[1]),
-                "localpathTocontentMeta": Pandas_Dataframe(self.node.inputs[2])
-                }
-
-    @property
-    def outputs(self):
-        return {"timestamp_folder": File_Txt(
-                self.node.outputs[0])}
-
-    def run(
-            self,
-            range_start,
-            range_end,
-            num_of_processes,
-            subset_contentMeta_by,
-            content_type):
-        DS_DATA_HOME = self.inputs["DS_DATA_HOME"].read_loc()
-        pathTocredentials = self.inputs["pathTocredentials"].read_loc()
-        content_meta = self.inputs["localpathTocontentMeta"].read()
-        if "derived_contentType" not in list(content_meta.columns):
-            content_meta["derived_contentType"] = np.nan
-            for row_ind, artifact_url in enumerate(content_meta["artifactUrl"]):
-                try:
-                    content_meta["derived_contentType"][row_ind] = identify_contentType(artifact_url)
-                except BaseException:
-                    pass
-        content_meta = content_meta[pd.notnull(content_meta['derived_contentType'])]
-        content_meta.reset_index(inplace=True, drop=True)
-        print(self.outputs["timestamp_folder"].location_specify())
-        oldwd = os.getcwd()
-        contentMeta_mandatory_fields = [
-            'artifactUrl',
-            'derived_contentType',
-            'downloadUrl',
-            'gradeLevel',
-            'identifier',
-            'keywords',
-            'language',
-            'subject']
-        assert df_feature_check(content_meta, contentMeta_mandatory_fields)
-        timestr = time.strftime("%Y%m%d-%H%M%S")
-        path_to_timestamp_folder = os.path.join(DS_DATA_HOME, timestr)
-        content_to_text_path = os.path.join(
-            path_to_timestamp_folder, "content_to_text")
-        # content dump:
-        if not os.path.exists(content_to_text_path):
-            os.makedirs(content_to_text_path)
-            print("content_to_text: ", content_to_text_path)
-        logging.info("CTT_CONTENT_TO_TEXT_START")
-        # read content meta:
-        if content_meta.columns[0] == "0":
-            content_meta = content_meta.drop("0", axis=1)
-
-        # check for duplicates in the meta
-        if list(content_meta[content_meta.duplicated(
-                ['artifactUrl'], keep=False)]["artifactUrl"]) != []:
-            content_meta.drop_duplicates(subset="artifactUrl", inplace=True)
-            content_meta.reset_index(drop=True, inplace=True)
-
-        # dropna from artifactUrl feature and reset the index:
-        content_meta.dropna(subset=["artifactUrl"], inplace=True)
-        content_meta.reset_index(drop=True, inplace=True)
-
-        # time the run
-        start = time.time()
-        logging.info(
-            'Contents detected in the content meta: ' + str(len(content_meta)))
-        logging.info(
-            "----Running Content_to_Text for contents from {0} to {1}:".format(
-                range_start, range_end))
-        logging.info("time started: {0}".format(start))
-        # subset contentMeta:
-        content_meta = content_meta[content_meta["derived_contentType"].isin(
-            subset_contentMeta_by.split(", "))]
-        content_meta.reset_index(drop=True, inplace=True)
-        if range_start == "START":
-            range_start = 0
-        if range_end == "END":
-            range_end = len(content_meta)-1
-        logging.info(
-            "CTT_Config: content_meta from {0} to {1} created in: {2}".format(
-                range_start, range_end, content_to_text_path))
-        print("Number of processes: ", num_of_processes)
-
-        status = False
-        if os.path.exists(pathTocredentials):
-            try:
-                config = configparser.ConfigParser(allow_no_value=True)
-                config.read(pathTocredentials)
-                status = True
-                try:
-                    path_to_googlecred = config['google application credentials']["GOOGLE_APPLICATION_CREDENTIALS"]
-                    with open(path_to_googlecred, "r") as cred_json:
-                        GOOGLE_APPLICATION_CREDENTIALS = cred_json.read()
-                except BaseException:
-                    logging.info("Invalid GOOGLE_APPLICATION_CREDENTIALS in config.")
-                    logging.info("***Checking for GOOGLE_APPLICATION_CREDENTIALS environment variable")
-                    status = False
-            except BaseException:
-                logging.info("Invalid config file")
-                logging.info("***Checking for GOOGLE_APPLICATION_CREDENTIALS environment variable")
-
-        if not status:
-            try:
-                GOOGLE_APPLICATION_CREDENTIALS = os.environ['GOOGLE_APPLICATION_CREDENTIALS']
-                with open(GOOGLE_APPLICATION_CREDENTIALS, "r") as f:
-                    GOOGLE_APPLICATION_CREDENTIALS = f.read()
-            except BaseException:
-                GOOGLE_APPLICATION_CREDENTIALS = ""
-                logging.info("Not a valid google credential") 
-
-        result = [
-            multimodal_text_enrichment(
-                i,
-                timestr,
-                content_meta,
-                content_type,
-                content_to_text_path,
-                GOOGLE_APPLICATION_CREDENTIALS) for i in range(
-                range_start,
-                range_end,)]
-        print(result)
-        os.chdir(oldwd)
-        print("Current directory c2t: ", os.getcwd())
-        print("timestamp_folder path:", path_to_timestamp_folder)
-        self.outputs["timestamp_folder"].write(path_to_timestamp_folder)
-
-
 class KeywordExtraction(BaseOperator):
-
+    
     @property
     def inputs(self):
-        return {"pathTotaxonomy": Pandas_Dataframe(self.node.inputs[0]),
-                "categoryLookup": ReadDaggitTask_Folderpath(self.node.inputs[1]),
-                "timestamp_folder": File_Txt(self.node.inputs[2]),
-                "pathTocredentials": ReadDaggitTask_Folderpath(self.node.inputs[3])
+        return {"timestamp_folder": File_Txt(self.node.inputs[0]),
+                "pathTocredentials": ReadDaggitTask_Folderpath(self.node.inputs[1]),
+                "categoryLookup": ReadDaggitTask_Folderpath(self.node.inputs[2])
                 }
 
     @property
@@ -367,14 +234,18 @@ class KeywordExtraction(BaseOperator):
         assert extract_keywords == "tagme" or extract_keywords == "text_token"
         assert filter_criteria == "none" or filter_criteria == "taxonomy" or filter_criteria == "dbpedia"
         pathTocredentials = self.inputs["pathTocredentials"].read_loc()
+        print("***************pathTocredentials: ", pathTocredentials)
         config = configparser.ConfigParser(allow_no_value=True)
         config.read(pathTocredentials)
         cache_cred=dict()
         cache_cred['host']=config["redis"]["host"]
         cache_cred['port']=config["redis"]["port"]
         cache_cred['password']=config["redis"]["password"]
+        
+        tagme_cred = dict()
+        tagme_cred['gcube_token']=config['tagme credentials']['gcube_token']
+        tagme_cred['postman_token']=config['tagme credentials']['postman_token']                        
 
-        taxonomy = self.inputs["pathTotaxonomy"].read()
         path_to_category_lookup = self.inputs["categoryLookup"].read_loc()
         timestamp_folder = self.inputs["timestamp_folder"].read()
         timestr = os.path.split(timestamp_folder)[1]
@@ -391,14 +262,14 @@ class KeywordExtraction(BaseOperator):
                keyword_extraction_parallel,
                timestr=timestr,
                content_to_text_path=content_to_text_path,
-               taxonomy=taxonomy,
                extract_keywords=extract_keywords,
                filter_criteria=filter_criteria,
                cache_cred=cache_cred,
                path_to_category_lookup=path_to_category_lookup,
                update_corpus=update_corpus,
                filter_score_val=filter_score_val,
-               num_keywords=num_keywords)
+               num_keywords=num_keywords,
+               tagme_cred=tagme_cred)
             results = pool.map(
                 keywordExtraction_partial, [
                     dir for dir in os.listdir(content_to_text_path)])
@@ -450,11 +321,13 @@ class WriteToKafkaTopic(BaseOperator):
 
     @property
     def inputs(self):
-        return {"path_to_contentKeywords": File_Txt(self.node.inputs[0])
+        return {"path_to_contentKeywords": File_Txt(self.node.inputs[0]),
+                "pathTocredentials": ReadDaggitTask_Folderpath(self.node.inputs[1])
                 }
 
-    def run(self, kafka_broker, kafkaTopic_writeTo):
+    def run(self, write_to_kafkaTopic):
         path_to_contentKeywords = self.inputs["path_to_contentKeywords"].read()
+        pathTocredentials = self.inputs["pathTocredentials"].read_loc()
         timestamp_folder = os.path.split(path_to_contentKeywords)[0]
         timestr = os.path.split(timestamp_folder)[1]
         epoch_time = time.mktime(time.strptime(timestr, "%Y%m%d-%H%M%S"))
@@ -479,17 +352,18 @@ class WriteToKafkaTopic(BaseOperator):
             autotagging_json.update({"ets": epoch_time})
             with open(os.path.join(timestamp_folder, "content_to_text", cid, "autoTagging_json.json"), "w+") as main_json:
                 json.dump(autotagging_json, main_json, sort_keys=True, indent=4)
-            # check if connection established.
-            server_topics = writeTokafka(kafka_broker)
-            if server_topics:
-                for i in server_topics:
-                    if i == kafkaTopic_writeTo:
-                        producer = KafkaProducer(bootstrap_servers=kafka_broker, value_serializer=lambda v: json.dumps(v, indent=4).encode('utf-8'))
-                        # sserializing json message:-
-                        event_send = producer.send(kafkaTopic_writeTo, autotagging_json)
-                        result = event_send.get(timeout=60)
+            # writing to kafka topic:-
+            kafka_cli = KafkaCLI(pathTocredentials)
+            status = kafka_cli.write(autotagging_json, write_to_kafkaTopic)
+            if status:
+                logging.info("******Transaction event successfully pushed to topic:{0}".format(write_to_kafkaTopic))
 
+            else:
+                logging.info("******Error pushing the event")
+        # Remove the timestamp folder:-
+        shutil.rmtree(timestamp_folder)
 
+            
 class CorpusCreation(BaseOperator):
 
     @property
@@ -576,14 +450,14 @@ class ContentTaxonomyScoring(BaseOperator):
 
     @property
     def inputs(self):
-        return {"pathTocontentMeta": File_Txt(self.node.inputs[0]),
+        return {"localpathTocontentMeta": ReadDaggitTask_Folderpath(self.node.inputs[0]),
                 "pathTotaxonomy": Pandas_Dataframe(self.node.inputs[1]),
                 "root_path": File_Txt(self.node.inputs[2]),
                 "path_to_corpus": File_Txt(self.node.inputs[3])
 
                 }
 
-    @property  # how to write to a folder?
+    @property
     def outputs(self):
         return {"path_to_timestampFolder": File_Txt(self.node.outputs[0]),
                 "path_to_distMeasure": File_Txt(self.node.outputs[1]),
@@ -603,7 +477,7 @@ class ContentTaxonomyScoring(BaseOperator):
         contentmeta_level = filter_by["contentMeta"]["alignment_depth"]
         taxonomy_filterby_column = filter_by["taxonomy"]["column"]
         taxonomy_level = filter_by["taxonomy"]["alignment_depth"]
-        content_meta_loc = self.inputs["pathTocontentMeta"].read()
+        content_meta_loc = self.inputs["localpathTocontentMeta"].read_loc()
         taxonomy = self.inputs["pathTotaxonomy"].read()
         root_path = self.inputs["root_path"].read()
         corpus_folder = self.inputs["path_to_corpus"].read()
@@ -900,7 +774,7 @@ class GenerateObservedTag(BaseOperator):
 
     @property
     def inputs(self):
-        return {"pathTocontentMeta": File_Txt(self.node.inputs[0]),
+        return {"localpathTocontentMeta": ReadDaggitTask_Folderpath(self.node.inputs[0]),
                 "pathTotaxonomy": Pandas_Dataframe(self.node.inputs[1]),
                 "path_to_timestampFolder": File_Txt(self.node.inputs[2])
                 }
@@ -919,7 +793,7 @@ class GenerateObservedTag(BaseOperator):
 
     def run(self, window, level, tax_known_tag, content_known_tag):
 
-        content_meta_loc = self.inputs["pathTocontentMeta"].read()
+        content_meta_loc = self.inputs["localpathTocontentMeta"].read_loc()
         content_meta = pd.read_csv(content_meta_loc)
         content_meta = content_meta[pd.notnull(content_meta[content_known_tag])]
         taxonomy = self.inputs["pathTotaxonomy"].read()

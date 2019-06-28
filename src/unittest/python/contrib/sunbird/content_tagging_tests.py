@@ -5,8 +5,14 @@ import unittest
 import sys
 import os
 import yaml
+import nltk
 import pandas as pd
-from daggit.contrib.sunbird.operators.contentTaggingUtils import *
+from daggit.contrib.sunbird.oplib.taggingUtils import *
+from daggit.core.oplib.misc import df_feature_check
+from daggit.core.oplib.nlp import jaccard_with_phrase
+
+from nltk.corpus import stopwords
+stopwords = stopwords.words('english')
 
 testdir = os.path.dirname(os.path.realpath(__file__))
 srcdir = '../../../../../src/unittest/python/contrib'
