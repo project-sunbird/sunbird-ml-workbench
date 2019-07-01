@@ -3,3 +3,4 @@
 venv
 **/target
 framework/build_env
+*.DS_Store
