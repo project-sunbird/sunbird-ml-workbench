@@ -4,9 +4,19 @@ import warnings
 import pandas as pd
 import pickle
 import os
+import json
+import logging
+import configparser
+
 from ..base.config import DAGGIT_HOME, STORE
 from ..base.utils import create_dir
 from ..base.config import STORAGE_FORMAT
+
+from pyspark import SparkConf, SparkContext
+from pyspark.streaming import StreamingContext
+from pyspark.streaming.kafka import KafkaUtils
+from kafka import KafkaClient
+from kafka import KafkaProducer, KafkaConsumer
 
 # TODO configuration file for settings
 
@@ -113,7 +123,7 @@ class Pandas_Dataframe(DataType):
                 mode='a')
 
 
-class CSV_Pandas(DataType):
+class CSV_Pandas(DataType): #provides interface for the operators 
 
     def read(self):
         return pd.read_csv(filepath_or_buffer=self.data_location)
@@ -181,3 +191,136 @@ class Pickle_Obj(DataType):
         create_dir(os.path.dirname(self.data_location))
         with open(self.data_location, 'wb') as handle:
             pickle.dump(data, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+class KafkaDispatcher(DataType):
+    
+    def __init__(self, configfile):
+        self.conf = configfile
+        config = configparser.ConfigParser(allow_no_value=True)
+        config.read(self.conf)
+        self.host = config["kafka"]["host"]
+        self.port = config["kafka"]["port"]
+        self.kafka_broker = self.host + ":" + self.port
+        self.connection_established = False
+        try:
+            self.client = KafkaClient(self.kafka_broker)
+            self.server_topics = self.client.topic_partitions
+            self.connection_established = True
+        except Exception as e:
+            print(e)
+            pass
+        
+    @abstractmethod
+    def read(self):
+        raise NotImplementedError()
+
+    def write(self, transaction_event, writeTotopic):
+        
+        self.write_to_topic = writeTotopic
+        self.event_json = transaction_event
+        print("topic: {0}".format(self.write_to_topic))
+        print("host: {0}".format(self.host))
+        print("port: {0}".format(self.port))
+        print("kafka_broker: {0}".format(self.kafka_broker))
+        print("Connection established: {0}".format(self.connection_established))
+        print("Server topics {0}".format(self.server_topics))
+        
+         # check if connection is established.
+        flag = True
+        if self.connection_established:
+            if self.write_to_topic in self.server_topics.keys():
+                try:
+                    producer = KafkaProducer(bootstrap_servers=self.kafka_broker, value_serializer=lambda v: json.dumps(v, indent=4).encode('utf-8'))
+                    # serializing json message:-
+                    event_send = producer.send(self.write_to_topic, transaction_event)
+                    result = event_send.get(timeout=60)
+                    flag = True
+                except Exception as e:
+                    print(e)
+                    flag = False
+            else:
+                print("Topic doesnot exist!!")
+                flag = False
+        else:
+            print("Connection to KafkaServer is not established")
+            flag = False
+        return flag
+        
+class KafkaCLI(KafkaDispatcher):
+    
+    def __init__(self, configfile):
+        KafkaDispatcher.__init__(self, configfile)
+        self.append_event = []
+    
+    def write(self, transaction_event, writeTotopic):
+        flag_status = KafkaDispatcher.write(self, transaction_event, writeTotopic)
+        return flag_status
+
+    def read(self, read_from_topic, groupID, offset_reset, session_timeout, auto_commit_enable):
+        self.read_from_topic = read_from_topic
+        self.groupID = groupID
+        self.offset_reset = offset_reset
+        self.session_timeout = session_timeout
+        self.auto_commit_enable = auto_commit_enable
+        if self.connection_established:
+            if self.read_from_topic in self.server_topics.keys():
+                consumer = KafkaConsumer(self.read_from_topic, 
+                                         bootstrap_servers= self.kafka_broker,
+                                         value_deserializer=lambda x: json.loads(x.decode('utf-8')),
+                                         group_id=self.groupID,      
+                                         enable_auto_commit= auto_commit_enable,
+                                         session_timeout_ms = self.session_timeout,
+                                         auto_offset_reset = self.offset_reset)
+                try:
+                    while True:
+                        for i, message in enumerate(consumer):
+                            event = message.value
+                            self.append_event.append(event)
+                            print(event)
+                except KeyboardInterrupt:
+                    pass
+                finally:
+                    consumer.close()
+            else:
+                print("Topic does not exist!")
+        else:
+            print("Connection to KafkaServer is not established")
+        return self.append_event   
+    
+class KafkaStreaming(KafkaDispatcher):
+    def __init__(self, configfile):
+        KafkaDispatcher.__init__(self, configfile)
+        self.append_event = []
+    
+    def write(self, transaction_event, writeTotopic):
+        flag_status = KafkaDispatcher.write(self, transaction_event, writeTotopic)
+        return flag_status
+
+    def handler(self, message):
+        records = self.message.collect()
+        for record in records:
+            self.append_event.append(record)
+
+    def read(self, app_name, read_from_topic, groupID, offset_reset, session_timeout, auto_commit_enable, batch_duration):
+        self.read_from_topic = read_from_topic
+        self.groupID = groupID
+        self.app_name = app_name
+        self.offset_reset = offset_reset
+        self.session_timeout = session_timeout
+        self.auto_commit_enable = auto_commit_enable
+        self.batch_duration = batch_duration
+        
+        self.kafkaParams = {"metadata.broker.list": self.kafka_broker}
+        self.kafkaParams["auto.offset.reset"] = self.offset_reset
+        self.kafkaParams["enable.auto.commit"] = self.auto_commit_enable
+        
+        if self.connection_established:
+            if self.write_to_topic in self.server_topics.keys():
+                sc = SparkContext(app_name=self.app_name)
+                ssc = StreamingContext(sc, self.batch_duration)
+
+                kvs = KafkaUtils.createDirectStream(ssc, [self.read_from_topic], self.kafkaParams)#{"metadata.broker.list": brokers})
+                kvs.foreachRDD(handler)
+
+                ssc.start()
+                ssc.awaitTermination()
