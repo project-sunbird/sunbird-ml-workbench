@@ -1,4 +1,5 @@
 {
+        "diksha_profanity_check": "/dag_examples/profanity_check/content_profanityCheck.yaml",
         "diksha_content_keyword_tagging": "/dag_examples/content_tagging/content_tagging.yaml",
         "housing_prices": "/dag_examples/housing_prices/housing_prices.yaml",
         "iris_classification": "/dag_examples/iris_classification/iris_classification_graph.yaml",
