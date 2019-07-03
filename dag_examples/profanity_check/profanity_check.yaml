@@ -14,7 +14,7 @@ graph:
   - node_name: content_to_text
     inputs: [DS_DATA_HOME, localpathTocontentMeta, pathTocredentials]
     outputs: [timestamp_folder]
-    operation: profanitycheckNodes.ContentToTextRead
+    operation: taggingNodes.ContentToTextRead
     arguments: 
       range_start: START
       range_end: END
