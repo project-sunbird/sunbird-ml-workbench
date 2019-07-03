@@ -10,7 +10,7 @@ import nltk
 import pandas as pd
 import numpy as np
 import configparser
-from functools import partial
+from functools import partial, reduce
 from elasticsearch import Elasticsearch
 
 from daggit.core.io.io import Pandas_Dataframe, File_Txt
@@ -35,7 +35,6 @@ from daggit.contrib.sunbird.oplib.taggingUtils import agg_precision_from_diction
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-from functools import partial, reduce
 from kafka import KafkaProducer, KafkaConsumer, KafkaClient
 
 
