@@ -1,0 +1,27 @@
+{
+    "ets": 1562148610,
+    "nodeUniqueId": "do_31257982241225113629617",
+    "operationType": "UPDATE",
+    "nodeType": "DATA_NODE",
+    "graphId": "Geography",
+    "objectType": "Content",
+    "nodeGraphId": 0,
+    "transactionData": {
+        "properties": {
+            "tags": {
+                "system_contentType": "pdf",
+                "system_medium": "en",
+                "duration": {
+                    "video": "",
+                    "stage": ""
+                },
+                "num_stage": 0,
+                "system_plugins": [],
+                "system_templates": "",
+                "text": "Resources_Types of Resources_1 Resources and Development_1_Resources_Types of Resources_Human Resources"
+            },
+            "version": "/Users/aleena/development/sunbird-ml-workbench/dag_examples/profanity_check/profanity_check.yaml",
+            "uri": ""
+        }
+    }
+}

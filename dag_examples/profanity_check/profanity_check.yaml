@@ -1,0 +1,51 @@
+experiment_name: ProfanityCheck
+owner: sunbird
+
+inputs:
+  DS_DATA_HOME: DS_DATA_HOME
+  localpathTocontentMeta: DS_DATA_HOME/content_meta.csv
+  pathTocredentials: inputs/credentials.ini
+
+outputs: 
+  dummy_output: /home/DS_HOME
+
+graph:
+  
+  - node_name: content_to_text
+    inputs: [DS_DATA_HOME, localpathTocontentMeta, pathTocredentials]
+    outputs: [timestamp_folder]
+    operation: profanitycheckNodes.ContentToTextRead
+    arguments: 
+      range_start: START
+      range_end: END
+      num_of_processes: 1
+      content_type:
+        youtube:
+          contentDownloadField: artifactUrl
+          video_to_speech: none
+          speech_to_text: googleAT
+          image_to_text: none
+          pdf_to_text: none
+          ecml_index_to_text: none
+        ecml:
+          contentDownloadField: downloadUrl
+          video_to_speech: ffmpeg
+          speech_to_text: googleAT
+          image_to_text: googleVision
+          pdf_to_text: pdfminer
+          ecml_index_to_text: parse
+        pdf:
+          contentDownloadField: downloadUrl
+          video_to_speech: none
+          speech_to_text: none
+          image_to_text: none
+          pdf_to_text: pdfminer
+          ecml_index_to_text: none
+
+  - node_name: profanity_check
+    inputs: [DS_DATA_HOME, content_to_text.timestamp_folder]
+    outputs: []
+    operation: profanitycheckNodes.ProfanityCheck
+
+
+      

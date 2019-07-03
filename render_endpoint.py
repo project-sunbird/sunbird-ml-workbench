@@ -28,7 +28,7 @@ for item in apps:
                     result = method_to_call(req)
                 except:
                     raise ValueError('Invalid method call for '+endpoint_mapping[endpoint])
-                    return Response(status=400
+                    return Response(status=400)
             else:
                 raise InvalidRequest()
                 return Response(status=400)
