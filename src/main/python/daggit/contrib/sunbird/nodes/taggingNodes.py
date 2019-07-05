@@ -106,7 +106,7 @@ class ContentToTextRead(BaseOperator):
         contentmeta_path = self.inputs["localpathTocontentMeta"].read_loc()
         # move the content meta to timestamp folder[destination folder]
         #for the time being experiment with copy: change it later.
-        shutil.move(contentmeta_path, os.path.join(path_to_timestamp_folder, os.path.split(contentmeta_path)[1]))
+        shutil.copy(contentmeta_path, os.path.join(path_to_timestamp_folder, os.path.split(contentmeta_path)[1]))
         moved_contentmeta_path = os.path.join(path_to_timestamp_folder, os.path.split(contentmeta_path)[1])
         
         content_meta = pd.read_csv(moved_contentmeta_path)

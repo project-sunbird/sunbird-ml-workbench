@@ -2,10 +2,10 @@ experiment_name: ProfanityCheck
 owner: sunbird
 
 inputs:
-  DS_DATA_HOME: DS_DATA_HOME
-  localpathTocontentMeta: DS_DATA_HOME/content_meta.csv
+  DS_DATA_HOME: <path to DS_DATA_HOME>
+  localpathTocontentMeta: <path to content_meta>
   pathTocredentials: inputs/credentials.ini
-
+  
 outputs: 
   dummy_output: /home/DS_HOME
 

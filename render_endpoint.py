@@ -9,16 +9,14 @@ app = Flask(__name__)
 current_wd = os.path.dirname(os.path.realpath(__file__))
 apps = os.listdir(os.path.join(current_wd,"dag_examples"))
 
-endpoint_dict={}
+endpoint_mapping_dict={}
 for item in apps:
     config_path = os.path.join(current_wd,"dag_examples",item,"config.json")
     try:
         with open(config_path) as f:
-            endpoint_mapping = json.load(f)
-        for endpoint in name_mapping.keys():
-
+            endpoint_mapping_dict = json.load(f)
+        for endpoint in endpoint_mapping_dict.keys():
             @app.route(endpoint, methods = ['POST'])
-
             module_name = ".".join(["dag_examples",item,"microservice"])
             module = __import__(module_name)
             method_to_call = getattr(module, 'endpoint_mapping[endpoint]')
