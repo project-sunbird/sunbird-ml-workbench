@@ -45,14 +45,17 @@ class ProfanityCheck(BaseOperator):
             cids_list.remove('.DS_Store')
         for cid in cids_list:
             try:
+                print("cid: ", cid)
                 content_info_file=os.path.join(read_basepath,cid,"ML_content_info.json")
                 with open(content_info_file) as json_file:
                     data = json.load(json_file)
-                text = data['text']
+                text = data["transactionData"]["properties"]["tags"]["text"]
                 profanity_filter_op = text_profanity(text)
                 profanity_filter_op.update({"identifier": cid})
+                if profanity_filter_op:
+                    os.makedirs(write_basepath)
                 with open(os.path.join(write_basepath, cid + '.json'), 'w') as outfile:
                     json.dump(profanity_filter_op, outfile)
             except:
                 pass
-        print("Path to content review: ", read_basepath)
+        print("Path to content review: ", write_basepath)

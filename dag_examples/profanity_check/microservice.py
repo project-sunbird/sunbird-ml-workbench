@@ -1,6 +1,6 @@
 def profanity_check(input_json):
     """
-    Function that takes text from request and checkes it for profanity.
+    Function that takes text from request and checks it for profanity.
     :param: input_json(json): Example input: {
                                 "id": "api.ml.profanity",
                                 "ver": "1.0",
@@ -26,6 +26,11 @@ def profanity_check(input_json):
     if status !=400:
         try:
             from daggit.contrib.sunbird.oplib.profanityUtils import text_profanity
+            from daggit.contrib.sunbird.oplib.profanityUtils import uncommonWords
+            from daggit.contrib.sunbird.oplib.profanityUtils import betterProfanity
+            from daggit.contrib.sunbird.oplib.profanityUtils import profanityFilter
+            from daggit.contrib.sunbird.oplib.profanityUtils import docProfanity
+            from daggit.contrib.sunbird.oplib.profanityUtils import profanityCheck
             check_profanity = text_profanity(text)
             status = 200
         except:

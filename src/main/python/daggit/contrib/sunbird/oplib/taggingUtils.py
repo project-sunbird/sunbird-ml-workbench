@@ -53,6 +53,8 @@ from daggit.core.oplib.nlp import clean_string_list
 from daggit.core.oplib.nlp import get_tokens
 from daggit.core.io.redis import setRediskey, getRediskey
 from daggit.core.io.files import findFiles
+from daggit.core.io.files import downloadZipFile
+from daggit.core.io.files import unzip_files
 
 
 
@@ -432,6 +434,7 @@ def convert_pdf_to_txt(path_to_pdf_file):
 
 def pdf_to_text(method, path_to_assets, pdf_url):
     """
+    A function to convert pdf files to text
     """
     text = ""
     number_of_pages = 0

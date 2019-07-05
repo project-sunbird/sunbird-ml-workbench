@@ -42,3 +42,7 @@ sphinx_rtd_theme
 kafka
 pyspark
 redis
+better_profanity
+profanityfilter
+profanity_check
+textblob
