@@ -1,0 +1,20 @@
+experiment_name: Content_reuse
+owner: sunbird
+
+inputs:
+  DS_DATA_HOME: <path to DS_DATA_HOME>
+  pathTocredentials: inputs/credentials.ini
+  pathToPDF: <local path to PDF>
+outputs:
+  dummy: /home/DS_HOME
+
+graph:
+
+  - node_name: ocr_text_extraction
+    inputs: [DS_DATA_HOME, pathTocredentials, pathToPDF]
+    outputs: [path_to_result_folder]
+    operation: contentreuseNodes.OcrTextExtraction
+    arguments: 
+      gcp_bucket_name: <bucket name>
+      content_id: <contentID>
+      ocr_method: GOCR
