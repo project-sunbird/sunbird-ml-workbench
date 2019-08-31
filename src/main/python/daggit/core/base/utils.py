@@ -2,6 +2,7 @@ import os
 import errno
 import contextlib
 import sys
+import mock
 
 
 def create_dir(directory):
@@ -21,7 +22,8 @@ class DummyFile(object):
 @contextlib.contextmanager
 def nostdout():
     save_stdout = sys.stdout
-    sys.stdout = DummyFile()
+    #sys.stdout = DummyFile()
+    sys.stdout = mock.MagicMock()
     yield
     sys.stdout = save_stdout
 

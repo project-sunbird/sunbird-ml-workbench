@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# this needs to point to virtual env where build is done
-virtualenv --python=`which python3.6` mlwb_venv
-source mlwb_venv/bin/activate
 
 cd "$(dirname "$0")"
 
@@ -17,8 +14,6 @@ fi
 pyb install_dependencies clean publish
 pyb sphinx_generate_documentation
 tox
-
-rm -rf mlwb_venv/
 
 if [ ! -d "bin" ]; then
   mkdir 'bin'
