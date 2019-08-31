@@ -1,9 +1,8 @@
 import importlib
 import os
 
-testdir = os.path.dirname(os.path.realpath("__file__"))
-srcdir = 'src/main/python/daggit'
-abs_path = os.path.join(testdir, srcdir)
+this_dir = os.path.dirname(os.path.realpath(__file__))
+abs_path = os.path.abspath(os.path.join(this_dir, '../..'))
 
 
 def get_node_callable(operator, module_path=None): #get_op_callable
@@ -17,10 +16,10 @@ def get_node_callable(operator, module_path=None): #get_op_callable
         module_path_list = []
         for root, dirs, _ in os.walk(abs_path):
             if len(dirs) > 0:
-                if "nodes" in dirs:
+                if "nodes" in dirs:                    
                     operator_dir = os.path.join(root, "nodes")
                     module_path_list.append(
-                        operator_dir[operator_dir.find("daggit"):].replace("/", "."))
+                        operator_dir[operator_dir.rfind("daggit"):].replace("/", "."))
         for path in module_path_list:
             try:
                 module = importlib.import_module(path + '.' + operator_module)
