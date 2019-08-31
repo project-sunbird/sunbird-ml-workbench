@@ -15,8 +15,6 @@ pyb install_dependencies clean publish
 pyb sphinx_generate_documentation
 tox
 
-rm -rf mlwb_venv/
-
 if [ ! -d "bin" ]; then
   mkdir 'bin'
 fi
