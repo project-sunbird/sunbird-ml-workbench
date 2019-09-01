@@ -18,6 +18,7 @@ from google.protobuf import json_format
 from natsort import natsorted
 
 from daggit.core.io.io import File_Txt
+from daggit.core.io.io import File_JSON
 from daggit.core.io.files import findFiles
 from daggit.core.base.factory import BaseOperator
 from daggit.core.io.io import ReadDaggitTask_Folderpath
@@ -27,7 +28,7 @@ from daggit.contrib.sunbird.oplib.contentreuseUtils import download_outputjson_r
 from daggit.contrib.sunbird.oplib.contentreuseUtils import getblob
 from daggit.contrib.sunbird.oplib.contentreuseUtils import create_manifest
 from daggit.contrib.sunbird.oplib.contentreuseUtils import create_toc
-
+from daggit.contrib.sunbird.oplib.contentreuseUtils import create_dtb
 
 
 class OcrTextExtraction(BaseOperator):
