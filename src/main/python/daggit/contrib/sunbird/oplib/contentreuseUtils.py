@@ -20,7 +20,6 @@ from scipy.spatial import distance_matrix
 from sklearn.decomposition import PCA
 from pyemd import emd
 
-
     
 def upload_blob(bucket_name, source_file_name, destination_blob_name):
     """Uploads a file to the storage bucket."""
