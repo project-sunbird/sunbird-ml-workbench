@@ -5,6 +5,7 @@ import io
 import re
 import shutil
 import json
+import copy
 import numpy as np
 import pandas as pd
 import ruptures as rp
@@ -19,9 +20,16 @@ from natsort import natsorted
 from scipy.spatial import distance_matrix
 from sklearn.decomposition import PCA
 from pyemd import emd
+from Bio import pairwise2
+from Bio.pairwise2 import format_alignment
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.preprocessing import normalize
+from bert_serving.client import BertClient
+
+from daggit.core.oplib import distanceUtils as dist
+from daggit.core.oplib import nlp as preprocess
 
 
-    
 def upload_blob(bucket_name, source_file_name, destination_blob_name):
     """Uploads a file to the storage bucket."""
     storage_client = storage.Client()
@@ -283,3 +291,30 @@ def create_toc(content_id, path_to_saved_folder, api_key, postman_token):
     except:
         pass
     return path_to_toc
+
+def getDTB(loc):
+    with open(loc) as json_file:
+        DTB = json.load(json_file)
+    DTB_df=[]
+    for topic in DTB['alignment']:
+        full_text = topic["target"]['fulltext_annotation']
+        cid = topic["source"]["id"]
+        topic_name = topic["source"]["fulltext_annotation"]
+        DTB_df.append({"identifier":cid, "name":topic_name, "text":full_text})
+    return pd.DataFrame(DTB_df)
+
+
+def getSimilarTopic(x, k):
+    df=dist.similarity_df(x)
+    similar_topic=dict()
+    for i in range(len(df)):
+        row_df=pd.DataFrame(df.iloc[i])
+        row_df=row_df.sort_values(by = list(row_df.columns),ascending=False)
+        topn=[]
+        for j in range(k):
+            try:
+                topn.append({list(row_df.index)[j]:row_df.iloc[j,0]})
+            except:
+                pass
+        similar_topic[list(df.index)[i]]=topn
+    return similar_topic

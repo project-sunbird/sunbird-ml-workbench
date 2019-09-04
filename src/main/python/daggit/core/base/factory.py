@@ -38,11 +38,11 @@ class BaseDAGManager(object):
 
     @abstractmethod
     def init(self):
-        raise NotImplementedError('dagit init Needs to be implemented!')
+        raise NotImplementedError('daggit init Needs to be implemented!')
 
     @abstractmethod
     def run(self):
-        raise NotImplementedError('dagit run needs to be implemented!')
+        raise NotImplementedError('daggit run needs to be implemented!')
 
 
 class NodeData(object):
