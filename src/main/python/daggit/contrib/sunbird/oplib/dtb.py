@@ -8,15 +8,11 @@ import json
 import numpy as np
 import pandas as pd
 import Levenshtein
-
-
 from pyemd import emd
-
 
 import copy
 import json
     
-
 
 def filterText(text, apply=True):
 

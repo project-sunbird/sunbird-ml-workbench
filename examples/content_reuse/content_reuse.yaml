@@ -4,7 +4,10 @@ owner: sunbird
 inputs:
   DS_DATA_HOME: <path to DS_DATA_HOME>
   pathTocredentials: inputs/credentials.ini
-  pathToPDF: <path to PDF>
+  pathToPDF: <path to PDF file>
+  pathToToc: <path to TOC csv file>
+  pathToReference_DTB: <path to reference DTB>
+
 outputs:
   dummy: /home/DS_HOME
 
@@ -13,10 +16,25 @@ graph:
   - node_name: ocr_text_extraction
     inputs: [DS_DATA_HOME, pathTocredentials, pathToPDF]
     outputs: [path_to_result_folder]
-    operation: contentreuseNodes.OcrTextExtraction
+    operation: contentreuse.OcrTextExtraction
     arguments: 
-      gcp_bucket_name: <bucket_name>
+      gcp_bucket_name: <gcp_bucket_name>
       content_id: <content_id>
       ocr_method: GOCR
+
+  - node_name: create_dtb
+    inputs: [ocr_text_extraction.path_to_result_folder, pathToToc]
+    outputs: [path_to_dtb_json_file]
+    operation: contentreuse.CreateDTB
+
+  - node_name: dtb_mapping
+    inputs: [ocr_text_extraction.path_to_result_folder, create_dtb.path_to_dtb_json_file, pathToReference_DTB]
+    outputs: [path_to_mapping_json]
+    operation: contentreuse.DTBMapping
+    arguments:
+      no_of_recommendations: 5
+      distance_method: BERT
+
+
 
 
