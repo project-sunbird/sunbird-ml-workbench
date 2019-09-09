@@ -23,8 +23,6 @@ from pyemd import emd
 from Bio import pairwise2
 from Bio.pairwise2 import format_alignment
 from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.preprocessing import normalize
-from bert_serving.client import BertClient
 
 from daggit.core.oplib import distanceUtils as dist
 from daggit.core.oplib import nlp as preprocess
@@ -47,7 +45,7 @@ def upload_blob(bucket_name, source_file_name, destination_blob_name):
 
 def do_GoogleOCR(gcs_source_uri, gcs_destination_uri): #bs parameter
     """
-    Perform OCR on a PDF uploaded in google cloud storage, generate output as 
+    Perform OCR on a PDF uploaded in google cloud storage, generate output as
     JSON responses and save it in a destination URI
     """
     # Supported mime_types are: 'application/pdf' and 'image/tiff'
@@ -91,7 +89,7 @@ def do_GoogleOCR(gcs_source_uri, gcs_destination_uri): #bs parameter
     # List objects with the given prefix.
     blob_list = list(bucket.list_blobs(prefix=prefix))
     new_list = []
-    for i in range(len(blob_list)): 
+    for i in range(len(blob_list)):
         str_convert = str(blob_list[i]).replace("<", "").replace(">", "").split(", ")[1]
         if str_convert[-3:] == "pdf":
             pass
@@ -233,7 +231,7 @@ def getblob(method_of_ocr, bucket_name, local_path_to_pdf, content_id, root_path
                             os.remove(fname)
                 path_to_outputjson_folder = download_outputjson_reponses(bucket_name, prefix+"/", path_to_gocr_json, delimiter="/")
         except:
-           print("Process terminated") 
+           print("Process terminated")
     return textbook_model_path
 
 
@@ -253,14 +251,14 @@ def create_manifest(content_id, path_to_saved_folder):
             arr = []
             for i in findFiles(path_to_saved_folder, ["txt"]):
                 arr.append({"id": content_id, "path": i, "Type": "gocr"})
-                
+
             manifest["extract"] = {}
             manifest["extract"]["fulltextAnnotation"] = arr
             arr = []
             for i in (os.listdir(os.path.join(path_to_saved_folder, "raw_data"))):
                 if i != '.DS_Store':
                     arr.append({"id": content_id+"_blob_gocr", "path": i, "Type": "gocr"})
-                
+
             manifest["extract"]["api_response"] = arr
             with open(path_to_manifest, "w") as json_file:
                 json.dump(manifest, json_file, indent=4)
