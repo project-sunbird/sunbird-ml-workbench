@@ -8,6 +8,7 @@ from Bio import pairwise2
 from Bio.pairwise2 import format_alignment
 import gensim.downloader as api
 import sklearn
+from sklearn.metrics.pairwise import cosine_distances
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.preprocessing import normalize
 from bert_serving.client import BertClient
@@ -69,21 +70,42 @@ def getWordlistEMD(doc1, doc2, method):
     dist=emd(h1.ravel(), h2.ravel(),word_dist)
     return dist
 
-def getBertCosine(list1, list2):
+def getMissingIndex(x):
+    """
+    For a list, remove value in [" ",""]
+    :param x(list): list of strings
+    :returns empty_index: Index of empty String elements
+    :returns x: Input list with empty element replaced with ".."
+    """
+    empty_index = [i for i,elem in enumerate(x) if elem in [" ",""]]
+    for i in empty_index: x[i] = ".."
+    return empty_index,x
+
+def getBertCosine(list1, list2, keep_empty=True):
     """
     Requires bert server running.
-    bert-serving-start -model_dir /uncased_L-12_H-768_A-12/ -num_worker=1
-
+    bert-serving-start -model_dir /uncased_L-12_H-768_A-12/ -num_worker=2
+    Find the cosine distance between two list of strings using BERT embedings
+    :param list1(list): list of strings
+    :param list2(list): list of strings
+    :param keep_empty(str): If True, distance between empty entries is Inf
+    :returns: Cosine distance matrix between list1 and list2
     """
-    try:
-        bc = BertClient()
-        emb1=bc.encode(list1)
-        emb2=bc.encode(list2)
-        #.tolist()
-        distance = pd.DataFrame(sklearn.metrics.pairwise.cosine_distances(emb1, emb2))
-        return distance
-    except:
-        print("Requires BERT server. Unable to detect.")
+    if keep_empty:
+        list1_missing_index,list1 = getMissingIndex(list1)
+        list2_missing_index,list2 = getMissingIndex(list2)
+        try:
+            bc = BertClient()
+            emb1=bc.encode(list1)             #.tolist()
+            emb2=bc.encode(list2)
+            distance = pd.DataFrame(cosine_distances(emb1, emb2))
+            if list1_missing_index:
+                for row_ind in list1_missing_index: distance.iloc[row_ind,:] = float("inf")
+            if list2_missing_index:
+                for col_ind in list2_missing_index: distance.iloc[:,col_ind] = float("inf")
+            return distance
+        except:
+            print("Requires BERT server. Unable to detect.")
 
 
 def getDistance(list1, list2, method):
