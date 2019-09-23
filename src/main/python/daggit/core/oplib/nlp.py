@@ -130,6 +130,17 @@ def strip_word(word, delimitter):
     return word
 
 
+def strip_word_number(list_word, delimitter):
+    delimitters = ["___", "__", " ", ",", "_", "-", ".", "/","\n"+"–","–","’","‘"] + \
+        list(set(string.punctuation))
+    for lim in delimitters:
+        list_word = [ str(i).replace(lim, delimitter).replace("\n"," ") for i in list_word]
+        list_word = [ i.lower().strip() for i in list_word ]
+        list_word = [ re.sub(r'\b[0-9]+\b\s*', '', i) for i in list_word ] 
+        list_word = [re.sub(' +', ' ', i) for i in list_word]
+    return list_word
+
+
 def get_tokens(path_to_text_file, tokenizer=nltk.word_tokenize): #custom_tokenizer
     """
     Given a text file uses custom_tokenizer function

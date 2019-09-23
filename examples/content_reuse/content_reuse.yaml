@@ -2,22 +2,47 @@ experiment_name: Content_reuse
 owner: sunbird
 
 inputs:
-  DS_DATA_HOME: /Users/adarsa/ilimi/DS_data/taxonomy_alignment/DAG_data
+  DS_DATA_HOME: <path to DS_DATA_HOME>
   pathTocredentials: inputs/credentials.ini
-  pathToPDF: /Users/adarsa/ilimi/DS_data/taxonomy_alignment/DAG_data/Maharashtra-Class-6-Science-English/source/603020012.pdf
-  pathToToc: /Users/adarsa/ilimi/DS_data/taxonomy_alignment/DAG_data/Maharashtra-Class-6-Science-English/TOC.csv
-  pathToReference_DTB: /Users/adarsa/ilimi/DS_data/taxonomy_alignment/DAG_data/ReferenceDTB
-  path_to_result_folder: /Users/adarsa/ilimi/DS_data/taxonomy_alignment/DAG_data/Maharashtra-Class-6-Science-English
+  pathToLanguageMapping: inputs/language_mapping.json
+  path_to_result_folder: <path to result folder>
+  pathToPDF: <path to TB PDF>
+  pathToToc: <path to TOC>
+  pathToReference_DTB: <path to Reference DTB>
+  pathToActualDTB: <path to Actual DTB>
 
 outputs:
   dummy: /home/DS_HOME
 
 graph:
+  
+  - node_name: ocr_text_extraction
+    inputs: [DS_DATA_HOME, pathTocredentials, pathToPDF]
+    outputs: [path_to_result_folder]
+    operation: contentreuse.OcrTextExtraction
+    arguments: 
+      gcp_bucket_name: contentreuse_experiment
+      content_id: do_312528046831214592246795
+      ocr_method: GOCR
 
+  - node_name: text_extraction_evaluation
+    inputs: [ocr_text_extraction.path_to_result_folder, pathToLanguageMapping, pathToToc]
+    outputs: [path_to_evaluation_result]
+    operation: contentreuse.TextExtractionEvaluation
+  
   - node_name: create_dtb
     inputs: [path_to_result_folder, pathToToc]
     outputs: [path_to_dtb_json_file]
     operation: contentreuse.CreateDTB
+    arguments:
+      col_name: [Chapter Name]
+
+  - node_name: dtb_creation_evaluation
+    inputs: [create_dtb.path_to_dtb_json_file, pathToToc, pathToActualDTB]
+    outputs: [path_to_dtb_evaluation_result]
+    operation: contentreuse.DTBCreationEvaluation
+    arguments:
+      level: Chapter Name
 
   - node_name: dtb_mapping
     inputs: [path_to_result_folder, create_dtb.path_to_dtb_json_file, pathToReference_DTB]
@@ -26,7 +51,11 @@ graph:
     arguments:
       no_of_recommendations: 5
       distance_method: BERT
+  
 
+
+
+ 
 
 
 

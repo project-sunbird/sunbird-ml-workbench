@@ -2,16 +2,31 @@ import os
 import daggit
 import requests
 import io
+import sys
 import re
+import string
 import shutil
 import json
+
 import copy
+import glob
+import natsort
 import numpy as np
+from numpy import nan 
 import pandas as pd
+import pandasql as ps
 import ruptures as rp
 import Levenshtein
+import gspread
+import spacy
 
-from daggit.core.io.files import findFiles
+nlp = spacy.load('en') 
+from oauth2client.service_account import ServiceAccountCredentials
+
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.preprocessing import normalize
+import Levenshtein
+from pyemd import emd
 
 from google.cloud import vision
 from google.cloud import storage
@@ -26,6 +41,7 @@ from sklearn.feature_extraction.text import CountVectorizer
 
 from daggit.core.oplib import distanceUtils as dist
 from daggit.core.oplib import nlp as preprocess
+from daggit.core.io.files import findFiles
 
 
 def upload_blob(bucket_name, source_file_name, destination_blob_name):
@@ -316,3 +332,39 @@ def getSimilarTopic(x, k):
                 pass
         similar_topic[list(df.index)[i]]=topn
     return similar_topic
+
+
+def read_google_sheet(credentials,spreadsheet_key,worksheetpage):
+    scope = ['https://spreadsheets.google.com/feeds']
+    credentials = ServiceAccountCredentials.from_json_keyfile_name(credentials, scope)
+    gc = gspread.authorize(credentials)
+    spreadsheet_key = spreadsheet_key
+    book = gc.open_by_key(spreadsheet_key)
+    worksheet = book.worksheet(worksheetpage) 
+    table = worksheet.get_all_values()
+    df = pd.DataFrame(table[1:], columns=table[0])
+    return df
+
+
+def calc_stat(list1, list2, measure):
+    ls = [] 
+    for i in range(len(list1)): 
+        if measure =='division':
+            try:
+                ls.append(float((len(list1[i]))/(len(list2[i]))))
+            except:
+                ls.append(0)
+        if measure=='MED':
+            try:
+                ls.append(dist.getWordlistEMD((list(list1[i])),list(list2[i]),"MED"))
+            except:
+                ls.append(0)
+    return ls
+
+
+def find_span_sentence(text, sentence):
+    start_index = text.find(sentence)
+    end_index = start_index + len(sentence) 
+    return start_index, end_index
+
+
