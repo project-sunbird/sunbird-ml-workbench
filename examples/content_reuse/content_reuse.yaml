@@ -31,7 +31,7 @@ graph:
     operation: contentreuse.TextExtractionEvaluation
   
   - node_name: create_dtb
-    inputs: [path_to_result_folder, pathToToc]
+    inputs: [ocr_text_extraction.path_to_result_folder, pathToToc]
     outputs: [path_to_dtb_json_file]
     operation: contentreuse.CreateDTB
     arguments:
