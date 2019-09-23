@@ -22,7 +22,7 @@ graph:
     operation: contentreuse.OcrTextExtraction
     arguments: 
       gcp_bucket_name: contentreuse_experiment
-      content_id: do_312528046831214592246795
+      content_id: <content id>
       ocr_method: GOCR
 
   - node_name: text_extraction_evaluation
