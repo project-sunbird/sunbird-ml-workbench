@@ -3,7 +3,7 @@ owner: sunbird
 
 inputs:
   DS_DATA_HOME: /home/DS_DATA_HOME
-  localpathTocontentMeta: /home/DS_DATA_HOME/content_meta.csv
+  localpathTocontentMeta: <path to contentmeta csv file>
   pathTocredentials: inputs/credentials.ini
   categoryLookup: inputs/category_lookup.yaml
   pathTotaxonomy: inputs/taxonomy.csv
