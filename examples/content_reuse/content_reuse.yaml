@@ -5,10 +5,9 @@ inputs:
   DS_DATA_HOME: <path to DS_DATA_HOME>
   pathTocredentials: inputs/credentials.ini
   pathToLanguageMapping: inputs/language_mapping.json
-  path_to_result_folder: <path to result folder>
-  pathToPDF: <path to TB PDF>
+  pathToPDF: <path to PDF>
   pathToToc: <path to TOC>
-  pathToReference_DTB: <path to Reference DTB>
+  pathToReference_DTB: <path to ReferenceDTB>
   pathToActualDTB: <path to Actual DTB>
 
 outputs:
@@ -26,7 +25,7 @@ graph:
       ocr_method: GOCR
 
   - node_name: text_extraction_evaluation
-    inputs: [ocr_text_extraction.path_to_result_folder, pathToLanguageMapping, pathToToc]
+    inputs: [path_to_result_folder, pathToLanguageMapping, pathToToc]
     outputs: [path_to_evaluation_result]
     operation: contentreuse.TextExtractionEvaluation
   
@@ -45,7 +44,7 @@ graph:
       level: Chapter Name
 
   - node_name: dtb_mapping
-    inputs: [path_to_result_folder, create_dtb.path_to_dtb_json_file, pathToReference_DTB]
+    inputs: [ocr_text_extraction.path_to_result_folder, create_dtb.path_to_dtb_json_file, pathToReference_DTB]
     outputs: [path_to_mapping_json]
     operation: contentreuse.DTBMapping
     arguments:

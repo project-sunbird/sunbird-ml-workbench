@@ -367,4 +367,29 @@ def find_span_sentence(text, sentence):
     end_index = start_index + len(sentence) 
     return start_index, end_index
 
+def agg_actual_predict_df(toc_df, dtb_actual, pred_df, level):
+    ls = [] 
+    for i in range(len(toc_df)):
+        a = [toc_df.index[i]] + list(toc_df['Topic Name'][i][1: ])
+        if level == 'Topic Name':
+            for j in range(len(a)):
+                actual_text = " ".join( dtb_actual.loc[dtb_actual['Toc feature']==str(a[j])]['CONTENTS'])
+                try:
+                    pred_text = pred_df[pred_df['title']==a[j]]['pred_text'].iloc[0]
+                except:
+                    pred_text = 'nan'
+                consolidated_df = pd.DataFrame([toc_df.index[i], a[j], actual_text,pred_text]).T
+                consolidated_df.columns= ['ChapterName','TopicName','ActualText','PredictedText']
+                ls.append(consolidated_df)
+        elif level == 'Chapter Name':
+            actual_text = " ".join( dtb_actual.loc[dtb_actual['Toc feature'].isin(a)]['CONTENTS'])
+            try:
+                pred_text = pred_df[pred_df['title']==toc_df.index[i]]['pred_text'].iloc[0]
+            except:
+                pred_text = 'nan'
+            consolidated_df = pd.DataFrame([toc_df.index[i], actual_text, pred_text]).T
+            consolidated_df.columns= ['ChapterName','ActualText','PredictedText']
+            ls.append(consolidated_df)
+    return ls 
+
 

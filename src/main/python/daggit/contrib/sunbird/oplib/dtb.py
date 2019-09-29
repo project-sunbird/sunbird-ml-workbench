@@ -109,47 +109,42 @@ def readToC(f_toc,col_name='Chapter Name',filter=True):
         toc[ind] = text
     return toc, toc_id
 
-def readToC_new(f_toc, col_name, filter=True):
+
+def readToC(f_toc,col_name,filter=True):
     df = pd.read_csv(f_toc)
-    toc = {}
     x = df.drop_duplicates(subset=col_name)
-    x = x.dropna(subset=["Identifier"]).reset_index(drop=True)
-    read_toc_by = col_name[len(col_name)-1]
-    if read_toc_by == "Chapter Name":
-        for i, j in enumerate(x[read_toc_by]):
-            toc.update({i:{i:x[read_toc_by].iloc[i], "id":x["Identifier"].iloc[i]}})
-    if read_toc_by == "Topic Name":
-        for i, j in enumerate(x[read_toc_by]):
+    x = x.dropna(subset=["Identifier"])
+    toc = {}
+    toc_id = []
+    create_toc_by = col_name[len(col_name)-1]
+    if create_toc_by == "Chapter Name":
+        toc = x[create_toc_by].to_dict()
+        toc_id = list(x["Identifier"])
+    if create_toc_by == "Topic Name":
+        for i, j in enumerate(x[create_toc_by]):
             if str(j) == "nan":
-                toc.update({i:{i:x[col_name[len(col_name)-2]].iloc[i], "id":x["Identifier"].iloc[i]}})
+                toc.update({i:x["Chapter Name"].iloc[i]})
             else:
-                toc.update({i:{i:j, "id":x["Identifier"].iloc[i]}})
+                toc.update({i:j})
+            toc_id.append(x["Identifier"].iloc[i])
     for ind,val in toc.items():
-        toc[ind][ind] = filterText(list(toc[ind].values())[0],apply=filter)
-    return toc
+        text = filterText(val,apply=filter)
+        toc[ind] = text
+    return toc, toc_id
+
 
 def create_dtb(f_toc, f_text, col_name):
-
-    #toc,toc_id = readToC(f_toc,filter=False)
-    #doc = readSentences(f_text,filter=False)
-    # doc_reverse_map = create_reverse_lookup(doc)
-    # toc_reverse_map = create_reverse_lookup(toc)
-    # w = getTocToDocDist(toc,doc)
-    # bkps = getBreakPoints(w)
-    ########
-    read_toc = readToC_new(f_toc, col_name, filter=False)
+    read_toc, toc_id = readToC(f_toc, col_name, filter=False)
     doc = readSentences(f_text,filter=False)
-    toc = dict((k,v[k]) for k, v in read_toc.items())
-    id_dict = dict((k,v["id"]) for k, v in read_toc.items())
     doc_reverse_map = create_reverse_lookup(doc)
-    toc_reverse_map = create_reverse_lookup(toc)
-    w = getTocToDocDist(toc,doc)
+    toc_reverse_map = create_reverse_lookup(read_toc)
+    w = getTocToDocDist(read_toc,doc)
     bkps = getBreakPoints(w)
-    #########
+  
     for tp, sp in enumerate(bkps[:-1]):
         doc_index = doc_reverse_map[sp]
         toc_index = toc_reverse_map[tp]
-        print('toc',toc[toc_index],'span',doc_index,'doc',doc[doc_index],' > ',)
+        print('toc',read_toc[toc_index],'span',doc_index,'doc',doc[doc_index],' > ',)
         print('\n')
 
     dtb = {}
@@ -168,15 +163,14 @@ def create_dtb(f_toc, f_text, col_name):
         toc_blob = copy.deepcopy(dtb_blob)
         doc_blob = copy.deepcopy(dtb_blob)
 
-        # toc_blob['id'] = toc_id[tp]
-        toc_blob['id'] = id_dict[tp]
+        toc_blob['id'] = toc_id[tp]
         toc_blob['span']['start'] = toc_start_index
         toc_blob['span']['end'] = toc_end_index
 
         doc_blob['span']['start'] = doc_start_index
         doc_blob['span']['end'] = doc_end_index
 
-        toc_blob['fulltext_annotation'] = toc[toc_start_index]
+        toc_blob['fulltext_annotation'] = read_toc[toc_start_index]
         doc_blob['fulltext_annotation'] = ''.join([doc[ind] for ind in range(doc_start_index,doc_end_index)])
 
         dtb_blob_array.append({'source':toc_blob,'target':doc_blob})

@@ -39,6 +39,7 @@ from daggit.contrib.sunbird.oplib.contentreuseUtils import create_manifest
 from daggit.contrib.sunbird.oplib.contentreuseUtils import create_toc
 from daggit.contrib.sunbird.oplib.dtb import create_dtb
 from daggit.contrib.sunbird.oplib.contentreuseUtils import getDTB, calc_stat
+from daggit.contrib.sunbird.oplib.contentreuseUtils import agg_actual_predict_df
 from daggit.contrib.sunbird.oplib.contentreuseUtils import getSimilarTopic
 from daggit.contrib.sunbird.oplib.contentreuseEvaluationUtils import text_image
 from daggit.core.oplib import distanceUtils as dist
@@ -159,7 +160,6 @@ class TextExtractionEvaluation(BaseOperator):
         Function that the OcrTextExtraction operator defines while returning graph outputs
 
         :returns: Returns the path to the folder in which text extraction results get generated
-
         """
         return {"path_to_validation_pdf": File_IO(
                 self.node.outputs[0])}
@@ -168,7 +168,10 @@ class TextExtractionEvaluation(BaseOperator):
         target_folder = self.inputs["path_to_result_folder"].read()
         language_mapping_loc = self.inputs["pathToLanguageMapping"].read()
         path_to_toc = self.inputs["pathToToc"].read()
-        output_loc = os.path.join(target_folder, "text_extraction_validation")
+        evaluation_folder = os.path.join(target_folder, "evaluation")
+        if not os.path.exists(evaluation_folder):
+            os.makedirs(evaluation_folder)
+        output_loc = os.path.join(evaluation_folder, "text_extraction_validation")
         if not os.path.exists(output_loc):
             os.mkdir(output_loc)
         pdf_files = [i for i in os.listdir(os.path.join(target_folder, "source")) if i!='.DS_Store']
@@ -269,14 +272,19 @@ class DTBCreationEvaluation(BaseOperator):
         """
         return {"path_to_dtb_evaluation_result": File_IO(
                 self.node.outputs[0])}
-
+    
     def run(self, level):
         dtb_pred_loc = self.inputs['path_to_dtb_json_file'].read()
         assert os.path.exists(dtb_pred_loc) == True
         path_to_result_folder = os.path.split(dtb_pred_loc)[0]
+        evaluation_folder = os.path.join(path_to_result_folder, "evaluation")
+        if not os.path.exists(evaluation_folder):
+            os.makedirs(evaluation_folder)
         text_loc = os.path.join(path_to_result_folder, "extract", "GOCR", "text", "fulltext_annotation.txt")
         dtb_actual_loc = self.inputs['pathToActualDTB'].read()
         toc_df_loc = self.inputs['pathToToc'].read()
+        output_loc = os.path.join(evaluation_folder, "DTB_creation_evaluation.csv")
+
         toc_df = pd.read_csv(toc_df_loc) 
         dtb_actual = pd.read_csv(dtb_actual_loc)
         if 'Toc feature' in dtb_actual.columns:
@@ -284,40 +292,32 @@ class DTBCreationEvaluation(BaseOperator):
                 text = txt_file.read()
             with open(dtb_pred_loc, 'r') as f:
                 dtb_predicted = json.load(f)
-            text_read_ = " ".join([ i for i in preprocess.strip_word_number(text.splitlines()," ") if i!=''])  
-            text_read_ = re.sub(' +', ' ', text_read_)   
+            text_read_ = preprocess.strip_word_number([text], " ")[0]    
+            text_read_ = re.sub(' +', ' ', text_read_)
+            toc_df[['Chapter Name','Topic Name']] = toc_df[['Chapter Name','Topic Name']].apply(lambda x: preprocess.strip_word_number(x, " ")) 
             toc_df = pd.DataFrame(toc_df.groupby('Chapter Name')['Topic Name'].unique())
             pred_df = pd.DataFrame( )
             pred_df['title'] = [dtb_predicted['alignment'][i]['source']['fulltext_annotation'] for i in range(len(dtb_predicted['alignment']))] 
             pred_df['pred_text']=[ dtb_predicted['alignment'][i]['target']['fulltext_annotation'] for i in range(len(dtb_predicted['alignment'])) ] 
-            toc_pred_merge_df = pd.merge(toc_df, pred_df, left_index=True, right_on='title')
-            toc_pred_merge_df = toc_pred_merge_df.reset_index()
-            toc_pred_merge_df[['title','pred_text']] = toc_pred_merge_df[['title','pred_text']].apply(lambda x: preprocess.strip_word_number(x, " ")) 
-            toc_pred_merge_df['Topic Name'] = [preprocess.strip_word_number(i," ") for i in toc_pred_merge_df['Topic Name']]
+            pred_df[['title','pred_text']] = pred_df[['title','pred_text']].apply(lambda x: preprocess.strip_word_number(x, " "))
             dtb_actual[['CONTENTS','Toc feature']] = dtb_actual[['CONTENTS','Toc feature']].apply(lambda x: preprocess.strip_word_number(x, " "))
-            ls = [] 
-
-            if level =='Chapter Name':
-                ls.append([ " ".join( dtb_actual.loc[dtb_actual['Toc feature'].isin(toc_pred_merge_df['Topic Name'][i][1: ]+[toc_pred_merge_df['title'][i]])]['CONTENTS'] ) for i in range(len(toc_pred_merge_df)) ])    
-            if level == 'Topic Name':
-                ls.append([ " ".join( dtb_actual.loc[dtb_actual['Toc feature'].isin(toc_pred_merge_df['Topic Name'][i][1: ])]['CONTENTS'] ) for i in range(len(toc_pred_merge_df))])  
-            toc_pred_merge_df['actual_text'] = [preprocess.strip_word_number([i]," ")[0] for i in ls[0]] 
-            toc_pred_merge_df['actual_text'] = toc_pred_merge_df['actual_text'] 
-            toc_pred_merge_df['actual_text_split'] = [set(i.split()) for i in toc_pred_merge_df['actual_text']] 
-            toc_pred_merge_df['pred_text_split'] = [set(i.split()) for i in toc_pred_merge_df['pred_text']]  
-            toc_pred_merge_df['common_words'] = [set(toc_pred_merge_df['actual_text_split'][i])&set(toc_pred_merge_df['pred_text_split'][i]) for i in range(len(toc_pred_merge_df))]  
-            toc_pred_merge_df['Len_actual_text_split'] = [ float(len(i)) for i in list(toc_pred_merge_df['actual_text_split'])] 
-            toc_pred_merge_df['Len_pred_text_split'] = [ float(len(i)) for i in list(toc_pred_merge_df['pred_text_split'])] 
-            toc_pred_merge_df['Len_common_words'] = [ float(len(i)) for i in list(toc_pred_merge_df['common_words'])] 
-            toc_pred_merge_df['intersection/actu'] = calc_stat(list(toc_pred_merge_df['common_words']), list(toc_pred_merge_df['actual_text_split']), "division")
-            toc_pred_merge_df['intersection/pred'] = calc_stat(list(toc_pred_merge_df['common_words']), list(toc_pred_merge_df['pred_text_split']), "division")
-            toc_pred_merge_df['WordlistEMD'] = calc_stat(list(toc_pred_merge_df['actual_text_split']), list(toc_pred_merge_df['pred_text_split']), "MED") 
-            output_loc = os.path.join(path_to_result_folder, "DTB_creation_evaluation_result.csv")
-            toc_pred_merge_df.to_csv(output_loc) 
+            actual_predict_df_ls = agg_actual_predict_df(toc_df,dtb_actual,pred_df, level)
+            concat_df = pd.concat(actual_predict_df_ls)
+            concat_df = concat_df.reset_index()
+            concat_df['Actual_text_split'] = [set(i.split()) for i in concat_df['ActualText']] 
+            concat_df['Pred_text_split'] = [set(i.split()) for i in concat_df['PredictedText']]  
+            concat_df['Common_words'] = [set(concat_df['Actual_text_split'][i])&set(concat_df['Pred_text_split'][i]) for i in range(len(concat_df))]  
+            concat_df['Len_actual_text_split'] = [ float(len(i)) for i in list(concat_df['Actual_text_split'])] 
+            concat_df['Len_pred_text_split'] = [ float(len(i)) for i in list(concat_df['Pred_text_split'])] 
+            concat_df['Len_common_words'] = [ float(len(i)) for i in list(concat_df['Common_words'])] 
+            concat_df['Intersection/actu'] = calc_stat(list(concat_df['Common_words']), list(concat_df['Actual_text_split']), "division")
+            concat_df['Intersection/pred'] = calc_stat(list(concat_df['Common_words']), list(concat_df['Pred_text_split']), "division")
+            concat_df['WordlistEMD'] = calc_stat(list(concat_df['Actual_text_split']), list(concat_df['Pred_text_split']), "MED") 
+            concat_df.to_csv(output_loc, index = False)
             self.outputs["path_to_dtb_evaluation_result"].write(output_loc)
         else:
             print("The column is not present in the Dataframe!!")
-        
+
 
 class DTBMapping(BaseOperator):
     
