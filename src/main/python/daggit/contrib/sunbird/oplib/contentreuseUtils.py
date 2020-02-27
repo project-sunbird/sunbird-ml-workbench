@@ -2,15 +2,31 @@ import os
 import daggit
 import requests
 import io
+import sys
 import re
+import string
 import shutil
 import json
+
+import copy
+import glob
+import natsort
 import numpy as np
+from numpy import nan 
 import pandas as pd
+import pandasql as ps
 import ruptures as rp
 import Levenshtein
+import gspread
+import spacy
 
-from daggit.core.io.files import findFiles
+nlp = spacy.load('en') 
+from oauth2client.service_account import ServiceAccountCredentials
+
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.preprocessing import normalize
+import Levenshtein
+from pyemd import emd
 
 from google.cloud import vision
 from google.cloud import storage
@@ -19,9 +35,15 @@ from natsort import natsorted
 from scipy.spatial import distance_matrix
 from sklearn.decomposition import PCA
 from pyemd import emd
+from Bio import pairwise2
+from Bio.pairwise2 import format_alignment
+from sklearn.feature_extraction.text import CountVectorizer
+
+from daggit.core.oplib import distanceUtils as dist
+from daggit.core.oplib import nlp as preprocess
+from daggit.core.io.files import findFiles
 
 
-    
 def upload_blob(bucket_name, source_file_name, destination_blob_name):
     """Uploads a file to the storage bucket."""
     storage_client = storage.Client()
@@ -39,7 +61,7 @@ def upload_blob(bucket_name, source_file_name, destination_blob_name):
 
 def do_GoogleOCR(gcs_source_uri, gcs_destination_uri): #bs parameter
     """
-    Perform OCR on a PDF uploaded in google cloud storage, generate output as 
+    Perform OCR on a PDF uploaded in google cloud storage, generate output as
     JSON responses and save it in a destination URI
     """
     # Supported mime_types are: 'application/pdf' and 'image/tiff'
@@ -83,7 +105,7 @@ def do_GoogleOCR(gcs_source_uri, gcs_destination_uri): #bs parameter
     # List objects with the given prefix.
     blob_list = list(bucket.list_blobs(prefix=prefix))
     new_list = []
-    for i in range(len(blob_list)): 
+    for i in range(len(blob_list)):
         str_convert = str(blob_list[i]).replace("<", "").replace(">", "").split(", ")[1]
         if str_convert[-3:] == "pdf":
             pass
@@ -225,7 +247,7 @@ def getblob(method_of_ocr, bucket_name, local_path_to_pdf, content_id, root_path
                             os.remove(fname)
                 path_to_outputjson_folder = download_outputjson_reponses(bucket_name, prefix+"/", path_to_gocr_json, delimiter="/")
         except:
-           print("Process terminated") 
+           print("Process terminated")
     return textbook_model_path
 
 
@@ -245,14 +267,14 @@ def create_manifest(content_id, path_to_saved_folder):
             arr = []
             for i in findFiles(path_to_saved_folder, ["txt"]):
                 arr.append({"id": content_id, "path": i, "Type": "gocr"})
-                
+
             manifest["extract"] = {}
             manifest["extract"]["fulltextAnnotation"] = arr
             arr = []
             for i in (os.listdir(os.path.join(path_to_saved_folder, "raw_data"))):
                 if i != '.DS_Store':
                     arr.append({"id": content_id+"_blob_gocr", "path": i, "Type": "gocr"})
-                
+
             manifest["extract"]["api_response"] = arr
             with open(path_to_manifest, "w") as json_file:
                 json.dump(manifest, json_file, indent=4)
@@ -283,3 +305,91 @@ def create_toc(content_id, path_to_saved_folder, api_key, postman_token):
     except:
         pass
     return path_to_toc
+
+def getDTB(loc):
+    with open(loc) as json_file:
+        DTB = json.load(json_file)
+    DTB_df=[]
+    for topic in DTB['alignment']:
+        full_text = topic["target"]['fulltext_annotation']
+        cid = topic["source"]["id"]
+        topic_name = topic["source"]["fulltext_annotation"]
+        DTB_df.append({"identifier":cid, "name":topic_name, "text":full_text})
+    return pd.DataFrame(DTB_df)
+
+
+def getSimilarTopic(x, k):
+    df=dist.similarity_df(x)
+    similar_topic=dict()
+    for i in range(len(df)):
+        row_df=pd.DataFrame(df.iloc[i])
+        row_df=row_df.sort_values(by = list(row_df.columns),ascending=False)
+        topn=[]
+        for j in range(k):
+            try:
+                topn.append({list(row_df.index)[j]:row_df.iloc[j,0]})
+            except:
+                pass
+        similar_topic[list(df.index)[i]]=topn
+    return similar_topic
+
+
+def read_google_sheet(credentials,spreadsheet_key,worksheetpage):
+    scope = ['https://spreadsheets.google.com/feeds']
+    credentials = ServiceAccountCredentials.from_json_keyfile_name(credentials, scope)
+    gc = gspread.authorize(credentials)
+    spreadsheet_key = spreadsheet_key
+    book = gc.open_by_key(spreadsheet_key)
+    worksheet = book.worksheet(worksheetpage) 
+    table = worksheet.get_all_values()
+    df = pd.DataFrame(table[1:], columns=table[0])
+    return df
+
+
+def calc_stat(list1, list2, measure):
+    ls = [] 
+    for i in range(len(list1)): 
+        if measure =='division':
+            try:
+                ls.append(float((len(list1[i]))/(len(list2[i]))))
+            except:
+                ls.append(0)
+        if measure=='MED':
+            try:
+                ls.append(dist.getWordlistEMD((list(list1[i])),list(list2[i]),"MED"))
+            except:
+                ls.append(0)
+    return ls
+
+
+def find_span_sentence(text, sentence):
+    start_index = text.find(sentence)
+    end_index = start_index + len(sentence) 
+    return start_index, end_index
+
+def agg_actual_predict_df(toc_df, dtb_actual, pred_df, level):
+    ls = [] 
+    for i in range(len(toc_df)):
+        a = [toc_df.index[i]] + list(toc_df['Topic Name'][i][1: ])
+        if level == 'Topic Name':
+            for j in range(len(a)):
+                actual_text = " ".join( dtb_actual.loc[dtb_actual['Toc feature']==str(a[j])]['CONTENTS'])
+                try:
+                    pred_text = pred_df[pred_df['title']==a[j]]['pred_text'].iloc[0]
+                except:
+                    pred_text = 'nan'
+                consolidated_df = pd.DataFrame([toc_df.index[i], a[j], actual_text,pred_text]).T
+                consolidated_df.columns= ['ChapterName','TopicName','ActualText','PredictedText']
+                ls.append(consolidated_df)
+        elif level == 'Chapter Name':
+            actual_text = " ".join( dtb_actual.loc[dtb_actual['Toc feature'].isin(a)]['CONTENTS'])
+            try:
+                pred_text = pred_df[pred_df['title']==toc_df.index[i]]['pred_text'].iloc[0]
+            except:
+                pred_text = 'nan'
+            consolidated_df = pd.DataFrame([toc_df.index[i], actual_text, pred_text]).T
+            consolidated_df.columns= ['ChapterName','ActualText','PredictedText']
+            ls.append(consolidated_df)
+    return ls 
+
+

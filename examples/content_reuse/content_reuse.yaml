@@ -4,19 +4,57 @@ owner: sunbird
 inputs:
   DS_DATA_HOME: <path to DS_DATA_HOME>
   pathTocredentials: inputs/credentials.ini
+  pathToLanguageMapping: inputs/language_mapping.json
   pathToPDF: <path to PDF>
+  pathToToc: <path to TOC>
+  pathToReference_DTB: <path to ReferenceDTB>
+  pathToActualDTB: <path to Actual DTB>
+
 outputs:
   dummy: /home/DS_HOME
 
 graph:
-
+  
   - node_name: ocr_text_extraction
     inputs: [DS_DATA_HOME, pathTocredentials, pathToPDF]
     outputs: [path_to_result_folder]
-    operation: contentreuseNodes.OcrTextExtraction
+    operation: contentreuse.OcrTextExtraction
     arguments: 
-      gcp_bucket_name: <bucket_name>
-      content_id: <content_id>
+      gcp_bucket_name: contentreuse_experiment
+      content_id: <content id>
       ocr_method: GOCR
+
+  - node_name: text_extraction_evaluation
+    inputs: [path_to_result_folder, pathToLanguageMapping, pathToToc]
+    outputs: [path_to_evaluation_result]
+    operation: contentreuse.TextExtractionEvaluation
+  
+  - node_name: create_dtb
+    inputs: [ocr_text_extraction.path_to_result_folder, pathToToc]
+    outputs: [path_to_dtb_json_file]
+    operation: contentreuse.CreateDTB
+    arguments:
+      col_name: [Chapter Name]
+
+  - node_name: dtb_creation_evaluation
+    inputs: [create_dtb.path_to_dtb_json_file, pathToToc, pathToActualDTB]
+    outputs: [path_to_dtb_evaluation_result]
+    operation: contentreuse.DTBCreationEvaluation
+    arguments:
+      level: Chapter Name
+
+  - node_name: dtb_mapping
+    inputs: [ocr_text_extraction.path_to_result_folder, create_dtb.path_to_dtb_json_file, pathToReference_DTB]
+    outputs: [path_to_mapping_json]
+    operation: contentreuse.DTBMapping
+    arguments:
+      no_of_recommendations: 5
+      distance_method: BERT
+  
+
+
+
+ 
+
 
 

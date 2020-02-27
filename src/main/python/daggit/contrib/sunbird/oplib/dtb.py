@@ -8,14 +8,11 @@ import json
 import numpy as np
 import pandas as pd
 import Levenshtein
-
-
 from pyemd import emd
-
+import ast
 
 import copy
 import json
-    
 
 
 def filterText(text, apply=True):
@@ -23,7 +20,7 @@ def filterText(text, apply=True):
     # get rid of newlines
     if apply:
         text = text.strip().replace("\n", " ").replace("\r","")
-        #text = text.lower()
+        text = text.lower()
         # remove spaces, periods brackets
         text = re.sub(r'\.(?!\d)|\s+', '', text)
         # remove [] brackets
@@ -48,7 +45,7 @@ def minedit(a,b,filter=True):
     b = filterText(b, apply=filter)
     d = 1.0*Levenshtein.distance(a, b)/max(len(a),len(b))
     return d
-    
+
 def getPairwiseDist(row_strings,col_strings,dist_method='minedit'):
     # Levenshtein distance
     if dist_method == 'minedit':
@@ -58,16 +55,16 @@ def getPairwiseDist(row_strings,col_strings,dist_method='minedit'):
     n = len(row_strings)
     m = len(col_strings)
     dist_matrix= np.zeros((n,m))
-    
+
     for i,row_word in enumerate(row_strings):
         for j,col_word in enumerate(col_strings):
-            dist_matrix[i,j] = f(row_word,col_word) 
+            dist_matrix[i,j] = f(row_word,col_word)
     return dist_matrix
 
 def getDocDistance(doc_a, doc_b, pooling = 'avg', dist_method='minedit'):
     dist = getPairwiseDist(doc_a.split(),doc_b.split(),dist_method=dist_method)
     d = dist.min()
-    return d 
+    return d
 
 def create_reverse_lookup(doc):
     k = len(doc)
@@ -100,33 +97,54 @@ def getBreakPoints(w,cutoff=0.0001,toc=True):
         if toc:
             bkps.append(index[1])
     bkps.append(m)
-    return bkps    
+    return bkps
 
 def readToC(f_toc,col_name='Chapter Name',filter=True):
     df = pd.read_csv(f_toc)
     x = df.drop_duplicates(subset=col_name)
     toc = x[col_name].to_dict()
+    toc_id = list(x["Identifier"])
     for ind,val in toc.items():
         text = filterText(val,apply=filter)
-        toc[ind] = text         
-    return toc
+        toc[ind] = text
+    return toc, toc_id
 
 
-def create_dtb(f_toc, f_text):
-    
+def readToC(f_toc,col_name,filter=True):
+    df = pd.read_csv(f_toc)
+    x = df.drop_duplicates(subset=col_name)
+    x = x.dropna(subset=["Identifier"])
+    toc = {}
+    toc_id = []
+    create_toc_by = col_name[len(col_name)-1]
+    if create_toc_by == "Chapter Name":
+        toc = x[create_toc_by].to_dict()
+        toc_id = list(x["Identifier"])
+    if create_toc_by == "Topic Name":
+        for i, j in enumerate(x[create_toc_by]):
+            if str(j) == "nan":
+                toc.update({i:x["Chapter Name"].iloc[i]})
+            else:
+                toc.update({i:j})
+            toc_id.append(x["Identifier"].iloc[i])
+    for ind,val in toc.items():
+        text = filterText(val,apply=filter)
+        toc[ind] = text
+    return toc, toc_id
 
-    toc = readToC(f_toc,filter=False)
+
+def create_dtb(f_toc, f_text, col_name):
+    read_toc, toc_id = readToC(f_toc, col_name, filter=False)
     doc = readSentences(f_text,filter=False)
-
     doc_reverse_map = create_reverse_lookup(doc)
-    toc_reverse_map = create_reverse_lookup(toc)
-    w = getTocToDocDist(toc,doc)
+    toc_reverse_map = create_reverse_lookup(read_toc)
+    w = getTocToDocDist(read_toc,doc)
     bkps = getBreakPoints(w)
-
+  
     for tp, sp in enumerate(bkps[:-1]):
         doc_index = doc_reverse_map[sp]
         toc_index = toc_reverse_map[tp]
-        print('toc',toc[toc_index],'span',doc_index,'doc',doc[doc_index],' > ',)
+        print('toc',read_toc[toc_index],'span',doc_index,'doc',doc[doc_index],' > ',)
         print('\n')
 
     dtb = {}
@@ -141,17 +159,18 @@ def create_dtb(f_toc, f_text):
 
         doc_end_index = doc_reverse_map[bkps[tp+1]-1]
         toc_end_index = toc_start_index
-    
+
         toc_blob = copy.deepcopy(dtb_blob)
         doc_blob = copy.deepcopy(dtb_blob)
 
+        toc_blob['id'] = toc_id[tp]
         toc_blob['span']['start'] = toc_start_index
         toc_blob['span']['end'] = toc_end_index
-    
+
         doc_blob['span']['start'] = doc_start_index
         doc_blob['span']['end'] = doc_end_index
-    
-        toc_blob['fulltext_annotation'] = toc[toc_start_index]
+
+        toc_blob['fulltext_annotation'] = read_toc[toc_start_index]
         doc_blob['fulltext_annotation'] = ''.join([doc[ind] for ind in range(doc_start_index,doc_end_index)])
 
         dtb_blob_array.append({'source':toc_blob,'target':doc_blob})

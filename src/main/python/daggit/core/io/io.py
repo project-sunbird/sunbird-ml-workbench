@@ -8,7 +8,7 @@ import json
 import logging
 import configparser
 
-from ..base.config import DAGGIT_HOME, STORE
+from ..base.config import DAGGIT_HOME, STORE, STORAGE_FORMAT
 from ..base.utils import create_dir
 from ..base.config import STORAGE_FORMAT
 
@@ -161,6 +161,7 @@ class ReadDaggitTask_Folderpath(DataType):
 
 
 class File_Txt(DataType):
+    
 
     def location_specify(self):
         return self.data_location
@@ -178,6 +179,44 @@ class File_Txt(DataType):
         f = open(self.data_location, "w+")
         f.write(data)
         f.close()
+
+
+class File_IO(DataType):
+    
+    def read(self):
+        if self.data_location[-3:] == STORAGE_FORMAT:
+            with open(self.data_location, "r") as file:
+                return file.read()
+        else:
+            return self.data_location
+
+    def write(self, data):
+        print(
+            "dirname for data_location:",
+            os.path.dirname(
+                self.data_location))
+        create_dir(os.path.dirname(self.data_location))
+        with open(self.data_location, "w+") as write_file:
+            write_file.write(data)
+
+
+class File_JSON(DataType):
+
+    def location_specify(self):
+        return self.data_location
+
+    def read(self):
+        f = open(self.data_location, "r")
+        return f.read()
+
+    def write(self, data):
+        print(
+            "dirname for data_location:",
+            os.path.dirname(
+                self.data_location))
+        create_dir(os.path.dirname(self.data_location))
+        with open(self.data_location, 'w+') as json_file:
+            json.dump(data, json_file, indent=4)
 
 
 class Pickle_Obj(DataType):
