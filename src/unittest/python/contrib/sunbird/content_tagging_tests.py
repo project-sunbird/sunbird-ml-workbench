@@ -1,17 +1,11 @@
-from contrib.sunbird.TestingUtils import text_reading
-from contrib.sunbird.TestingUtils import sentence_similarity
-from contrib.sunbird.TestingUtils import keyword_extraction
-import unittest
 import sys
-import os
-import yaml
-import nltk
-import pandas as pd
+import unittest
+
 from daggit.contrib.sunbird.oplib.taggingUtils import *
 from daggit.core.oplib.misc import df_feature_check
 from daggit.core.oplib.nlp import jaccard_with_phrase
-
 from nltk.corpus import stopwords
+
 stopwords = stopwords.words('english')
 
 testdir = os.path.dirname(os.path.realpath(__file__))
@@ -39,7 +33,7 @@ class UnitTests(unittest.TestCase):
             "df_feature_check/" +
             "Content_Meta_feature_checking_df_3.csv")
         mandatatory_field_location = test_case_data_location + \
-            "df_feature_check/" + "ContentTagging_mandatory_fields.yaml"
+                                     "df_feature_check/" + "ContentTagging_mandatory_fields.yaml"
         with open(mandatatory_field_location, 'r') as stream:
             data = yaml.load(stream)
         mandatatory_field_ls = list(data['mandatory_fields'])
@@ -107,6 +101,12 @@ class UnitTests(unittest.TestCase):
     @staticmethod
     def test_jaccard_evaluation():
         assert jaccard_with_phrase(['simple', 'algebraic', 'problem', 'mathematics'], [
-                                   'algebraic', 'maths'])['jaccard'] == 0.2
+            'algebraic', 'maths'])['jaccard'] == 0.2
         assert jaccard_with_phrase(['simple', 'algebraic', 'problem', 'mathematics'], [
-                                   'tree', 'apple'])['jaccard'] == 0
+            'tree', 'apple'])['jaccard'] == 0
+
+    @staticmethod
+    def test_scoring_data_preparation():
+        cols = ['STB_Id', 'STB_Grade', 'STB_Section', 'STB_Text', 'Ref_id', 'Ref_Grade', 'Ref_Section', 'Ref_Text']
+        case1 = pd.read_csv(test_case_data_location + "df_feature_check/" + "content_reuse_feature_check.csv")
+        assert df_feature_check(case1, cols)
