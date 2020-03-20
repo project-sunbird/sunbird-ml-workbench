@@ -7,8 +7,9 @@ import time
 import re
 import glob
 import logging
-import pyvips
+#import pyvips
 import cv2
+import pickle
 import img2pdf
 import configparser
 import Levenshtein
@@ -18,6 +19,7 @@ from scipy.spatial import distance_matrix
 import ruptures as rp
 import pandas as pd
 import numpy as np 
+from keras.models import load_model
 
 from PIL import Image, ImageDraw, ImageFont
 from pdf2image import convert_from_path
@@ -26,8 +28,11 @@ from google.cloud import vision
 from google.cloud import storage
 from google.protobuf import json_format
 from natsort import natsorted, ns
+from sklearn.metrics import precision_recall_curve
+from sklearn.metrics import average_precision_score
+from sklearn.model_selection import train_test_split
 
-from daggit.core.io.io import File_IO 
+from daggit.core.io.io import File_IO, File_Txt
 from daggit.core.io.files import findFiles
 from daggit.core.base.factory import BaseOperator
 from daggit.core.io.io import ReadDaggitTask_Folderpath
@@ -41,13 +46,17 @@ from daggit.contrib.sunbird.oplib.dtb import create_dtb
 from daggit.contrib.sunbird.oplib.contentreuseUtils import getDTB, calc_stat
 from daggit.contrib.sunbird.oplib.contentreuseUtils import agg_actual_predict_df
 from daggit.contrib.sunbird.oplib.contentreuseUtils import getSimilarTopic
-from daggit.contrib.sunbird.oplib.contentreuseEvaluationUtils import text_image
+# from daggit.contrib.sunbird.oplib.contentreuseEvaluationUtils import text_image
 from daggit.core.oplib import distanceUtils as dist
 from daggit.core.oplib import nlp as preprocess
+from daggit.contrib.sunbird.oplib.contentreuseUtils import scoring_module, filter_by_grade_range
+from daggit.contrib.sunbird.oplib.contentreuseUtils import generate_tokenizer_embedding_mat
+from daggit.contrib.sunbird.oplib.contentreuseUtils import SiameseBiLSTM
+from daggit.contrib.sunbird.oplib.contentreuseUtils import scoring_agg_topic_level
 
 
 class OcrTextExtraction(BaseOperator):
-    
+
     @property
     def inputs(self):
         """
@@ -60,10 +69,10 @@ class OcrTextExtraction(BaseOperator):
 
         """
         return {
-                "DS_DATA_HOME": File_IO(self.node.inputs[0]),
-                "pathTocredentials": File_IO(self.node.inputs[1]),
-                "pathToPDF":  File_IO(self.node.inputs[2])
-                }
+            "DS_DATA_HOME": File_IO(self.node.inputs[0]),
+            "pathTocredentials": File_IO(self.node.inputs[1]),
+            "pathToPDF": File_IO(self.node.inputs[2])
+        }
 
     @property
     def outputs(self):
@@ -74,7 +83,7 @@ class OcrTextExtraction(BaseOperator):
 
         """
         return {"path_to_result_folder": File_IO(
-                self.node.outputs[0])}
+            self.node.outputs[0])}
 
     def run(self, gcp_bucket_name, ocr_method, content_id):
 
@@ -109,9 +118,9 @@ class OcrTextExtraction(BaseOperator):
                     GOOGLE_APPLICATION_CREDENTIALS = f.read()
             except BaseException:
                 GOOGLE_APPLICATION_CREDENTIALS = ""
-                logging.info("Not a valid google credential") 
+                logging.info("Not a valid google credential")
 
-        # content dump:
+                # content dump:
         if os.path.exists(path_to_PDF_file):
             try:
                 print("Content ID: ", content_id)
@@ -121,8 +130,8 @@ class OcrTextExtraction(BaseOperator):
                 start = time.time()
                 path_to_saved_folder = getblob(ocr_method, gcp_bucket_name, path_to_PDF_file, content_id, DS_DATA_HOME)
                 stop = time.time()
-                time_consumed = stop-start
-                time_consumed_minutes = time_consumed/60.0
+                time_consumed = stop - start
+                time_consumed_minutes = time_consumed / 60.0
                 print("Time consumed in minutes: ", time_consumed_minutes)
                 print()
             except:
@@ -136,7 +145,7 @@ class OcrTextExtraction(BaseOperator):
 
 
 class TextExtractionEvaluation(BaseOperator):
-    
+
     @property
     def inputs(self):
         """
@@ -149,10 +158,10 @@ class TextExtractionEvaluation(BaseOperator):
 
         """
         return {
-                "path_to_result_folder": File_IO(self.node.inputs[0]),
-                "pathToLanguageMapping": File_IO(self.node.inputs[1]),
-                "pathToToc": File_IO(self.node.inputs[2])
-                }
+            "path_to_result_folder": File_IO(self.node.inputs[0]),
+            "pathToLanguageMapping": File_IO(self.node.inputs[1]),
+            "pathToToc": File_IO(self.node.inputs[2])
+        }
 
     @property
     def outputs(self):
@@ -162,7 +171,7 @@ class TextExtractionEvaluation(BaseOperator):
         :returns: Returns the path to the folder in which text extraction results get generated
         """
         return {"path_to_validation_pdf": File_IO(
-                self.node.outputs[0])}
+            self.node.outputs[0])}
 
     def run(self):
         target_folder = self.inputs["path_to_result_folder"].read()
@@ -174,32 +183,32 @@ class TextExtractionEvaluation(BaseOperator):
         output_loc = os.path.join(evaluation_folder, "text_extraction_validation")
         if not os.path.exists(output_loc):
             os.mkdir(output_loc)
-        pdf_files = [i for i in os.listdir(os.path.join(target_folder, "source")) if i!='.DS_Store']
-        pdf_ocr_loc_ls = [] 
+        pdf_files = [i for i in os.listdir(os.path.join(target_folder, "source")) if i != '.DS_Store']
+        pdf_ocr_loc_ls = []
         for i in range(len(pdf_files)):
-            pdf_loc = os.path.join(target_folder, "source", pdf_files[i])  
+            pdf_loc = os.path.join(target_folder, "source", pdf_files[i])
             print(pdf_loc)
-            google_ocr_loc = os.path.join(target_folder, "raw_data", os.path.split(target_folder)[1]) 
+            google_ocr_loc = os.path.join(target_folder, "raw_data", os.path.split(target_folder)[1])
             pdf_ocr_loc_ls.append([pdf_loc, google_ocr_loc])
         toc_df = pd.read_csv(path_to_toc)
-        medium = [i for i in toc_df["Medium"].unique() if str(i)!="nan"][0]
+        medium = [i for i in toc_df["Medium"].unique() if str(i) != "nan"][0]
         pdf_ocr_loc_ls
         for i in range(len(pdf_ocr_loc_ls)):
-            text_image(pdf_ocr_loc_ls[i][0],pdf_ocr_loc_ls[i][1],medium, language_mapping_loc, 1, output_loc)
+            text_image(pdf_ocr_loc_ls[i][0], pdf_ocr_loc_ls[i][1], medium, language_mapping_loc, 1, output_loc)
 
-        image_ls = [i for i in os.listdir(output_loc) if i.endswith(".png")] 
-        ls = [i for i in natsorted(image_ls, reverse=False)] 
-        image_ls_open = [Image.open(os.path.join(output_loc,str(i))) for i in ls ]
+        image_ls = [i for i in os.listdir(output_loc) if i.endswith(".png")]
+        ls = [i for i in natsorted(image_ls, reverse=False)]
+        image_ls_open = [Image.open(os.path.join(output_loc, str(i))) for i in ls]
         pdf_filename = os.path.join(output_loc, "validation.pdf")
 
-        image_ls_open[0].save(pdf_filename, "PDF" ,resolution=100.0, save_all=True, append_images=image_ls_open[1:]) 
+        image_ls_open[0].save(pdf_filename, "PDF", resolution=100.0, save_all=True, append_images=image_ls_open[1:])
         for files in image_ls:
-             os.remove(os.path.join(output_loc, str(files)))
+            os.remove(os.path.join(output_loc, str(files)))
         self.outputs["path_to_validation_pdf"].write(pdf_filename)
 
 
 class CreateDTB(BaseOperator):
-    
+
     @property
     def inputs(self):
         """
@@ -209,9 +218,9 @@ class CreateDTB(BaseOperator):
 
         """
         return {
-                "path_to_result_folder": File_IO(self.node.inputs[0]),
-                "pathToToc": File_IO(self.node.inputs[1]),
-                }
+            "path_to_result_folder": File_IO(self.node.inputs[0]),
+            "pathToToc": File_IO(self.node.inputs[1]),
+        }
 
     @property
     def outputs(self):
@@ -222,10 +231,9 @@ class CreateDTB(BaseOperator):
 
         """
         return {"path_to_dtb_json_file": File_IO(
-                self.node.outputs[0])}
+            self.node.outputs[0])}
 
     def run(self, col_name):
-
         """
         Creates the DTB by aligning ToC with text extractd from text extracted from any textbook
 
@@ -243,7 +251,7 @@ class CreateDTB(BaseOperator):
 
 
 class DTBCreationEvaluation(BaseOperator):
-    
+
     @property
     def inputs(self):
         """
@@ -257,10 +265,10 @@ class DTBCreationEvaluation(BaseOperator):
 
         """
         return {
-                "path_to_dtb_json_file": File_IO(self.node.inputs[0]),
-                "pathToToc": File_IO(self.node.inputs[1]),
-                "pathToActualDTB": File_IO(self.node.inputs[2])
-                }
+            "path_to_dtb_json_file": File_IO(self.node.inputs[0]),
+            "pathToToc": File_IO(self.node.inputs[1]),
+            "pathToActualDTB": File_IO(self.node.inputs[2])
+        }
 
     @property
     def outputs(self):
@@ -271,8 +279,8 @@ class DTBCreationEvaluation(BaseOperator):
 
         """
         return {"path_to_dtb_evaluation_result": File_IO(
-                self.node.outputs[0])}
-    
+            self.node.outputs[0])}
+
     def run(self, level):
         dtb_pred_loc = self.inputs['path_to_dtb_json_file'].read()
         assert os.path.exists(dtb_pred_loc) == True
@@ -285,42 +293,51 @@ class DTBCreationEvaluation(BaseOperator):
         toc_df_loc = self.inputs['pathToToc'].read()
         output_loc = os.path.join(evaluation_folder, "DTB_creation_evaluation.csv")
 
-        toc_df = pd.read_csv(toc_df_loc) 
+        toc_df = pd.read_csv(toc_df_loc)
         dtb_actual = pd.read_csv(dtb_actual_loc)
         if 'Toc feature' in dtb_actual.columns:
             with open(text_loc, 'r') as txt_file:
                 text = txt_file.read()
             with open(dtb_pred_loc, 'r') as f:
                 dtb_predicted = json.load(f)
-            text_read_ = preprocess.strip_word_number([text], " ")[0]    
+            text_read_ = preprocess.strip_word_number([text], " ")[0]
             text_read_ = re.sub(' +', ' ', text_read_)
-            toc_df[['Chapter Name','Topic Name']] = toc_df[['Chapter Name','Topic Name']].apply(lambda x: preprocess.strip_word_number(x, " ")) 
+            toc_df[['Chapter Name', 'Topic Name']] = toc_df[['Chapter Name', 'Topic Name']].apply(
+                lambda x: preprocess.strip_word_number(x, " "))
             toc_df = pd.DataFrame(toc_df.groupby('Chapter Name')['Topic Name'].unique())
-            pred_df = pd.DataFrame( )
-            pred_df['title'] = [dtb_predicted['alignment'][i]['source']['fulltext_annotation'] for i in range(len(dtb_predicted['alignment']))] 
-            pred_df['pred_text']=[ dtb_predicted['alignment'][i]['target']['fulltext_annotation'] for i in range(len(dtb_predicted['alignment'])) ] 
-            pred_df[['title','pred_text']] = pred_df[['title','pred_text']].apply(lambda x: preprocess.strip_word_number(x, " "))
-            dtb_actual[['CONTENTS','Toc feature']] = dtb_actual[['CONTENTS','Toc feature']].apply(lambda x: preprocess.strip_word_number(x, " "))
-            actual_predict_df_ls = agg_actual_predict_df(toc_df,dtb_actual,pred_df, level)
+            pred_df = pd.DataFrame()
+            pred_df['title'] = [dtb_predicted['alignment'][i]['source']['fulltext_annotation'] for i in
+                                range(len(dtb_predicted['alignment']))]
+            pred_df['pred_text'] = [dtb_predicted['alignment'][i]['target']['fulltext_annotation'] for i in
+                                    range(len(dtb_predicted['alignment']))]
+            pred_df[['title', 'pred_text']] = pred_df[['title', 'pred_text']].apply(
+                lambda x: preprocess.strip_word_number(x, " "))
+            dtb_actual[['CONTENTS', 'Toc feature']] = dtb_actual[['CONTENTS', 'Toc feature']].apply(
+                lambda x: preprocess.strip_word_number(x, " "))
+            actual_predict_df_ls = agg_actual_predict_df(toc_df, dtb_actual, pred_df, level)
             concat_df = pd.concat(actual_predict_df_ls)
             concat_df = concat_df.reset_index()
-            concat_df['Actual_text_split'] = [set(i.split()) for i in concat_df['ActualText']] 
-            concat_df['Pred_text_split'] = [set(i.split()) for i in concat_df['PredictedText']]  
-            concat_df['Common_words'] = [set(concat_df['Actual_text_split'][i])&set(concat_df['Pred_text_split'][i]) for i in range(len(concat_df))]  
-            concat_df['Len_actual_text_split'] = [ float(len(i)) for i in list(concat_df['Actual_text_split'])] 
-            concat_df['Len_pred_text_split'] = [ float(len(i)) for i in list(concat_df['Pred_text_split'])] 
-            concat_df['Len_common_words'] = [ float(len(i)) for i in list(concat_df['Common_words'])] 
-            concat_df['Intersection/actu'] = calc_stat(list(concat_df['Common_words']), list(concat_df['Actual_text_split']), "division")
-            concat_df['Intersection/pred'] = calc_stat(list(concat_df['Common_words']), list(concat_df['Pred_text_split']), "division")
-            concat_df['WordlistEMD'] = calc_stat(list(concat_df['Actual_text_split']), list(concat_df['Pred_text_split']), "MED") 
-            concat_df.to_csv(output_loc, index = False)
+            concat_df['Actual_text_split'] = [set(i.split()) for i in concat_df['ActualText']]
+            concat_df['Pred_text_split'] = [set(i.split()) for i in concat_df['PredictedText']]
+            concat_df['Common_words'] = [set(concat_df['Actual_text_split'][i]) & set(concat_df['Pred_text_split'][i])
+                                         for i in range(len(concat_df))]
+            concat_df['Len_actual_text_split'] = [float(len(i)) for i in list(concat_df['Actual_text_split'])]
+            concat_df['Len_pred_text_split'] = [float(len(i)) for i in list(concat_df['Pred_text_split'])]
+            concat_df['Len_common_words'] = [float(len(i)) for i in list(concat_df['Common_words'])]
+            concat_df['Intersection/actu'] = calc_stat(list(concat_df['Common_words']),
+                                                       list(concat_df['Actual_text_split']), "division")
+            concat_df['Intersection/pred'] = calc_stat(list(concat_df['Common_words']),
+                                                       list(concat_df['Pred_text_split']), "division")
+            concat_df['WordlistEMD'] = calc_stat(list(concat_df['Actual_text_split']),
+                                                 list(concat_df['Pred_text_split']), "MED")
+            concat_df.to_csv(output_loc, index=False)
             self.outputs["path_to_dtb_evaluation_result"].write(output_loc)
         else:
             print("The column is not present in the Dataframe!!")
 
 
 class DTBMapping(BaseOperator):
-    
+
     @property
     def inputs(self):
         """
@@ -332,10 +349,10 @@ class DTBMapping(BaseOperator):
 
         """
         return {
-                "path_to_result_folder": File_IO(self.node.inputs[0]),
-                "path_to_dtb_json_file": File_IO(self.node.inputs[1]),
-                "path_to_reference_DTB": File_IO(self.node.inputs[2])
-                }
+            "path_to_result_folder": File_IO(self.node.inputs[0]),
+            "path_to_dtb_json_file": File_IO(self.node.inputs[1]),
+            "path_to_reference_DTB": File_IO(self.node.inputs[2])
+        }
 
     @property
     def outputs(self):
@@ -346,7 +363,7 @@ class DTBMapping(BaseOperator):
 
         """
         return {"path_to_mapping_json": File_IO(
-                self.node.outputs[0])}
+            self.node.outputs[0])}
 
     def run(self, no_of_recommendations, distance_method):
 
@@ -354,7 +371,7 @@ class DTBMapping(BaseOperator):
         path_to_dtb_json_file = self.inputs["path_to_dtb_json_file"].read()
         path_to_ref_dtb = self.inputs["path_to_reference_DTB"].read()
 
-        path_to_mapping_json = os.path.join(path_to_result_folder, distance_method+"_mapping.json")
+        path_to_mapping_json = os.path.join(path_to_result_folder, distance_method + "_mapping.json")
         state_DTB = getDTB(path_to_dtb_json_file)
         reference_DTB = pd.DataFrame()
         for TB in os.listdir(path_to_ref_dtb):
@@ -369,11 +386,12 @@ class DTBMapping(BaseOperator):
         if distance_method == "BERT":
             distance = dist.getDistance(list(state_DTB['text']), list(reference_DTB['text']), 'BERT')
         elif distance_method == "WMD":
-            distance =dist.getDistance(list(state_DTB['text']), list(reference_DTB['text']), 'WMD')
+            distance = dist.getDistance(list(state_DTB['text']), list(reference_DTB['text']), 'WMD')
         else:
             print("Invalid distance measure!!")
         try:
-            distance_df = pd.DataFrame(distance, index= list(state_DTB['identifier']), columns= list(reference_DTB['identifier']))
+            distance_df = pd.DataFrame(distance, index=list(state_DTB['identifier']),
+                                       columns=list(reference_DTB['identifier']))
             topN_similar = getSimilarTopic(distance_df, no_of_recommendations)
 
             json.dump(topN_similar, open(path_to_mapping_json, "w"), indent=4)
@@ -381,4 +399,129 @@ class DTBMapping(BaseOperator):
         except:
             print("Distance not computed")
 
+
+class ScoringDataPreparation(BaseOperator):
+    @property
+    def inputs(self):
+        """
+        Function that the ScoringDataPreparation operator defines while returning graph inputs
+        :return: Inputs to the node of the Content Reuse graph
+            path_to_base_data_file: path to base data file
+        """
+        return {
+            "path_to_base_data_file": File_IO(self.node.inputs[0])
+        }
+
+    @property
+    def outputs(self):
+        """
+        Function that the ScoringDataPreparation operator defines while returning graph outputs
+        :return: Returns the path to the cosine similarity pickle and complete data set
+        """
+        return {
+            "path_to_cosine_similarity_matrix": File_IO(self.node.outputs[0]),
+            "path_to_complete_data_set": File_IO(self.node.outputs[1])
+        }
+
+    def run(self, sentence_length):
+        """
+        Generate data for the purpose of scoring
+        :param sentence_length: filter data on minimum number of sentences per topic
+        :return: None
+        """
+        input_folder_path = Path(self.inputs["path_to_base_data_file"].read())
+        if not input_folder_path.exists():
+            raise Exception("Data folder not present.")
+        file_path = input_folder_path.joinpath("base_ref_general_data_prep.csv")
+        try:
+            base_df = pd.read_csv(file_path)[
+                ['STB_Id', 'STB_Grade', 'STB_Section', 'STB_Text', 'Ref_id', 'Ref_Grade', 'Ref_Section', 'Ref_Text']]
+        except FileNotFoundError:
+            raise Exception("Base data file does not exist")
+        except KeyError:
+            raise Exception("Column names are invalid")
+        stb_df, ref_df = modify_df(base_df, sentence_length)
+        cos_sim_df = generate_cosine_similarity_score(stb_df, ref_df, input_folder_path)
+        append_cosine_similarity_score(stb_df, ref_df, cos_sim_df, input_folder_path)
+        self.outputs["path_to_cosine_similarity_matrix"].write(str(input_folder_path.joinpath('cosine_similarity.pkl')))
+        self.outputs["path_to_complete_data_set"].write(str(input_folder_path.joinpath('complete_data_set.csv')))
+
+
+class ModelScoring(BaseOperator):
+    @property
+    def inputs(self):
+        """
+        Function that the DTBMapping operator defines while returning graph inputs
+
+        :returns: Inputs to the node of the Content Reuse graph
+            path_to_result_folder: path to result folder
+            path_to_reference_DTB: path to reference DTB
+
+        """
+        return {
+                "path_to_result_folder": File_IO(self.node.inputs[0]),
+                "path_to_trained_model": ReadDaggitTask_Folderpath(self.node.inputs[1]),
+                "path_to_pickled_tokenizer": File_IO(self.node.inputs[2]),
+                "path_to_scoring_data": File_IO(self.node.inputs[3]),
+                "path_to_siamese_config": File_IO(self.node.inputs[4])
+                }
+
+    @property
+    def outputs(self):
+        """
+        Function that the DTBMapping operator defines while returning graph outputs
+
+        :returns: Returns the path to the mapping json file
+
+        """
+        return {"path_to_predicted_output": File_Txt(
+                self.node.outputs[0])}
+
+    def run(self, filterby_typeofmatch, filterby_grade_range, threshold, compute_topic_similarity, embedding_method):
+        path_to_result_folder = self.inputs["path_to_result_folder"].read()
+        path_to_best_model = self.inputs["path_to_trained_model"].read_loc()
+        path_to_pickled_tokenizer = self.inputs["path_to_pickled_tokenizer"].read()
+        path_to_scoring_data = self.inputs["path_to_scoring_data"].read()
+        path_to_siamese_config = self.inputs["path_to_siamese_config"].read()
+
+        test_df = pd.read_csv(path_to_scoring_data)
+
+        if "Unnamed: 0" in test_df.columns:
+            del test_df["Unnamed: 0"]
+
+        # filtering the test dataset based on grade range: +2/-2
+        if filterby_grade_range != "nan":
+            grade_range = 2
+            test_df = filter_by_grade_range(test_df, grade_range)
+        # filtering based on type of match
+        if filterby_typeofmatch != "nan":
+            test_df = test_df[test_df["type_of_match"] == filterby_typeofmatch].copy()
+            test_df = test_df.reset_index(drop=True)
+        print("****The best model path: ", path_to_best_model)
+
+        # if model not present terminate the process:
+        assert os.path.exists(path_to_best_model)
+
+        # loading tokenizer:
+        if not os.path.exists(path_to_pickled_tokenizer):
+            print("Tokenizer not found")
+        else:
+            with open(path_to_pickled_tokenizer, 'rb') as tokenizer_file:
+                tokenizer = pickle.load(tokenizer_file)
+
+        with open(path_to_siamese_config, "rb") as json_file:
+            siamese_config = json.load(json_file)
+
+        # invoke the scoring module:
+        output_pred_df = scoring_module(tokenizer, path_to_best_model, siamese_config, test_df, threshold)
+        # topic similarity computation:
+        if compute_topic_similarity:
+            path_to_save_output = os.path.join(path_to_result_folder, "output_topic_level_{0}.csv").format(embedding_method)
+            output_aggregated_topic_level = scoring_agg_topic_level(output_pred_df)
+            output_aggregated_topic_level.to_csv(path_to_save_output)
+        else:
+            path_to_save_output = os.path.join(path_to_result_folder, "output_sentence_level_{0}.csv").format(embedding_method)
+            output_pred_df.to_csv(path_to_save_output)
+
+        self.outputs["path_to_predicted_output"].write(path_to_save_output)
 
