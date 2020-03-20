@@ -59,5 +59,8 @@ opencv-python==4.1.1.26
 spacy==2.1.8
 pdf2image==1.8.0
 Pillow==6.2.0
-pyvips==2.1.8
 img2pdf==0.3.3
+transformers==2.1.1
+tensorflow==1.14.0
+Keras==2.1.1
+sklearn==0.0

@@ -1,25 +1,58 @@
-import configparser
-import json
-import logging
+import sys
 import os
-import re
+import daggit
+import requests
+import io
 import time
-
+import re
+import glob
+import logging
+#import pyvips
+import cv2
+import pickle
+import img2pdf
+import configparser
+import Levenshtein
 import pandas as pd
-from PIL import Image
-from daggit.contrib.sunbird.oplib.contentreuseEvaluationUtils import text_image
-from daggit.contrib.sunbird.oplib.contentreuseUtils import agg_actual_predict_df
+import json
+from scipy.spatial import distance_matrix
+import ruptures as rp
+import pandas as pd
+import numpy as np 
+from keras.models import load_model
+
+from PIL import Image, ImageDraw, ImageFont
+from pdf2image import convert_from_path
+
+from google.cloud import vision
+from google.cloud import storage
+from google.protobuf import json_format
+from natsort import natsorted, ns
+from sklearn.metrics import precision_recall_curve
+from sklearn.metrics import average_precision_score
+from sklearn.model_selection import train_test_split
+
+from daggit.core.io.io import File_IO, File_Txt
+from daggit.core.io.files import findFiles
+from daggit.core.base.factory import BaseOperator
+from daggit.core.io.io import ReadDaggitTask_Folderpath
+from daggit.contrib.sunbird.oplib.contentreuseUtils import upload_blob
+from daggit.contrib.sunbird.oplib.contentreuseUtils import do_GoogleOCR
+from daggit.contrib.sunbird.oplib.contentreuseUtils import download_outputjson_reponses
+from daggit.contrib.sunbird.oplib.contentreuseUtils import getblob
 from daggit.contrib.sunbird.oplib.contentreuseUtils import create_manifest
 from daggit.contrib.sunbird.oplib.contentreuseUtils import create_toc
-from daggit.contrib.sunbird.oplib.contentreuseUtils import getDTB, calc_stat
-from daggit.contrib.sunbird.oplib.contentreuseUtils import getSimilarTopic
-from daggit.contrib.sunbird.oplib.contentreuseUtils import getblob
 from daggit.contrib.sunbird.oplib.dtb import create_dtb
-from daggit.core.base.factory import BaseOperator
-from daggit.core.io.io import File_IO
+from daggit.contrib.sunbird.oplib.contentreuseUtils import getDTB, calc_stat
+from daggit.contrib.sunbird.oplib.contentreuseUtils import agg_actual_predict_df
+from daggit.contrib.sunbird.oplib.contentreuseUtils import getSimilarTopic
+# from daggit.contrib.sunbird.oplib.contentreuseEvaluationUtils import text_image
 from daggit.core.oplib import distanceUtils as dist
 from daggit.core.oplib import nlp as preprocess
-from natsort import natsorted
+from daggit.contrib.sunbird.oplib.contentreuseUtils import scoring_module, filter_by_grade_range
+from daggit.contrib.sunbird.oplib.contentreuseUtils import generate_tokenizer_embedding_mat
+from daggit.contrib.sunbird.oplib.contentreuseUtils import SiameseBiLSTM
+from daggit.contrib.sunbird.oplib.contentreuseUtils import scoring_agg_topic_level
 
 
 class OcrTextExtraction(BaseOperator):
@@ -412,3 +445,83 @@ class ScoringDataPreparation(BaseOperator):
         append_cosine_similarity_score(stb_df, ref_df, cos_sim_df, input_folder_path)
         self.outputs["path_to_cosine_similarity_matrix"].write(str(input_folder_path.joinpath('cosine_similarity.pkl')))
         self.outputs["path_to_complete_data_set"].write(str(input_folder_path.joinpath('complete_data_set.csv')))
+
+
+class ModelScoring(BaseOperator):
+    @property
+    def inputs(self):
+        """
+        Function that the DTBMapping operator defines while returning graph inputs
+
+        :returns: Inputs to the node of the Content Reuse graph
+            path_to_result_folder: path to result folder
+            path_to_reference_DTB: path to reference DTB
+
+        """
+        return {
+                "path_to_result_folder": File_IO(self.node.inputs[0]),
+                "path_to_trained_model": ReadDaggitTask_Folderpath(self.node.inputs[1]),
+                "path_to_pickled_tokenizer": File_IO(self.node.inputs[2]),
+                "path_to_scoring_data": File_IO(self.node.inputs[3]),
+                "path_to_siamese_config": File_IO(self.node.inputs[4])
+                }
+
+    @property
+    def outputs(self):
+        """
+        Function that the DTBMapping operator defines while returning graph outputs
+
+        :returns: Returns the path to the mapping json file
+
+        """
+        return {"path_to_predicted_output": File_Txt(
+                self.node.outputs[0])}
+
+    def run(self, filterby_typeofmatch, filterby_grade_range, threshold, compute_topic_similarity, embedding_method):
+        path_to_result_folder = self.inputs["path_to_result_folder"].read()
+        path_to_best_model = self.inputs["path_to_trained_model"].read_loc()
+        path_to_pickled_tokenizer = self.inputs["path_to_pickled_tokenizer"].read()
+        path_to_scoring_data = self.inputs["path_to_scoring_data"].read()
+        path_to_siamese_config = self.inputs["path_to_siamese_config"].read()
+
+        test_df = pd.read_csv(path_to_scoring_data)
+
+        if "Unnamed: 0" in test_df.columns:
+            del test_df["Unnamed: 0"]
+
+        # filtering the test dataset based on grade range: +2/-2
+        if filterby_grade_range != "nan":
+            grade_range = 2
+            test_df = filter_by_grade_range(test_df, grade_range)
+        # filtering based on type of match
+        if filterby_typeofmatch != "nan":
+            test_df = test_df[test_df["type_of_match"] == filterby_typeofmatch].copy()
+            test_df = test_df.reset_index(drop=True)
+        print("****The best model path: ", path_to_best_model)
+
+        # if model not present terminate the process:
+        assert os.path.exists(path_to_best_model)
+
+        # loading tokenizer:
+        if not os.path.exists(path_to_pickled_tokenizer):
+            print("Tokenizer not found")
+        else:
+            with open(path_to_pickled_tokenizer, 'rb') as tokenizer_file:
+                tokenizer = pickle.load(tokenizer_file)
+
+        with open(path_to_siamese_config, "rb") as json_file:
+            siamese_config = json.load(json_file)
+
+        # invoke the scoring module:
+        output_pred_df = scoring_module(tokenizer, path_to_best_model, siamese_config, test_df, threshold)
+        # topic similarity computation:
+        if compute_topic_similarity:
+            path_to_save_output = os.path.join(path_to_result_folder, "output_topic_level_{0}.csv").format(embedding_method)
+            output_aggregated_topic_level = scoring_agg_topic_level(output_pred_df)
+            output_aggregated_topic_level.to_csv(path_to_save_output)
+        else:
+            path_to_save_output = os.path.join(path_to_result_folder, "output_sentence_level_{0}.csv").format(embedding_method)
+            output_pred_df.to_csv(path_to_save_output)
+
+        self.outputs["path_to_predicted_output"].write(path_to_save_output)
+
