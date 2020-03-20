@@ -477,7 +477,7 @@ class ModelScoring(BaseOperator):
         return {"path_to_predicted_output": File_Txt(
                 self.node.outputs[0])}
 
-    def run(self, filterby_typeofmatch, filterby_grade_range, threshold, compute_topic_similarity, embedding_method):
+    def run(self, filterby_typeofmatch, filterby_grade_range, threshold, embedding_method):
         path_to_result_folder = self.inputs["path_to_result_folder"].read()
         path_to_best_model = self.inputs["path_to_trained_model"].read_loc()
         path_to_pickled_tokenizer = self.inputs["path_to_pickled_tokenizer"].read()
@@ -493,6 +493,7 @@ class ModelScoring(BaseOperator):
         if filterby_grade_range != "nan":
             grade_range = 2
             test_df = filter_by_grade_range(test_df, grade_range)
+
         # filtering based on type of match
         if filterby_typeofmatch != "nan":
             test_df = test_df[test_df["type_of_match"] == filterby_typeofmatch].copy()
@@ -514,14 +515,49 @@ class ModelScoring(BaseOperator):
 
         # invoke the scoring module:
         output_pred_df = scoring_module(tokenizer, path_to_best_model, siamese_config, test_df, threshold)
-        # topic similarity computation:
+        path_to_save_output = os.path.join(path_to_result_folder, "output_{0}.csv").format(embedding_method)
+        output_pred_df.to_csv(path_to_save_output)
+        self.outputs["path_to_predicted_output"].write(path_to_save_output)
+
+
+class ScoreAggAtTopicLevel(BaseOperator):
+    @property
+    def inputs(self):
+        """
+        Function that the ScoreAggAtTopicLevel operator defines while returning graph inputs
+
+        :returns: Inputs to the node of the Content Reuse graph
+            path_to_predicted_output: path to the output csv with predicted score
+        """
+        return {"path_to_predicted_output": File_Txt(self.node.inputs[0])}
+
+    @property
+    def outputs(self):
+        """
+        Function that the ScoreAggAtTopicLevel operator defines while returning graph outputs
+
+        :returns: Returns the path to the csv with aggregated score for each topic pair
+           path_to_output_topic_agg: path to the csv with aggregated score for each topic pair
+        """
+        return {"path_to_output_topic_agg": File_IO(
+            self.node.outputs[0])}
+
+    def run(self, compute_topic_similarity):
+        path_to_predicted_output = self.inputs["path_to_predicted_output"].read()
+        path_to_result_folder = os.path.split(path_to_predicted_output)[0]
+        assert os.path.exists(path_to_predicted_output)
+        output_pred_df = pd.read_csv(path_to_predicted_output)
+
+        if "Unnamed: 0" in output_pred_df.columns:
+            del output_pred_df["Unnamed: 0"]
+
+        # Topic similarity aggregation computation:
         if compute_topic_similarity:
-            path_to_save_output = os.path.join(path_to_result_folder, "output_topic_level_{0}.csv").format(embedding_method)
+            path_to_save_output = os.path.join(path_to_result_folder, "agg_topic_level_output.csv")
             output_aggregated_topic_level = scoring_agg_topic_level(output_pred_df)
             output_aggregated_topic_level.to_csv(path_to_save_output)
         else:
-            path_to_save_output = os.path.join(path_to_result_folder, "output_sentence_level_{0}.csv").format(embedding_method)
-            output_pred_df.to_csv(path_to_save_output)
-
-        self.outputs["path_to_predicted_output"].write(path_to_save_output)
+            path_to_save_output = ""
+            print("*****Topic similarity aggregation not computed")
+        self.outputs["path_to_output_topic_agg"].write(path_to_save_output)
 

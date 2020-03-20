@@ -9,19 +9,13 @@ inputs:
   pathToToc: <path to TOC>
   pathToReference_DTB: <path to ReferenceDTB>
   pathToActualDTB: <path to Actual DTB>
-  pathToSiameseConfig: <path to siamese configuration>
-  pathToTrainCSV: <path to train data>
-  pathToscoringdata: <path to scoring data>
-  path_to_result_folder: <path to result folder>
-  path_to_trained_model: <path to pretrained model>
-  path_to_pickled_tokenizer: <path to pickled tokenizer>
-
+  
 
 outputs:
   dummy: /home/DS_HOME
 
+
 graph:
-  
   - node_name: ocr_text_extraction
     inputs: [DS_DATA_HOME, pathTocredentials, pathToPDF]
     outputs: [path_to_result_folder]
@@ -58,18 +52,3 @@ graph:
       no_of_recommendations: 5
       distance_method: BERT
   
-
-  - node_name: model_scoring
-    inputs: [path_to_result_folder, path_to_trained_model, path_to_pickled_tokenizer, pathToscoringdata, pathToSiameseConfig]
-    outputs: [path_to_prediced_output]
-    operation: contentreuse.ModelScoring
-    arguments:
-      filterby_typeofmatch: nan
-      filterby_grade_range: nan
-      threshold: 0.482528924942016
-      compute_topic_similarity: True
-      embedding_method: BERT
- 
-
-
-

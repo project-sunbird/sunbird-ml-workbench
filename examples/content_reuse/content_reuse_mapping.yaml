@@ -1,0 +1,32 @@
+experiment_name: Content_reuse_mapping
+owner: sunbird
+
+inputs:
+  
+  pathToSiameseConfig: <path to siamese configuration>
+  pathToscoringdata: <path to scoring data>
+  path_to_result_folder: <path to result folder>
+  path_to_trained_model: <path to pretrained model>
+  path_to_pickled_tokenizer: <path to pickled tokenizer
+
+outputs:
+  dummy: /home/DS_HOME
+
+graph:
+  
+  - node_name: model_scoring
+    inputs: [path_to_result_folder, path_to_trained_model, path_to_pickled_tokenizer, pathToscoringdata, pathToSiameseConfig]
+    outputs: [path_to_predicted_output]
+    operation: contentreuse.ModelScoring
+    arguments:
+      filterby_typeofmatch: nan
+      filterby_grade_range: nan
+      threshold: 0.482528924942016
+      embedding_method: BERT
+
+  - node_name: topic_aggregation
+    inputs: [model_scoring.path_to_predicted_output]
+    outputs: [path_to_output_topic_agg]
+    operation: contentreuse.ScoreAggAtTopicLevel
+    arguments:
+      compute_topic_similarity: True
