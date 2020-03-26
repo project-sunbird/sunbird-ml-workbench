@@ -7,7 +7,7 @@ import time
 import re
 import glob
 import logging
-#import pyvips
+# import pyvips
 import cv2
 import pickle
 import img2pdf
@@ -18,7 +18,7 @@ import json
 from scipy.spatial import distance_matrix
 import ruptures as rp
 import pandas as pd
-import numpy as np 
+import numpy as np
 from keras.models import load_model
 
 from PIL import Image, ImageDraw, ImageFont
@@ -50,9 +50,10 @@ from daggit.contrib.sunbird.oplib.contentreuseUtils import getSimilarTopic
 from daggit.core.oplib import distanceUtils as dist
 from daggit.core.oplib import nlp as preprocess
 from daggit.contrib.sunbird.oplib.contentreuseUtils import scoring_module, filter_by_grade_range
-from daggit.contrib.sunbird.oplib.contentreuseUtils import generate_tokenizer_embedding_mat
-from daggit.contrib.sunbird.oplib.contentreuseUtils import SiameseBiLSTM
-from daggit.contrib.sunbird.oplib.contentreuseUtils import scoring_agg_topic_level
+from daggit.contrib.sunbird.oplib.contentreuseUtils import aggregation_topic_level
+from daggit.contrib.sunbird.oplib.contentreuseUtils import modify_df
+from daggit.contrib.sunbird.oplib.contentreuseUtils import generate_cosine_similarity_score
+from daggit.contrib.sunbird.oplib.contentreuseUtils import append_cosine_similarity_score
 
 
 class OcrTextExtraction(BaseOperator):
@@ -120,7 +121,7 @@ class OcrTextExtraction(BaseOperator):
                 GOOGLE_APPLICATION_CREDENTIALS = ""
                 logging.info("Not a valid google credential")
 
-                # content dump:
+        # content dump:
         if os.path.exists(path_to_PDF_file):
             try:
                 print("Content ID: ", content_id)
@@ -192,10 +193,8 @@ class TextExtractionEvaluation(BaseOperator):
             pdf_ocr_loc_ls.append([pdf_loc, google_ocr_loc])
         toc_df = pd.read_csv(path_to_toc)
         medium = [i for i in toc_df["Medium"].unique() if str(i) != "nan"][0]
-        pdf_ocr_loc_ls
         for i in range(len(pdf_ocr_loc_ls)):
             text_image(pdf_ocr_loc_ls[i][0], pdf_ocr_loc_ls[i][1], medium, language_mapping_loc, 1, output_loc)
-
         image_ls = [i for i in os.listdir(output_loc) if i.endswith(".png")]
         ls = [i for i in natsorted(image_ls, reverse=False)]
         image_ls_open = [Image.open(os.path.join(output_loc, str(i))) for i in ls]
@@ -409,7 +408,7 @@ class ScoringDataPreparation(BaseOperator):
             path_to_base_data_file: path to base data file
         """
         return {
-            "path_to_base_data_file": File_IO(self.node.inputs[0])
+            "path_to_result_folder": File_IO(self.node.inputs[0])
         }
 
     @property
@@ -429,10 +428,10 @@ class ScoringDataPreparation(BaseOperator):
         :param sentence_length: filter data on minimum number of sentences per topic
         :return: None
         """
-        input_folder_path = Path(self.inputs["path_to_base_data_file"].read())
-        if not input_folder_path.exists():
+        path_to_result_folder = self.inputs["path_to_result_folder"].read()
+        if not os.path.exists(path_to_result_folder):
             raise Exception("Data folder not present.")
-        file_path = input_folder_path.joinpath("base_ref_general_data_prep.csv")
+        file_path = os.path.join(path_to_result_folder, "base_ref_general_data_prep.csv")
         try:
             base_df = pd.read_csv(file_path)[
                 ['STB_Id', 'STB_Grade', 'STB_Section', 'STB_Text', 'Ref_id', 'Ref_Grade', 'Ref_Section', 'Ref_Text']]
@@ -441,17 +440,18 @@ class ScoringDataPreparation(BaseOperator):
         except KeyError:
             raise Exception("Column names are invalid")
         stb_df, ref_df = modify_df(base_df, sentence_length)
-        cos_sim_df = generate_cosine_similarity_score(stb_df, ref_df, input_folder_path)
-        append_cosine_similarity_score(stb_df, ref_df, cos_sim_df, input_folder_path)
-        self.outputs["path_to_cosine_similarity_matrix"].write(str(input_folder_path.joinpath('cosine_similarity.pkl')))
-        self.outputs["path_to_complete_data_set"].write(str(input_folder_path.joinpath('complete_data_set.csv')))
+        cos_sim_df = generate_cosine_similarity_score(stb_df, ref_df, path_to_result_folder)
+        append_cosine_similarity_score(stb_df, ref_df, cos_sim_df, path_to_result_folder)
+        self.outputs["path_to_cosine_similarity_matrix"].write(os.path.join(path_to_result_folder,
+                                                                            'cosine_similarity.pkl'))
+        self.outputs["path_to_complete_data_set"].write(os.path.join(path_to_result_folder, 'complete_data_set.csv'))
 
 
-class ModelScoring(BaseOperator):
+class BERTScoring(BaseOperator):
     @property
     def inputs(self):
         """
-        Function that the DTBMapping operator defines while returning graph inputs
+        Function that the BERTScoring operator defines while returning graph inputs
 
         :returns: Inputs to the node of the Content Reuse graph
             path_to_result_folder: path to result folder
@@ -459,23 +459,23 @@ class ModelScoring(BaseOperator):
 
         """
         return {
-                "path_to_result_folder": File_IO(self.node.inputs[0]),
-                "path_to_trained_model": ReadDaggitTask_Folderpath(self.node.inputs[1]),
-                "path_to_pickled_tokenizer": File_IO(self.node.inputs[2]),
-                "path_to_scoring_data": File_IO(self.node.inputs[3]),
-                "path_to_siamese_config": File_IO(self.node.inputs[4])
-                }
+            "path_to_result_folder": File_IO(self.node.inputs[0]),
+            "path_to_trained_model": ReadDaggitTask_Folderpath(self.node.inputs[1]),
+            "path_to_pickled_tokenizer": File_IO(self.node.inputs[2]),
+            "path_to_scoring_data": File_IO(self.node.inputs[3]),
+            "path_to_siamese_config": File_IO(self.node.inputs[4])
+        }
 
     @property
     def outputs(self):
         """
-        Function that the DTBMapping operator defines while returning graph outputs
+        Function that the BERTScoring operator defines while returning graph outputs
 
         :returns: Returns the path to the mapping json file
 
         """
         return {"path_to_predicted_output": File_Txt(
-                self.node.outputs[0])}
+            self.node.outputs[0])}
 
     def run(self, filterby_typeofmatch, filterby_grade_range, threshold, embedding_method):
         path_to_result_folder = self.inputs["path_to_result_folder"].read()
@@ -501,6 +501,7 @@ class ModelScoring(BaseOperator):
         print("****The best model path: ", path_to_best_model)
 
         # if model not present terminate the process:
+        assert os.path.exists(path_to_result_folder)
         assert os.path.exists(path_to_best_model)
 
         # loading tokenizer:
@@ -520,21 +521,23 @@ class ModelScoring(BaseOperator):
         self.outputs["path_to_predicted_output"].write(path_to_save_output)
 
 
-class ScoreAggAtTopicLevel(BaseOperator):
+class TopicLevelAggregation(BaseOperator):
     @property
     def inputs(self):
         """
-        Function that the ScoreAggAtTopicLevel operator defines while returning graph inputs
+        Function that the TopicLevelAggregation operator defines while returning graph inputs
 
         :returns: Inputs to the node of the Content Reuse graph
             path_to_predicted_output: path to the output csv with predicted score
         """
-        return {"path_to_predicted_output": File_Txt(self.node.inputs[0])}
+        return {
+            "path_to_predicted_output": File_Txt(self.node.inputs[0])
+        }
 
     @property
     def outputs(self):
         """
-        Function that the ScoreAggAtTopicLevel operator defines while returning graph outputs
+        Function that the TopicLevelAggregation operator defines while returning graph outputs
 
         :returns: Returns the path to the csv with aggregated score for each topic pair
            path_to_output_topic_agg: path to the csv with aggregated score for each topic pair
@@ -542,7 +545,7 @@ class ScoreAggAtTopicLevel(BaseOperator):
         return {"path_to_output_topic_agg": File_IO(
             self.node.outputs[0])}
 
-    def run(self, compute_topic_similarity):
+    def run(self, aggregation_criteria, compute_topic_similarity, mandatory_column_names):
         path_to_predicted_output = self.inputs["path_to_predicted_output"].read()
         path_to_result_folder = os.path.split(path_to_predicted_output)[0]
         assert os.path.exists(path_to_predicted_output)
@@ -554,10 +557,10 @@ class ScoreAggAtTopicLevel(BaseOperator):
         # Topic similarity aggregation computation:
         if compute_topic_similarity:
             path_to_save_output = os.path.join(path_to_result_folder, "agg_topic_level_output.csv")
-            output_aggregated_topic_level = scoring_agg_topic_level(output_pred_df)
+            output_aggregated_topic_level = aggregation_topic_level(output_pred_df, aggregation_criteria,
+                                                                    mandatory_column_names)
             output_aggregated_topic_level.to_csv(path_to_save_output)
         else:
             path_to_save_output = ""
             print("*****Topic similarity aggregation not computed")
         self.outputs["path_to_output_topic_agg"].write(path_to_save_output)
-

@@ -9,19 +9,17 @@ import shutil
 import json
 
 import copy
+import torch
 import glob
 import natsort
 import numpy as np
 from numpy import nan 
 import pandas as pd
-import pandasql as ps
 import ruptures as rp
 import Levenshtein
 import gspread
 import spacy
-nlp = spacy.load('en')
-from oauth2client.service_account import ServiceAccountCredentials
-nlp = spacy.load('en') 
+# nlp = spacy.load('en')
 from oauth2client.service_account import ServiceAccountCredentials
 
 from sklearn.feature_extraction.text import CountVectorizer
@@ -72,13 +70,13 @@ from nltk.stem import PorterStemmer
 from plotly.offline import download_plotlyjs, init_notebook_mode, plot, iplot
 from sklearn.metrics import precision_recall_curve
 from sklearn.metrics import average_precision_score
+from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.model_selection import train_test_split
 from operator import itemgetter
 from keras.models import load_model
 import ast
 
-import torch
-from torch.utils.data import Dataset
 from transformers import BertModel
 from transformers import BertTokenizer
 import pandas as pd
@@ -147,7 +145,7 @@ def do_GoogleOCR(gcs_source_uri, gcs_destination_uri): #bs parameter
     print("bucket_name", bucket_name)
     prefix = match.group(2)
 
-    bucket = storage_client.get_bucket(bucket_name)#1.16.0(bucket_or_name=bucket_name)
+    bucket = storage_client.get_bucket(bucket_name)
 
     # List objects with the given prefix.
     blob_list = list(bucket.list_blobs(prefix=prefix))
@@ -160,7 +158,7 @@ def do_GoogleOCR(gcs_source_uri, gcs_destination_uri): #bs parameter
             new_list.append(str_convert)
     sorted_blob_list = [bucket.blob(i) for i in natsorted(new_list, reverse=False)]
     all_text = ""
-    #sort the blob_list
+    # sort the blob_list
     for i in range(len(sorted_blob_list)):
         try:
             output = sorted_blob_list[i]
@@ -284,7 +282,7 @@ def getblob(method_of_ocr, bucket_name, local_path_to_pdf, content_id, root_path
 
                 with open(os.path.join(path_to_gocr_text, prefix + ".txt"), "w") as text_file:
                     text_file.write(all_text)
-                #concatenate multiple text file if any:
+                # concatenate multiple text file if any:
                 textnames = findFiles(path_to_gocr_text, ["txt"])
                 with open(os.path.join(path_to_gocr_text, "fulltext_annotation" + ".txt"), 'w') as outfile:
                     for fname in textnames:
@@ -292,7 +290,8 @@ def getblob(method_of_ocr, bucket_name, local_path_to_pdf, content_id, root_path
                             for line in infile:
                                 outfile.write(line)
                             os.remove(fname)
-                path_to_outputjson_folder = download_outputjson_reponses(bucket_name, prefix+"/", path_to_gocr_json, delimiter="/")
+                path_to_outputjson_folder = download_outputjson_reponses(bucket_name, prefix+"/",
+                                                                         path_to_gocr_json, delimiter="/")
         except:
            print("Process terminated")
     return textbook_model_path
@@ -484,7 +483,7 @@ def get_bert_word_embeddings(documents, maxlen, bert_layer, path_to_DS_DATA_HOME
                 pass
             else:
                 vect_dict.update({j: cont_reps[:, i].detach().numpy()})
-        #vect_ls.append(cont_reps.detach().numpy())
+        # vect_ls.append(cont_reps.detach().numpy())
         vect_ls.append(vect_dict)
     with open(os.path.join(path_to_DS_DATA_HOME, 'embeddings_list.pkl'), 'wb') as fp:
         pickle.dump(vect_ls, fp)
@@ -570,8 +569,8 @@ def pytorchbert_word_embed_meta_data(documents, maxlen, bert_layer, embedding_di
     """
     # there would have been a step to split the list of sentences to list of tokens in each sentence
     tokenizer = Tokenizer()
-    #documents_ = [bert_tokenizer.tokenize(sentence) for sentence in documents]
-    #tokenizer.fit_on_texts(documents)
+    # documents_ = [bert_tokenizer.tokenize(sentence) for sentence in documents]
+    # tokenizer.fit_on_texts(documents)
     tokenizer.fit_on_texts(documents)
     word_vector = get_bert_word_embeddings(documents, maxlen, bert_layer, path_to_DS_DATA_HOME)
     # with open(path_to_save_embeddings, "wb") as json_file:
@@ -582,7 +581,6 @@ def pytorchbert_word_embed_meta_data(documents, maxlen, bert_layer, embedding_di
     return tokenizer, embedding_matrix
 
 
-#validation split ratio is used in create_train_dev_set train data itself is split into validation data:    
 def create_train_dev_set(tokenizer, sentences_pair, is_similar, max_sequence_length, validation_split_ratio):
     """
     Create training and validation dataset
@@ -769,7 +767,8 @@ class SiameseBiLSTM:
 
         early_stopping = EarlyStopping(monitor='val_loss', patience=3)
 
-        STAMP = 'lstm_%d_%d_%.2f_%.2f' % (self.number_lstm_units, self.number_dense_units, self.rate_drop_lstm, self.rate_drop_dense)
+        STAMP = 'lstm_%d_%d_%.2f_%.2f' % (self.number_lstm_units, self.number_dense_units,
+                                          self.rate_drop_lstm, self.rate_drop_dense)
 
         checkpoint_dir = model_save_directory + '/' + 'checkpoints/' + str(int(time.time())) + '/'
 
@@ -813,7 +812,6 @@ class SiameseBiLSTM:
         logging.info("STOP_BOS_TRAIN_MODEL")
         logging.info("BOS_CREATE_TRAIN_MODEL_TIME_TAKEN: {0}mins".format((time.time()-start)/60.0))
         return bst_model_path
-
 
     def update_model(self, saved_model_path, new_sentences_pair, is_similar, embedding_meta_data):
         """
@@ -919,8 +917,17 @@ def create_scoring_data(tokenizer, score_sentences_pair, max_sequence_length):
     return test_data_1, test_data_2, leaks_test
 
 
-# load a pre trained or freshly trained model in best_model
 def scoring_module(tokenizer, best_model_path, siamese_config, test_df, threshold):
+    """
+    Score a test dataset using pretrained BERT model and pickled tokenizer which is trained on the train dataset.
+    Args:
+        tokenizer: Tokenizer object which is trained on the train dataset
+        best_model_path: Path to the pretrained BERT model
+        siamese_config: The configuration of the pretrained model
+        threshold: The value that is to be exceded for the label to be 1 or 0
+    Returns:
+        model_pred_df (dataframe): dataframe with predicted score and predicted label after applying threshold on the score.
+    """
     test_sentence_pairs = [(x1, x2) for x1, x2 in zip(list(test_df['sentence1']), list(test_df['sentence2']))] 
     test_data_x1, test_data_x2, leaks_test = create_scoring_data(tokenizer, test_sentence_pairs,  siamese_config['MAX_SEQUENCE_LENGTH'])
     best_model = load_model(best_model_path, compile=False)
@@ -937,8 +944,15 @@ def scoring_module(tokenizer, best_model_path, siamese_config, test_df, threshol
     return model_pred_df
 
 
-# compute derived measures for quality check:
 def create_confusion_matrix(row):
+    """
+    Reports the number of false positives, false negatives, true positives, and true negatives
+    to describe the performance of the model
+    Args:
+        row: A row in the input dataframe
+    Returns:
+        Accuracy variable(variable): Returns the accuracy measure that the predicted label corresponds in a row
+    """
     if row['actual_label'] == 1:
         if row['predicted_label'] == 1:
             return 'TP'
@@ -951,7 +965,17 @@ def create_confusion_matrix(row):
             return 'TN'
 
 
-def scoring_agg_topic_level(output_df):
+def aggregation_topic_level(output_df, aggregation_criteria, mandatory_column_names):
+    """
+    Aggregate output of the sentence similarity model at topic level
+    Args:
+        output_df: Predicted output dataframe
+        aggregation_criteria: The method of aggregation that needs to be performed
+        mandatory_column_names: Dictionary of columns names for the output dataframe
+    Returns:
+        full_score_df(dataframe): Dataframe with aggregated similarity score at topic level for a given pair of
+             state topic ID and reference topic ID.
+    """
     full_df_ls = []
     if 'cm' not in output_df.columns:
         output_df['cm'] = output_df.apply(create_confusion_matrix, axis=1)
@@ -960,36 +984,47 @@ def scoring_agg_topic_level(output_df):
             big_ls = []
             stb_df = output_df[output_df["stb_topic_id"] == stb_topic_id]
             for ref_id in stb_df["ref_topic_id"].unique():
+                pred_score_percent = 0
                 stb_1_df_sam = stb_df[stb_df["ref_topic_id"] == ref_id]
                 eval_dict = dict(stb_1_df_sam['cm'].value_counts())
                 print("eval_dict: ", eval_dict)
-                columns = ["state_topic_id", "reference_topic_id", "pred_label_percentage", "TP_count", "FP_count", "TN_count", "FN_count"]
+                columns = [v for k, v in mandatory_column_names.items()]
                 score_df = pd.DataFrame(index=[0], columns=columns)
                 score_df = score_df.fillna(0)
-                actual_ref_id = stb_df[stb_df["actual_label"] == 1]["ref_topic_id"].unique()[0]
-                pred_score_percent = (stb_1_df_sam['predicted_label'].sum()/len(stb_1_df_sam))*100
-                score_df["state_topic_id"] = stb_topic_id
-                score_df["reference_topic_id"] = ref_id
-                score_df["pred_label_percentage"] = pred_score_percent
-                score_df["actual_label"] = stb_1_df_sam['actual_label'].mean()
+                if aggregation_criteria == "average":
+                    pred_score_percent = (stb_1_df_sam['predicted_label'].sum()/len(stb_1_df_sam))*100
+                score_df[mandatory_column_names["stb_topic_col_name"]] = stb_topic_id
+                score_df[mandatory_column_names["ref_topic_col_name"]] = ref_id
+                score_df[mandatory_column_names["pred_agg_col_name"]] = pred_score_percent
+                score_df[mandatory_column_names["label_col_name"]] = stb_1_df_sam['actual_label'].mean()
                 if "FP" in eval_dict.keys():
-                    score_df["FP_count"] = eval_dict["FP"]
+                    score_df[mandatory_column_names["fp_col_name"]] = eval_dict["FP"]
                 if "TN" in eval_dict.keys():
-                    score_df["TN_count"] = eval_dict["TN"]
+                    score_df[mandatory_column_names["tn_col_name"]] = eval_dict["TN"]
                 if "TP" in eval_dict.keys():
-                    score_df["TP_count"] = eval_dict["TP"]
+                    score_df[mandatory_column_names["tp_col_name"]] = eval_dict["TP"]
                 if "FN" in eval_dict.keys():
-                    score_df["FN_count"] = eval_dict["FN"]
+                    score_df[mandatory_column_names["fn_col_name"]] = eval_dict["FN"]
                 big_ls.append(score_df)
-            full_score_df = pd.concat(big_ls).reset_index(drop=True).sort_values(by=['pred_label_percentage'], ascending=False)
+            full_score_df = pd.concat(big_ls).reset_index(drop=True).sort_values(by=[mandatory_column_names["pred_agg_col_name"]], ascending=False)
             full_df_ls.append(full_score_df)
         full_score_df = pd.concat(full_df_ls).reset_index(drop=True)  
         return full_score_df
     except:
-        print("Error occured!!")
+        print("Error occurred!!")
     
 
 def k_topic_recommendation(full_score_df, window):
+    """
+    Generates a dataframe with  top n reference topics ID for a given state topic ID
+
+    Args:
+        full_score_df: Dataframe with aggregated similarity score at topic level for a given pair of
+            state topic ID and reference topic ID.
+        window: The number of recommendations to be displayed
+    Returns:
+        big_full_score(dataframe): Dataframe with recommendations from 1 to window size.
+    """
     full_df_ls = []
     df_ls = []
     for stb_topic_id in full_score_df["state_topic_id"].unique():
@@ -1010,31 +1045,8 @@ def k_topic_recommendation(full_score_df, window):
                 break
         df_ls.append(df_)
     big_full_score = pd.concat(df_ls).reset_index(drop=True)
-    grouped_refid_df = pd.concat(full_df_ls).reset_index(drop=True)
+    # grouped_refid_df = pd.concat(full_df_ls).reset_index(drop=True)
     return big_full_score
-
-
-def evaluation_module(output_pred_df, window):
-    # window=5 for the experiment being conducted
-    # confusion matrix creation:- 
-    output_pred_df['cm'] = output_pred_df.apply(create_confusion_matrix, axis=1)
-    eval_dict = dict(output_pred_df['cm'].value_counts())
-    
-    precision = eval_dict["TP"]/(eval_dict["TP"]+eval_dict["FP"])
-    recall = eval_dict["TP"]/(eval_dict["TP"]+eval_dict["FN"])
-    accuracy = (eval_dict["TP"]+eval_dict["TN"])/(eval_dict["TP"]+eval_dict["TN"]+eval_dict["FP"]+eval_dict["FN"])
-    f1_score = (2*precision*recall)/(precision+recall)
-    eval_dict.update({"precision": precision, "recall": recall, "accuracy": accuracy, "f1_score": f1_score})
-    print("eval_dict: ", eval_dict)
-    # k=n evaluation
-    k_result_df = k_topic_recomm_evaluation(output_pred_df, window)
-    k_1 = k_result_df["k=1"].mean()
-    k_2 = k_result_df["k=2"].mean()
-    k_3 = k_result_df["k=3"].mean()
-    k_4 = k_result_df["k=4"].mean()
-    k_5 = k_result_df["k=5"].mean()
-    eval_dict.update({"k=1": k_1, "k=2": k_2, "k=3": k_3, "k=4": k_4, "k=5": k_5})
-    return eval_dict
 
 
 def listify(x):
@@ -1099,7 +1111,7 @@ def generate_cosine_similarity_score(stb_df, ref_df, input_folder_path):
     X = vectorizer.fit_transform(corpus)
     X = X.toarray()
     similarity = cosine_similarity(X[:limiter], X[limiter:])
-    with open(str(input_folder_path.joinpath('cosine_similarity.pkl')), 'wb') as f:
+    with open(os.path.join(input_folder_path, 'cosine_similarity.pkl'), 'wb') as f:
         pickle.dump(similarity, f)
     cos_sim = pd.DataFrame(pd.DataFrame(similarity).stack())
     cos_sim.index.names = ['index_stb', 'index']
@@ -1124,4 +1136,4 @@ def append_cosine_similarity_score(stb_df, ref_df, cos_sim, input_folder_path):
     jdf.drop('Ref_id_stb', axis=1, inplace=True)
     jdf.columns = ['stb_id', 'stb_grade', 'stb_topic', 'sentence1', 'ref_id', 'ref_grade', 'ref_topic', 'sentence2',
                    'cos_sim_score', 'actual_label']
-    jdf.to_csv(input_folder_path.joinpath('complete_data_set.csv'))
+    jdf.to_csv(os.path.join(input_folder_path, 'complete_data_set.csv'))

@@ -1,0 +1,14 @@
+mandatory_fields: !!set
+  sentence1_score: null
+  sentence2_score: null
+  pred_score: null
+  sent1_general: null
+  sent2_general: null
+  ref_topic_id: null
+  ref_grade: null
+  ref_section: null
+  actual_label: null
+  stb_topic_id: null
+  STB_Grade: null
+  STB_Section: null
+  TypeofMatch: null

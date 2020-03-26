@@ -2,22 +2,22 @@ experiment_name: Content_reuse_mapping
 owner: sunbird
 
 inputs:
-  
-  pathToSiameseConfig: <path to siamese configuration>
-  pathToscoringdata: <path to scoring data>
-  path_to_result_folder: <path to result folder>
-  path_to_trained_model: <path to pretrained model>
-  path_to_pickled_tokenizer: <path to pickled tokenizer
+
+   pathToSiameseConfig: <path to siamese configuration>
+   pathToscoringdata: <path to scoring data>
+   path_to_result_folder: <path to result folder>
+   path_to_trained_model: <path to pretrained model>
+   path_to_pickled_tokenizer: <path to pickled tokenizer
 
 outputs:
   dummy: /home/DS_HOME
 
 graph:
   
-  - node_name: model_scoring
+  - node_name: bert_scoring
     inputs: [path_to_result_folder, path_to_trained_model, path_to_pickled_tokenizer, pathToscoringdata, pathToSiameseConfig]
     outputs: [path_to_predicted_output]
-    operation: contentreuse.ModelScoring
+    operation: contentreuse.BERTScoring
     arguments:
       filterby_typeofmatch: nan
       filterby_grade_range: nan
@@ -25,8 +25,33 @@ graph:
       embedding_method: BERT
 
   - node_name: topic_aggregation
-    inputs: [model_scoring.path_to_predicted_output]
+    inputs: [bert_scoring.path_to_predicted_output]
     outputs: [path_to_output_topic_agg]
-    operation: contentreuse.ScoreAggAtTopicLevel
+    operation: contentreuse.TopicLevelAggregation
     arguments:
+      aggregation_criteria: average
       compute_topic_similarity: True
+      mandatory_column_names:
+        stb_topic_col_name: state_topic_id
+        ref_topic_col_name: reference_topic_id
+        pred_agg_col_name: pred_label_percentage
+        label_col_name: actual_label
+        tp_col_name: TP_count
+        fp_col_name: FP_count
+        tn_col_name: TN_count
+        fn_col_name: FN_count
+
+
+
+
+
+
+
+  
+
+
+
+ 
+
+
+
