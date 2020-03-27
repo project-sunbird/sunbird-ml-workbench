@@ -1,0 +1,19 @@
+mandatory_fields:
+  state_topic_id: null
+  reference_topic_id: null
+  pred_label_percentage: null
+  actual_label: null
+  tp_col_name: null
+  fp_col_name: null
+  tn_col_name: null
+  fn_col_name: null
+
+mandatory_column_name:
+  stb_topic_col_name: state_topic_id
+  ref_topic_col_name: reference_topic_id
+  pred_agg_col_name: pred_label_percentage
+  label_col_name: actual_label
+  tp_col_name: TP_count
+  fp_col_name: FP_count
+  tn_col_name: TN_count
+  fn_col_name: FN_count
