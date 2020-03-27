@@ -1,59 +1,34 @@
-import sys
-import os
-import daggit
-import requests
-import io
-import time
-import re
-import glob
-import logging
-# import pyvips
-import cv2
-import pickle
-import img2pdf
 import configparser
-import Levenshtein
-import pandas as pd
 import json
-from scipy.spatial import distance_matrix
-import ruptures as rp
+import logging
+import os
+# import pyvips
+import pickle
+import re
+import time
+
 import pandas as pd
-import numpy as np
-from keras.models import load_model
-
-from PIL import Image, ImageDraw, ImageFont
-from pdf2image import convert_from_path
-
-from google.cloud import vision
-from google.cloud import storage
-from google.protobuf import json_format
-from natsort import natsorted, ns
-from sklearn.metrics import precision_recall_curve
-from sklearn.metrics import average_precision_score
-from sklearn.model_selection import train_test_split
-
-from daggit.core.io.io import File_IO, File_Txt
-from daggit.core.io.files import findFiles
-from daggit.core.base.factory import BaseOperator
-from daggit.core.io.io import ReadDaggitTask_Folderpath
-from daggit.contrib.sunbird.oplib.contentreuseUtils import upload_blob
-from daggit.contrib.sunbird.oplib.contentreuseUtils import do_GoogleOCR
-from daggit.contrib.sunbird.oplib.contentreuseUtils import download_outputjson_reponses
-from daggit.contrib.sunbird.oplib.contentreuseUtils import getblob
+from PIL import Image
+from daggit.contrib.sunbird.oplib.contentreuseUtils import agg_actual_predict_df
+from daggit.contrib.sunbird.oplib.contentreuseUtils import aggregation_topic_level
+from daggit.contrib.sunbird.oplib.contentreuseUtils import append_cosine_similarity_score
 from daggit.contrib.sunbird.oplib.contentreuseUtils import create_manifest
 from daggit.contrib.sunbird.oplib.contentreuseUtils import create_toc
-from daggit.contrib.sunbird.oplib.dtb import create_dtb
+from daggit.contrib.sunbird.oplib.contentreuseUtils import generate_cosine_similarity_score
 from daggit.contrib.sunbird.oplib.contentreuseUtils import getDTB, calc_stat
-from daggit.contrib.sunbird.oplib.contentreuseUtils import agg_actual_predict_df
 from daggit.contrib.sunbird.oplib.contentreuseUtils import getSimilarTopic
+from daggit.contrib.sunbird.oplib.contentreuseUtils import getblob
+from daggit.contrib.sunbird.oplib.contentreuseUtils import k_topic_recommendation
+from daggit.contrib.sunbird.oplib.contentreuseUtils import modify_df
+from daggit.contrib.sunbird.oplib.contentreuseUtils import scoring_module, filter_by_grade_range
+from daggit.contrib.sunbird.oplib.dtb import create_dtb
+from daggit.core.base.factory import BaseOperator
+from daggit.core.io.io import File_IO, File_Txt
+from daggit.core.io.io import ReadDaggitTask_Folderpath
 # from daggit.contrib.sunbird.oplib.contentreuseEvaluationUtils import text_image
 from daggit.core.oplib import distanceUtils as dist
 from daggit.core.oplib import nlp as preprocess
-from daggit.contrib.sunbird.oplib.contentreuseUtils import scoring_module, filter_by_grade_range
-from daggit.contrib.sunbird.oplib.contentreuseUtils import aggregation_topic_level
-from daggit.contrib.sunbird.oplib.contentreuseUtils import modify_df
-from daggit.contrib.sunbird.oplib.contentreuseUtils import generate_cosine_similarity_score
-from daggit.contrib.sunbird.oplib.contentreuseUtils import append_cosine_similarity_score
+from natsort import natsorted
 
 
 class OcrTextExtraction(BaseOperator):
@@ -485,7 +460,7 @@ class BERTScoring(BaseOperator):
         path_to_siamese_config = self.inputs["path_to_siamese_config"].read()
 
         test_df = pd.read_csv(path_to_scoring_data)
-
+        test_df.fillna({'sentence1': '', 'sentence2': ''}, inplace=True)
         if "Unnamed: 0" in test_df.columns:
             del test_df["Unnamed: 0"]
 
@@ -561,6 +536,49 @@ class TopicLevelAggregation(BaseOperator):
                                                                     mandatory_column_names)
             output_aggregated_topic_level.to_csv(path_to_save_output)
         else:
-            path_to_save_output = ""
+            path_to_save_output = path_to_predicted_output
             print("*****Topic similarity aggregation not computed")
         self.outputs["path_to_output_topic_agg"].write(path_to_save_output)
+
+
+class ContentReuseEvaluation(BaseOperator):
+    @property
+    def inputs(self):
+        """
+        Function that the ContentReuseEvaluation operator defines while returning graph inputs
+        :return: Inputs to the node of the Content Reuse graph
+            path_to_full_score_metrics_file: path to scored dataframe file
+        """
+        return {
+            "path_to_output_topic_agg": File_IO(self.node.inputs[0])
+        }
+
+    @property
+    def outputs(self):
+        """
+        Function that the ContentReuseEvaluation operator defines while returning graph outputs
+        :return: Returns the path to the k_eval_metrics
+        """
+        return {
+            "path_to_k_eval_metrics": File_IO(self.node.outputs[0])
+        }
+
+    def run(self, window):
+        """
+        Generate k evaluation metrics
+        :param window: length of k eval metrics window
+        :return: None
+        """
+        path_to_output_topic_agg = self.inputs["path_to_output_topic_agg"].read()
+        path_to_result_folder = os.path.split(path_to_output_topic_agg)[0]
+        full_score_df = pd.read_csv(path_to_output_topic_agg)
+        k_result_df = k_topic_recommendation(full_score_df, window)
+        k_1 = k_result_df["k=1"].mean()
+        k_2 = k_result_df["k=2"].mean()
+        k_3 = k_result_df["k=3"].mean()
+        k_4 = k_result_df["k=4"].mean()
+        k_5 = k_result_df["k=5"].mean()
+        eval_dict = {"k=1": k_1, "k=2": k_2, "k=3": k_3, "k=4": k_4, "k=5": k_5}
+        with open(os.path.join(path_to_result_folder, 'k_eval_metrics.json'), 'w') as f:
+            json.dump(eval_dict, f)
+        self.outputs["path_to_k_eval_metrics"].write(os.path.join(path_to_result_folder, 'k_eval_metrics.json'))

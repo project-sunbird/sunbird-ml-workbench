@@ -64,3 +64,5 @@ transformers==2.1.1
 tensorflow==1.14.0
 Keras==2.1.1
 sklearn==0.0
+torch==1.4.0
+werkzeug==0.16.0
