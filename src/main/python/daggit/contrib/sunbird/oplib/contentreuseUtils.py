@@ -910,7 +910,7 @@ def scoring_module(tokenizer, best_model_path, siamese_config, test_df, threshol
     model_pred_df = pd.DataFrame(results)
     model_pred_df.columns = test_df.columns.to_list() + ['sentence1_score', 'sentence2_score', 'pred_score']
     model_pred_df['predicted_label'] = np.where(model_pred_df['pred_score'] > threshold, 1, 0)
-    model_pred_df.drop(['sentence2_score', 'sentence2_score'], axis=1, inplace=True)
+    model_pred_df.drop(['sentence1_score', 'sentence2_score'], axis=1, inplace=True)
     return model_pred_df
 
 
