@@ -5,6 +5,9 @@ from daggit.contrib.sunbird.oplib.taggingUtils import *
 from daggit.core.oplib.misc import df_feature_check
 from daggit.core.oplib.nlp import jaccard_with_phrase
 from nltk.corpus import stopwords
+import pandas as pd
+import os
+
 # from daggit.contrib.sunbird.oplib.contentreuseUtils import scoring_module, filter_by_grade_range
 # from daggit.contrib.sunbird.oplib.contentreuseUtils import aggregation_topic_level
 
@@ -106,14 +109,6 @@ class UnitTests(unittest.TestCase):
             'algebraic', 'maths'])['jaccard'] == 0.2
         assert jaccard_with_phrase(['simple', 'algebraic', 'problem', 'mathematics'], [
             'tree', 'apple'])['jaccard'] == 0
-
-
-    @staticmethod
-    def test_scoring_data_preparation():
-        cols = ['STB_Id', 'STB_Grade', 'STB_Section', 'STB_Text', 'Ref_id', 'Ref_Grade', 'Ref_Section', 'Ref_Text']
-        case1 = pd.read_csv(test_case_data_location + "df_feature_check/" + "content_reuse_feature_check.csv")
-        assert df_feature_check(case1, cols)
-
 
     # @staticmethod
     # def test_bert_scoring():

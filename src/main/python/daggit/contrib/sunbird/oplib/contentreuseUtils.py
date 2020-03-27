@@ -1,98 +1,57 @@
-import os
-import daggit
-import requests
-import io
-import sys
-import re
-import string
-import shutil
-import json
-
-import copy
-import torch
-import glob
-import natsort
-import numpy as np
-from numpy import nan 
-import pandas as pd
-import ruptures as rp
-import Levenshtein
-import gspread
-import spacy
-# nlp = spacy.load('en')
-from oauth2client.service_account import ServiceAccountCredentials
-
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.preprocessing import normalize
-import Levenshtein
-from pyemd import emd
-
-from google.cloud import vision
-from google.cloud import storage
-from google.protobuf import json_format
-from natsort import natsorted
-from scipy.spatial import distance_matrix
-from sklearn.decomposition import PCA
-from pyemd import emd
-from Bio import pairwise2
-from Bio.pairwise2 import format_alignment
-from sklearn.feature_extraction.text import CountVectorizer
-
-from keras.layers import Dense, Input, LSTM, Dropout, Bidirectional
-from keras.callbacks import EarlyStopping, ModelCheckpoint
-from keras.layers.normalization import BatchNormalization
-from keras.layers.embeddings import Embedding
-from keras.layers.merge import concatenate
-from keras.callbacks import TensorBoard
-from keras.models import load_model
-from keras.models import Model
-from keras.preprocessing.sequence import pad_sequences
-from keras.preprocessing.text import Tokenizer
-from gensim.models import Word2Vec
-import numpy as np
-import pickle
-import sys
-import logging
-import time
-import json
+import ast
 import gc
+import json
+import logging
 import os
+import pickle
+import re
+import shutil
+import time
 import warnings
-warnings.filterwarnings("ignore")
+from collections import ChainMap
+from operator import itemgetter
+
+import gspread
+import numpy as np
+import pandas as pd
 import plotly as py
 import plotly.graph_objs as go
-
-import nltk
-nltk.download('wordnet')
-
-from nltk.stem.wordnet import WordNetLemmatizer
-from nltk.stem import PorterStemmer
-from plotly.offline import download_plotlyjs, init_notebook_mode, plot, iplot
-from sklearn.metrics import precision_recall_curve
-from sklearn.metrics import average_precision_score
-from sklearn.metrics.pairwise import cosine_similarity
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.model_selection import train_test_split
-from operator import itemgetter
+import requests
+import torch
+from daggit.core.io.files import findFiles
+from daggit.core.oplib import distanceUtils as dist
+from gensim.models import Word2Vec
+from google.cloud import storage
+from google.cloud import vision
+from google.protobuf import json_format
+from keras.callbacks import EarlyStopping, ModelCheckpoint
+from keras.callbacks import TensorBoard
+from keras.layers import Dense, Input, LSTM, Dropout, Bidirectional
+from keras.layers.embeddings import Embedding
+from keras.layers.merge import concatenate
+from keras.layers.normalization import BatchNormalization
+from keras.models import Model
 from keras.models import load_model
-import ast
-
+from keras.preprocessing.sequence import pad_sequences
+from keras.preprocessing.text import Tokenizer
+from natsort import natsorted
+from nltk.stem import PorterStemmer
+from nltk.stem.wordnet import WordNetLemmatizer
+from oauth2client.service_account import ServiceAccountCredentials
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics import average_precision_score
+from sklearn.metrics import precision_recall_curve
+from sklearn.metrics.pairwise import cosine_similarity
 from transformers import BertModel
 from transformers import BertTokenizer
-import pandas as pd
-from collections import ChainMap
-from itertools import product
 
-
-from daggit.core.oplib import distanceUtils as dist
-from daggit.core.oplib import nlp as preprocess
-from daggit.core.io.files import findFiles
+warnings.filterwarnings("ignore")
 
 
 def upload_blob(bucket_name, source_file_name, destination_blob_name):
     """Uploads a file to the storage bucket."""
     storage_client = storage.Client()
-    gcs_source_uri  = ""
+    gcs_source_uri = ""
     try:
         bucket = storage_client.get_bucket(bucket_name)
         blob = bucket.blob(destination_blob_name)
@@ -104,7 +63,7 @@ def upload_blob(bucket_name, source_file_name, destination_blob_name):
     return gcs_source_uri
 
 
-def do_GoogleOCR(gcs_source_uri, gcs_destination_uri): #bs parameter
+def do_GoogleOCR(gcs_source_uri, gcs_destination_uri):  # bs parameter
     """
     Perform OCR on a PDF uploaded in google cloud storage, generate output as
     JSON responses and save it in a destination URI
@@ -223,7 +182,7 @@ def custom_googleOCR_parser(path_to_outputjson_folder):
                 pages = sheet['fullTextAnnotation']['pages']
                 print('sheet: ', sid)
                 for pid, page in enumerate(pages):
-                    size = [page['width'],page['height']]
+                    size = [page['width'], page['height']]
                     page_sizes.append(size)
                     boxes = []
                     mytxt = []
@@ -233,7 +192,7 @@ def custom_googleOCR_parser(path_to_outputjson_folder):
 
                         paragraphs = block['paragraphs']
                         rPara = ''
-                        for paid,para in enumerate(paragraphs):
+                        for paid, para in enumerate(paragraphs):
                             bbox = para['boundingBox']
                             rSent = ''
                             for wid, word in enumerate(para['words']):
@@ -241,11 +200,11 @@ def custom_googleOCR_parser(path_to_outputjson_folder):
                                 rWord = ''
                                 for sid, symbol in enumerate(symbols):
                                     txt = (symbol['text'].encode("utf-8")).decode("utf-8")
-                                    rWord+=txt
-                                rSent += ' '+rWord
-                            rPara += ''+rSent
+                                    rWord += txt
+                                rSent += ' ' + rWord
+                            rPara += '' + rSent
                             mytxt.append(rSent)
-                            boxes.append(getBox(bbox,size))
+                            boxes.append(getBox(bbox, size))
                     page_boxes.append(boxes)
                     page_txt.append(mytxt)
         return page_txt
@@ -258,7 +217,7 @@ def getblob(method_of_ocr, bucket_name, local_path_to_pdf, content_id, root_path
     if method_of_ocr == "GOCR":
         print("----Performing GoogleOCR Text extraction----")
         try:
-            pdf_name = content_id # os.path.split(local_path_to_pdf)[1][:-4]
+            pdf_name = content_id  # os.path.split(local_path_to_pdf)[1][:-4]
             textbook_model_path = os.path.join(root_path, pdf_name)
             print(pdf_name, textbook_model_path)
             if not os.path.exists(textbook_model_path):
@@ -269,10 +228,10 @@ def getblob(method_of_ocr, bucket_name, local_path_to_pdf, content_id, root_path
                 if not os.path.exists(loc):
                     os.makedirs(loc)
             shutil.copy(local_path_to_pdf, os.path.join(textbook_model_path, "source"))
-            gcs_source_uri = upload_blob(bucket_name, local_path_to_pdf, pdf_name+".pdf")
+            gcs_source_uri = upload_blob(bucket_name, local_path_to_pdf, pdf_name + ".pdf")
             if gcs_source_uri:
                 # perform GoogleOCR:
-                gcs_destination_uri = "gs://{0}/{1}".format(bucket_name, os.path.split(gcs_source_uri)[1][:-4]+"/")
+                gcs_destination_uri = "gs://{0}/{1}".format(bucket_name, os.path.split(gcs_source_uri)[1][:-4] + "/")
                 print(gcs_destination_uri)
                 prefix, all_text = do_GoogleOCR(gcs_source_uri, gcs_destination_uri)
                 path_to_gocr_text = os.path.join(textbook_model_path, "extract", "GOCR", "text")
@@ -290,10 +249,10 @@ def getblob(method_of_ocr, bucket_name, local_path_to_pdf, content_id, root_path
                             for line in infile:
                                 outfile.write(line)
                             os.remove(fname)
-                path_to_outputjson_folder = download_outputjson_reponses(bucket_name, prefix+"/",
+                path_to_outputjson_folder = download_outputjson_reponses(bucket_name, prefix + "/",
                                                                          path_to_gocr_json, delimiter="/")
         except:
-           print("Process terminated")
+            print("Process terminated")
     return textbook_model_path
 
 
@@ -319,7 +278,7 @@ def create_manifest(content_id, path_to_saved_folder):
             arr = []
             for i in (os.listdir(os.path.join(path_to_saved_folder, "raw_data"))):
                 if i != '.DS_Store':
-                    arr.append({"id": content_id+"_blob_gocr", "path": i, "Type": "gocr"})
+                    arr.append({"id": content_id + "_blob_gocr", "path": i, "Type": "gocr"})
 
             manifest["extract"]["api_response"] = arr
             with open(path_to_manifest, "w") as json_file:
@@ -332,77 +291,77 @@ def create_manifest(content_id, path_to_saved_folder):
 
 
 def create_toc(content_id, path_to_saved_folder, api_key, postman_token):
-
     url = "https://diksha.gov.in/action/composite/v3/search"
-    payload = "{\r\n    \"request\": {\r\n        \"filters\":{\r\n            \"identifier\":[\""+content_id+"\"]\r\n         },\r\n               \"limit\":1\r\n    }\r\n}"
+    payload = "{\r\n    \"request\": {\r\n        \"filters\":{\r\n            \"identifier\":[\"" + content_id + "\"]\r\n         },\r\n               \"limit\":1\r\n    }\r\n}"
     path_to_toc = ""
     headers = {
         'content-type': "application/json",
         'authorization': api_key,
         'cache-control': "no-cache",
         'postman-token': postman_token
-        }
+    }
     print("path_to_saved_folder", path_to_saved_folder)
     response = requests.request("POST", url, data=payload, headers=headers).json()
     try:
-        path_to_toc = os.path.join(path_to_saved_folder, content_id+".json")
+        path_to_toc = os.path.join(path_to_saved_folder, content_id + ".json")
         with open(path_to_toc, "w") as write_file:
             json.dump(response["result"]["content"][0], write_file, indent=4)
     except:
         pass
     return path_to_toc
 
+
 def getDTB(loc):
     with open(loc) as json_file:
         DTB = json.load(json_file)
-    DTB_df=[]
+    DTB_df = []
     for topic in DTB['alignment']:
         full_text = topic["target"]['fulltext_annotation']
         cid = topic["source"]["id"]
         topic_name = topic["source"]["fulltext_annotation"]
-        DTB_df.append({"identifier":cid, "name":topic_name, "text":full_text})
+        DTB_df.append({"identifier": cid, "name": topic_name, "text": full_text})
     return pd.DataFrame(DTB_df)
 
 
 def getSimilarTopic(x, k):
-    df=dist.similarity_df(x)
-    similar_topic=dict()
+    df = dist.similarity_df(x)
+    similar_topic = dict()
     for i in range(len(df)):
-        row_df=pd.DataFrame(df.iloc[i])
-        row_df=row_df.sort_values(by = list(row_df.columns),ascending=False)
-        topn=[]
+        row_df = pd.DataFrame(df.iloc[i])
+        row_df = row_df.sort_values(by=list(row_df.columns), ascending=False)
+        topn = []
         for j in range(k):
             try:
-                topn.append({list(row_df.index)[j]:row_df.iloc[j,0]})
+                topn.append({list(row_df.index)[j]: row_df.iloc[j, 0]})
             except:
                 pass
-        similar_topic[list(df.index)[i]]=topn
+        similar_topic[list(df.index)[i]] = topn
     return similar_topic
 
 
-def read_google_sheet(credentials,spreadsheet_key,worksheetpage):
+def read_google_sheet(credentials, spreadsheet_key, worksheetpage):
     scope = ['https://spreadsheets.google.com/feeds']
     credentials = ServiceAccountCredentials.from_json_keyfile_name(credentials, scope)
     gc = gspread.authorize(credentials)
     spreadsheet_key = spreadsheet_key
     book = gc.open_by_key(spreadsheet_key)
-    worksheet = book.worksheet(worksheetpage) 
+    worksheet = book.worksheet(worksheetpage)
     table = worksheet.get_all_values()
     df = pd.DataFrame(table[1:], columns=table[0])
     return df
 
 
 def calc_stat(list1, list2, measure):
-    ls = [] 
-    for i in range(len(list1)): 
-        if measure =='division':
+    ls = []
+    for i in range(len(list1)):
+        if measure == 'division':
             try:
-                ls.append(float((len(list1[i]))/(len(list2[i]))))
+                ls.append(float((len(list1[i])) / (len(list2[i]))))
             except:
                 ls.append(0)
-        if measure=='MED':
+        if measure == 'MED':
             try:
-                ls.append(dist.getWordlistEMD((list(list1[i])),list(list2[i]),"MED"))
+                ls.append(dist.getWordlistEMD((list(list1[i])), list(list2[i]), "MED"))
             except:
                 ls.append(0)
     return ls
@@ -410,33 +369,35 @@ def calc_stat(list1, list2, measure):
 
 def find_span_sentence(text, sentence):
     start_index = text.find(sentence)
-    end_index = start_index + len(sentence) 
+    end_index = start_index + len(sentence)
     return start_index, end_index
 
+
 def agg_actual_predict_df(toc_df, dtb_actual, pred_df, level):
-    ls = [] 
+    ls = []
     for i in range(len(toc_df)):
-        a = [toc_df.index[i]] + list(toc_df['Topic Name'][i][1: ])
+        a = [toc_df.index[i]] + list(toc_df['Topic Name'][i][1:])
         if level == 'Topic Name':
             for j in range(len(a)):
-                actual_text = " ".join( dtb_actual.loc[dtb_actual['Toc feature']==str(a[j])]['CONTENTS'])
+                actual_text = " ".join(dtb_actual.loc[dtb_actual['Toc feature'] == str(a[j])]['CONTENTS'])
                 try:
-                    pred_text = pred_df[pred_df['title']==a[j]]['pred_text'].iloc[0]
+                    pred_text = pred_df[pred_df['title'] == a[j]]['pred_text'].iloc[0]
                 except:
                     pred_text = 'nan'
-                consolidated_df = pd.DataFrame([toc_df.index[i], a[j], actual_text,pred_text]).T
-                consolidated_df.columns= ['ChapterName','TopicName','ActualText','PredictedText']
+                consolidated_df = pd.DataFrame([toc_df.index[i], a[j], actual_text, pred_text]).T
+                consolidated_df.columns = ['ChapterName', 'TopicName', 'ActualText', 'PredictedText']
                 ls.append(consolidated_df)
         elif level == 'Chapter Name':
-            actual_text = " ".join( dtb_actual.loc[dtb_actual['Toc feature'].isin(a)]['CONTENTS'])
+            actual_text = " ".join(dtb_actual.loc[dtb_actual['Toc feature'].isin(a)]['CONTENTS'])
             try:
-                pred_text = pred_df[pred_df['title']==toc_df.index[i]]['pred_text'].iloc[0]
+                pred_text = pred_df[pred_df['title'] == toc_df.index[i]]['pred_text'].iloc[0]
             except:
                 pred_text = 'nan'
             consolidated_df = pd.DataFrame([toc_df.index[i], actual_text, pred_text]).T
-            consolidated_df.columns= ['ChapterName','ActualText','PredictedText']
+            consolidated_df.columns = ['ChapterName', 'ActualText', 'PredictedText']
             ls.append(consolidated_df)
-    return ls 
+    return ls
+
 
 def train_word2vec(documents, embedding_dim):
     """
@@ -464,19 +425,20 @@ def get_bert_word_embeddings(documents, maxlen, bert_layer, path_to_DS_DATA_HOME
     for sentence in tqdm(documents):
         tokens = bert_tokenizer.tokenize(sentence)
         print("tokens: ", tokens)
-        
+
         tokens = ['[CLS]'] + tokens + ['[SEP]']
         if len(tokens) < maxlen:
-            tokens = tokens + ['[PAD]' for _ in range(maxlen - len(tokens))] #Padding sentences
+            tokens = tokens + ['[PAD]' for _ in range(maxlen - len(tokens))]  # Padding sentences
         else:
-            tokens = tokens[:maxlen-1] + ['[SEP]'] # Prunning the list to be of specified max length
+            tokens = tokens[:maxlen - 1] + ['[SEP]']  # Prunning the list to be of specified max length
         token_ls.append(tokens)
-        tokens_ids = bert_tokenizer.convert_tokens_to_ids(tokens) # Obtaining the indices of the tokens in the BERT Vocabulary
-        tokens_ids_tensor = torch.tensor(tokens_ids) # Converting the list to a pytorch tensor
+        tokens_ids = bert_tokenizer.convert_tokens_to_ids(
+            tokens)  # Obtaining the indices of the tokens in the BERT Vocabulary
+        tokens_ids_tensor = torch.tensor(tokens_ids)  # Converting the list to a pytorch tensor
         # Obtaining the attention mask i.e a tensor containing 1s for no padded tokens and 0s for padded ones
         attn_masks = (tokens_ids_tensor != 0).long()
         # bert layer:
-        cont_reps, _ = bert_layer(tokens_ids_tensor.unsqueeze(0), attention_mask = attn_masks.unsqueeze(0))
+        cont_reps, _ = bert_layer(tokens_ids_tensor.unsqueeze(0), attention_mask=attn_masks.unsqueeze(0))
         vect_dict = {}
         for i, j in enumerate(tokens):
             if j in ["[CLS]", "[SEP]", "[PAD]"]:
@@ -488,7 +450,7 @@ def get_bert_word_embeddings(documents, maxlen, bert_layer, path_to_DS_DATA_HOME
     with open(os.path.join(path_to_DS_DATA_HOME, 'embeddings_list.pkl'), 'wb') as fp:
         pickle.dump(vect_ls, fp)
     full_rep_dict = dict(ChainMap(*vect_ls))
-    logging.info("BOS_PYTORCH_BERT_EMBEDDING_TIME_TAKEN: {0}mins".format((time.time()-starttime)/60.0))
+    logging.info("BOS_PYTORCH_BERT_EMBEDDING_TIME_TAKEN: {0}mins".format((time.time() - starttime) / 60.0))
     logging.info("STOP_BOS_PYTORCH_BERT_EMBEDDING")
     return full_rep_dict
 
@@ -534,13 +496,13 @@ def word_embed_meta_data(documents, embedding_dim, lemmatisation, stemming):
         tokenizer (keras.preprocessing.text.Tokenizer): keras tokenizer object
         embedding_matrix (dict): dict with word_index and vector mapping
     """
-    documents = [x.lower().split() for x in documents]   
+    documents = [x.lower().split() for x in documents]
     wordnet_lemmatizer = WordNetLemmatizer()
     porter = PorterStemmer()
-    preprocess_documents = [] 
+    preprocess_documents = []
     if lemmatisation == True:
         for j in range(len(documents)):
-            preprocess_documents.append( [wordnet_lemmatizer.lemmatize(i,pos="v") for i in documents[j]])
+            preprocess_documents.append([wordnet_lemmatizer.lemmatize(i, pos="v") for i in documents[j]])
     else:
         preprocess_documents = preprocess_documents.copy()
     preprocess_documents = []
@@ -557,7 +519,8 @@ def word_embed_meta_data(documents, embedding_dim, lemmatisation, stemming):
     return tokenizer, embedding_matrix
 
 
-def pytorchbert_word_embed_meta_data(documents, maxlen, bert_layer, embedding_dim, bert_tokenizer, path_to_DS_DATA_HOME):
+def pytorchbert_word_embed_meta_data(documents, maxlen, bert_layer, embedding_dim, bert_tokenizer,
+                                     path_to_DS_DATA_HOME):
     """
     Load tokenizer object for given vocabs list
     Args:
@@ -632,7 +595,7 @@ def create_train_dev_set(tokenizer, sentences_pair, is_similar, max_sequence_len
     labels_train, labels_val = train_labels_shuffled[:-dev_idx], train_labels_shuffled[-dev_idx:]
     leaks_train, leaks_val = leaks_shuffled[:-dev_idx], leaks_shuffled[-dev_idx:]
     logging.info("STOP_BOS_CREATE_TRAIN")
-    logging.info("BOS_CREATE_TRAIN_TIME_TAKEN: {0}mins".format((time.time()-start)/60.0))
+    logging.info("BOS_CREATE_TRAIN_TIME_TAKEN: {0}mins".format((time.time() - start) / 60.0))
     return train_data_1, train_data_2, labels_train, leaks_train, val_data_1, val_data_2, labels_val, leaks_val
 
 
@@ -645,15 +608,18 @@ def generate_tokenizer_embedding_mat(embedding_args, embedding_algo, complete_df
         bert_layer = BertModel.from_pretrained('bert-base-uncased')
         bert_tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 
-        tokenizer, embedding_matrix = pytorchbert_word_embed_meta_data(list(complete_df['sentence1']) + list(complete_df['sentence2']), maxlen, bert_layer, embedding_dim, bert_tokenizer, path_to_DS_DATA_HOME)
+        tokenizer, embedding_matrix = pytorchbert_word_embed_meta_data(
+            list(complete_df['sentence1']) + list(complete_df['sentence2']), maxlen, bert_layer, embedding_dim,
+            bert_tokenizer, path_to_DS_DATA_HOME)
 
     if embedding_algo == "Word2Vec":
         lemmatisation = embedding_args[embedding_algo]["lemmatisation"]
         stemming = embedding_args[embedding_algo]["stemming"]
-        tokenizer, embedding_matrix = word_embed_meta_data(list(complete_df['sentence1']) + list(complete_df['sentence2']),  embedding_dim, lemmatisation, stemming)
+        tokenizer, embedding_matrix = word_embed_meta_data(
+            list(complete_df['sentence1']) + list(complete_df['sentence2']), embedding_dim, lemmatisation, stemming)
 
     embedding_meta_data = {
-        'tokenizer': tokenizer, 
+        'tokenizer': tokenizer,
         'embedding_matrix': embedding_matrix
     }
     return embedding_meta_data
@@ -684,13 +650,13 @@ def create_test_data(tokenizer, test_sentences_pair, max_sequence_length):
     test_data_1 = pad_sequences(test_sequences_1, maxlen=max_sequence_length)
     test_data_2 = pad_sequences(test_sequences_2, maxlen=max_sequence_length)
     logging.info("STOP_BOS_CREATE_TEST")
-    logging.info("BOS_CREATE_TEST_TIME_TAKEN: {0}mins".format((time.time()-start)/60.0))
+    logging.info("BOS_CREATE_TEST_TIME_TAKEN: {0}mins".format((time.time() - start) / 60.0))
 
     return test_data_1, test_data_2, leaks_test
 
 
 class SiameseBiLSTM:
-    def __init__(self, embedding_dim, max_sequence_length, number_lstm, number_dense, rate_drop_lstm, 
+    def __init__(self, embedding_dim, max_sequence_length, number_lstm, number_dense, rate_drop_lstm,
                  rate_drop_dense, hidden_activation, validation_split_ratio):
         self.embedding_dim = embedding_dim
         self.max_sequence_length = max_sequence_length
@@ -736,7 +702,8 @@ class SiameseBiLSTM:
                                     input_length=self.max_sequence_length, trainable=False)
 
         # Creating LSTM Encoder--> try GRU
-        lstm_layer = Bidirectional(LSTM(self.number_lstm_units, dropout=self.rate_drop_lstm, recurrent_dropout=self.rate_drop_lstm))
+        lstm_layer = Bidirectional(
+            LSTM(self.number_lstm_units, dropout=self.rate_drop_lstm, recurrent_dropout=self.rate_drop_lstm))
 
         # Creating LSTM Encoder layer for First Sentence
         sequence_1_input = Input(shape=(self.max_sequence_length,), dtype='int32')
@@ -750,7 +717,7 @@ class SiameseBiLSTM:
 
         # Creating leaks input
         leaks_input = Input(shape=(leaks_train.shape[1],))
-        leaks_dense = Dense(int(self.number_dense_units/2), activation=self.activation_function)(leaks_input)
+        leaks_dense = Dense(int(self.number_dense_units / 2), activation=self.activation_function)(leaks_input)
 
         # Merging two LSTM encodes vectors from sentences to
         # pass it to dense layer applying dropout and batch normalisation
@@ -782,10 +749,10 @@ class SiameseBiLSTM:
         tensorboard = TensorBoard(log_dir=checkpoint_dir + "logs/{}".format(time.time()))
 
         model_ = model.fit([train_data_x1, train_data_x2, leaks_train], train_labels,
-                  validation_data=([val_data_x1, val_data_x2, leaks_val], val_labels),
-                  epochs=200, batch_size=64, shuffle=True,
-                  callbacks=[early_stopping, model_checkpoint, tensorboard],
-                      )
+                           validation_data=([val_data_x1, val_data_x2, leaks_val], val_labels),
+                           epochs=200, batch_size=64, shuffle=True,
+                           callbacks=[early_stopping, model_checkpoint, tensorboard],
+                           )
         model_summary = json.loads(str(model.to_json()))
         with open(os.path.join(model_save_directory, 'model_summary.json'), "w") as summ_file:
             json.dump(model_summary, summ_file, indent=4)
@@ -793,24 +760,24 @@ class SiameseBiLSTM:
         #     json.dump(model_.history, hist_file, indent=4)
         loss_history = model_.history["loss"]
         numpy_loss_history = np.array(loss_history)
-        df = pd.DataFrame(numpy_loss_history, columns = ["loss"])
+        df = pd.DataFrame(numpy_loss_history, columns=["loss"])
         df['val_loss'] = np.array(model_.history["val_loss"])
-        df['accuracy'] = np.array(model_.history["acc"]) 
-        df.to_csv(os.path.join(model_save_directory, "loss_function_df.csv")) 
+        df['accuracy'] = np.array(model_.history["acc"])
+        df.to_csv(os.path.join(model_save_directory, "loss_function_df.csv"))
 
         fig = go.Figure()
-        fig.add_trace(go.Scatter(x = list(df.index), y= list(df['loss']),
-                            mode='lines',
-                            name='train'))
-        fig.add_trace(go.Scatter(x = list(df.index), y= list(df['val_loss']),
-                            mode='lines',
-                            name='test'))
+        fig.add_trace(go.Scatter(x=list(df.index), y=list(df['loss']),
+                                 mode='lines',
+                                 name='train'))
+        fig.add_trace(go.Scatter(x=list(df.index), y=list(df['val_loss']),
+                                 mode='lines',
+                                 name='test'))
         fig.update_layout(title='model loss',
-                           xaxis_title='epoch',
-                           yaxis_title='loss') 
-        py.offline.plot(fig, filename=os.path.join(model_save_directory,'loss_function_curve.html'))
+                          xaxis_title='epoch',
+                          yaxis_title='loss')
+        py.offline.plot(fig, filename=os.path.join(model_save_directory, 'loss_function_curve.html'))
         logging.info("STOP_BOS_TRAIN_MODEL")
-        logging.info("BOS_CREATE_TRAIN_MODEL_TIME_TAKEN: {0}mins".format((time.time()-start)/60.0))
+        logging.info("BOS_CREATE_TRAIN_MODEL_TIME_TAKEN: {0}mins".format((time.time() - start) / 60.0))
         return bst_model_path
 
     def update_model(self, saved_model_path, new_sentences_pair, is_similar, embedding_meta_data):
@@ -838,7 +805,7 @@ class SiameseBiLSTM:
                                                                                self.validation_split_ratio)
         model = load_model(saved_model_path)
         model_file_name = saved_model_path.split('/')[-1]
-        new_model_checkpoint_path  = saved_model_path.split('/')[:-2] + str(int(time.time())) + '/' 
+        new_model_checkpoint_path = saved_model_path.split('/')[:-2] + str(int(time.time())) + '/'
 
         new_model_path = new_model_checkpoint_path + model_file_name
         model_checkpoint = ModelCheckpoint(new_model_checkpoint_path + model_file_name,
@@ -853,16 +820,18 @@ class SiameseBiLSTM:
                   epochs=50, batch_size=3, shuffle=True,
                   callbacks=[early_stopping, model_checkpoint, tensorboard])
         logging.info("STOP_BOS_UPDATE_MODEL")
-        logging.info("BOS_UPDATE_MODEL_TIME_TAKEN: {0}mins".format((time.time()-start)/60.0))
+        logging.info("BOS_UPDATE_MODEL_TIME_TAKEN: {0}mins".format((time.time() - start) / 60.0))
         return new_model_path
 
 
-def generate_pr_curve(predicted_model):
-    precision, recall, threshold = precision_recall_curve(predicted_model['actual_label'].ravel(), predicted_model['pred_score'].ravel())  
-    average_precision = average_precision_score(predicted_model['actual_label'].ravel(), predicted_model['pred_score'].ravel()) 
-    trace1 = go.Scatter(x=recall, y=precision, 
+def generate_pr_curve(predicted_model, path_to_DS_DATA_HOME):
+    precision, recall, threshold = precision_recall_curve(predicted_model['actual_label'].ravel(),
+                                                          predicted_model['pred_score'].ravel())
+    average_precision = average_precision_score(predicted_model['actual_label'].ravel(),
+                                                predicted_model['pred_score'].ravel())
+    trace1 = go.Scatter(x=recall, y=precision,
                         mode='lines',
-                        hovertext = threshold, 
+                        hovertext=threshold,
                         line=dict(width=2, color='navy'),
                         name='Precision-Recall curve')
 
@@ -871,8 +840,8 @@ def generate_pr_curve(predicted_model):
                        yaxis=dict(title='Precision'))
 
     fig = go.Figure(data=[trace1], layout=layout)
-    py.offline.plot(fig, filename=os.path.join(path_to_DS_DATA_HOME,'pr_curve.html'))
-    #fig.write_image(path_to_save_image)
+    py.offline.plot(fig, filename=os.path.join(path_to_DS_DATA_HOME, 'pr_curve.html'))
+    # fig.write_image(path_to_save_image)
     # return path_to_save_image
 
 
@@ -913,7 +882,7 @@ def create_scoring_data(tokenizer, score_sentences_pair, max_sequence_length):
     test_data_1 = pad_sequences(test_sequences_1, maxlen=max_sequence_length)
     test_data_2 = pad_sequences(test_sequences_2, maxlen=max_sequence_length)
     logging.info("STOP_BOS_CREATE_TEST")
-    logging.info("BOS_CREATE_TEST_TIME_TAKEN: {0}mins".format((time.time()-start)/60.0))
+    logging.info("BOS_CREATE_TEST_TIME_TAKEN: {0}mins".format((time.time() - start) / 60.0))
     return test_data_1, test_data_2, leaks_test
 
 
@@ -928,19 +897,20 @@ def scoring_module(tokenizer, best_model_path, siamese_config, test_df, threshol
     Returns:
         model_pred_df (dataframe): dataframe with predicted score and predicted label after applying threshold on the score.
     """
-    test_sentence_pairs = [(x1, x2) for x1, x2 in zip(list(test_df['sentence1']), list(test_df['sentence2']))] 
-    test_data_x1, test_data_x2, leaks_test = create_scoring_data(tokenizer, test_sentence_pairs,  siamese_config['MAX_SEQUENCE_LENGTH'])
+    test_sentence_pairs = [(x1, x2) for x1, x2 in zip(list(test_df['sentence1']), list(test_df['sentence2']))]
+    test_data_x1, test_data_x2, leaks_test = create_scoring_data(tokenizer, test_sentence_pairs,
+                                                                 siamese_config['MAX_SEQUENCE_LENGTH'])
     best_model = load_model(best_model_path, compile=False)
     preds = list(best_model.predict([test_data_x1, test_data_x2, leaks_test], verbose=1).ravel())
     results_ = [(x, y, z) for (x, y), z in zip(test_sentence_pairs, preds)]
-    results = [] 
+    results = []
     for i in range(len(results_)):
-        results.append(tuple(list(results_[i])+list(test_df.iloc[i]))) 
-
+        results.append(tuple(list(test_df.iloc[i]) + list(results_[i])))
     results.sort(key=itemgetter(2), reverse=True)
     model_pred_df = pd.DataFrame(results)
-    model_pred_df.columns = ['sentence1_score','sentence2_score','pred_score','sent1_general','sent2_general','ref_topic_id', 'ref_grade','ref_section', 'actual_label', 'stb_topic_id', 'STB_Grade', 'STB_Section','TypeofMatch']
+    model_pred_df.columns = test_df.columns.to_list() + ['sentence1_score', 'sentence2_score', 'pred_score']
     model_pred_df['predicted_label'] = np.where(model_pred_df['pred_score'] > threshold, 1, 0)
+    model_pred_df.drop(['sentence1_score', 'sentence2_score'], axis=1, inplace=True)
     return model_pred_df
 
 
@@ -980,19 +950,19 @@ def aggregation_topic_level(output_df, aggregation_criteria, mandatory_column_na
     if 'cm' not in output_df.columns:
         output_df['cm'] = output_df.apply(create_confusion_matrix, axis=1)
     try:
-        for stb_topic_id in output_df["stb_topic_id"].unique():
+        for stb_topic_id in output_df["stb_id"].unique():
             big_ls = []
-            stb_df = output_df[output_df["stb_topic_id"] == stb_topic_id]
-            for ref_id in stb_df["ref_topic_id"].unique():
+            stb_df = output_df[output_df["stb_id"] == stb_topic_id]
+            for ref_id in stb_df["ref_id"].unique():
                 pred_score_percent = 0
-                stb_1_df_sam = stb_df[stb_df["ref_topic_id"] == ref_id]
+                stb_1_df_sam = stb_df[stb_df["ref_id"] == ref_id]
                 eval_dict = dict(stb_1_df_sam['cm'].value_counts())
                 print("eval_dict: ", eval_dict)
                 columns = [v for k, v in mandatory_column_names.items()]
                 score_df = pd.DataFrame(index=[0], columns=columns)
                 score_df = score_df.fillna(0)
                 if aggregation_criteria == "average":
-                    pred_score_percent = (stb_1_df_sam['predicted_label'].sum()/len(stb_1_df_sam))*100
+                    pred_score_percent = (stb_1_df_sam['predicted_label'].sum() / len(stb_1_df_sam)) * 100
                 score_df[mandatory_column_names["stb_topic_col_name"]] = stb_topic_id
                 score_df[mandatory_column_names["ref_topic_col_name"]] = ref_id
                 score_df[mandatory_column_names["pred_agg_col_name"]] = pred_score_percent
@@ -1006,13 +976,14 @@ def aggregation_topic_level(output_df, aggregation_criteria, mandatory_column_na
                 if "FN" in eval_dict.keys():
                     score_df[mandatory_column_names["fn_col_name"]] = eval_dict["FN"]
                 big_ls.append(score_df)
-            full_score_df = pd.concat(big_ls).reset_index(drop=True).sort_values(by=[mandatory_column_names["pred_agg_col_name"]], ascending=False)
+            full_score_df = pd.concat(big_ls).reset_index(drop=True).sort_values(
+                by=[mandatory_column_names["pred_agg_col_name"]], ascending=False)
             full_df_ls.append(full_score_df)
-        full_score_df = pd.concat(full_df_ls).reset_index(drop=True)  
+        full_score_df = pd.concat(full_df_ls).reset_index(drop=True)
         return full_score_df
     except:
         print("Error occurred!!")
-    
+
 
 def k_topic_recommendation(full_score_df, window):
     """
@@ -1027,21 +998,22 @@ def k_topic_recommendation(full_score_df, window):
     """
     full_df_ls = []
     df_ls = []
-    for stb_topic_id in full_score_df["state_topic_id"].unique():
-        stb_df = full_score_df[full_score_df["state_topic_id"] == stb_topic_id]
+    for stb_topic_id in full_score_df["stb_id"].unique():
+        stb_df = full_score_df[full_score_df["stb_id"] == stb_topic_id]
         actual_label_max_score = max(stb_df["actual_label"].unique())
-        actual_ref_id = stb_df[stb_df["actual_label"] == actual_label_max_score]["reference_topic_id"].iloc[0]
+        actual_ref_id = stb_df[stb_df["actual_label"] == actual_label_max_score]["ref_id"].iloc[0]
         print("actual ref id: ", actual_ref_id)
-        grouped_refid_df_ = stb_df.groupby('pred_label_percentage')['reference_topic_id'].apply(list).reset_index(name='grouped_ref_id').sort_values(by=['pred_label_percentage'], ascending=False)[:window]
-        grouped_refid_df_["state_topic_id"] = stb_topic_id
+        grouped_refid_df_ = stb_df.groupby('pred_label_percentage')['ref_id'].apply(list).reset_index(
+            name='grouped_ref_id').sort_values(by=['pred_label_percentage'], ascending=False)[:window]
+        grouped_refid_df_["stb_id"] = stb_topic_id
         full_df_ls.append(grouped_refid_df_)
-        columns = ["state_topic_id", "k=1", "k=2", "k=3", "k=4", "k=5"]
+        columns = ["stb_id", "k=1", "k=2", "k=3", "k=4", "k=5"]
         df_ = pd.DataFrame(index=[0], columns=columns)
         df_ = df_.fillna(0)
-        df_["state_topic_id"] = stb_topic_id
+        df_["stb_id"] = stb_topic_id
         for i in range(window):
             if actual_ref_id in grouped_refid_df_["grouped_ref_id"].iloc[i]:
-                df_.loc[0, i+1:] = 1
+                df_.loc[0, i + 1:] = 1
                 break
         df_ls.append(df_)
     big_full_score = pd.concat(df_ls).reset_index(drop=True)
