@@ -857,28 +857,25 @@ def filter_by_grade_range(df, grade_range):
     return final_df
 
 
-def create_scoring_data(tokenizer, score_sentences_pair, max_sequence_length):
+def create_scoring_data(tokenizer, test_sentences1, test_sentences2, max_sequence_length):
     """
     Create scoring dataset
     Args:
         tokenizer (keras.preprocessing.text.Tokenizer): keras tokenizer object
-        test_sentences_pair (list): list of tuple of sentences pairs
+        test_sentences1 (pandas.Series): sentence 1 of the pair to test
+        test_sentences2 (pandas.Series): sentence 2 of the pair to test
         max_sequence_length (int): max sequence length of sentences to apply padding
     Returns:
         test_data_1 (list): list of input features for training set from sentences1
         test_data_2 (list): list of input features for training set from sentences2
+        leaks_test (list): list of input features for training set from
     """
     start = time.time()
     logging.info("START_BOS_CREATE_TEST")
-    test_sentences1 = [x[0].lower() for x in score_sentences_pair]
-    test_sentences2 = [x[1].lower() for x in score_sentences_pair]
-
     test_sequences_1 = tokenizer.texts_to_sequences(test_sentences1)
     test_sequences_2 = tokenizer.texts_to_sequences(test_sentences2)
-    leaks_test = [[len(set(x1)), len(set(x2)), len(set(x1).intersection(x2))]
-                  for x1, x2 in zip(test_sequences_1, test_sequences_2)]
-
-    leaks_test = np.array(leaks_test)
+    leaks_test = np.array([[len(set(x1)), len(set(x2)), len(set(x1).intersection(x2))] for x1, x2 in
+                           zip(test_sequences_1, test_sequences_2)])
     test_data_1 = pad_sequences(test_sequences_1, maxlen=max_sequence_length)
     test_data_2 = pad_sequences(test_sequences_2, maxlen=max_sequence_length)
     logging.info("STOP_BOS_CREATE_TEST")
@@ -897,21 +894,14 @@ def scoring_module(tokenizer, best_model_path, siamese_config, test_df, threshol
     Returns:
         model_pred_df (dataframe): dataframe with predicted score and predicted label after applying threshold on the score.
     """
-    test_sentence_pairs = [(x1, x2) for x1, x2 in zip(list(test_df['sentence1']), list(test_df['sentence2']))]
-    test_data_x1, test_data_x2, leaks_test = create_scoring_data(tokenizer, test_sentence_pairs,
+    test_sentences1 = test_df['sentence1'].apply(lambda x: x.lower())
+    test_sentences2 = test_df['sentence2'].apply(lambda x: x.lower())
+    test_data_x1, test_data_x2, leaks_test = create_scoring_data(tokenizer, test_sentences1, test_sentences2,
                                                                  siamese_config['MAX_SEQUENCE_LENGTH'])
     best_model = load_model(best_model_path, compile=False)
-    preds = list(best_model.predict([test_data_x1, test_data_x2, leaks_test], verbose=1).ravel())
-    results_ = [(x, y, z) for (x, y), z in zip(test_sentence_pairs, preds)]
-    results = []
-    for i in range(len(results_)):
-        results.append(tuple(list(test_df.iloc[i]) + list(results_[i])))
-    results.sort(key=itemgetter(2), reverse=True)
-    model_pred_df = pd.DataFrame(results)
-    model_pred_df.columns = test_df.columns.to_list() + ['sentence1_score', 'sentence2_score', 'pred_score']
-    model_pred_df['predicted_label'] = np.where(model_pred_df['pred_score'] > threshold, 1, 0)
-    model_pred_df.drop(['sentence1_score', 'sentence2_score'], axis=1, inplace=True)
-    return model_pred_df
+    test_df['pred_score'] = best_model.predict([test_data_x1, test_data_x2, leaks_test], verbose=1)
+    test_df['predicted_label'] = test_df['pred_score'].apply(lambda x: 1 if x > threshold else 0)
+    return test_df
 
 
 def create_confusion_matrix(row):
