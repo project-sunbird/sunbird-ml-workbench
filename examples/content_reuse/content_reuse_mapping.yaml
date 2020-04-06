@@ -19,6 +19,7 @@ graph:
     operation: contentreuse.ScoringDataPreparation
     arguments:
       sentence_length: 4
+      cosine_score_threshold: 0.51
 
   - node_name: bert_scoring
     inputs: [path_to_result_folder, path_to_trained_model, path_to_pickled_tokenizer, data_preparation.path_to_complete_data_set, pathToSiameseConfig]
