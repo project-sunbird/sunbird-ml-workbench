@@ -397,10 +397,11 @@ class ScoringDataPreparation(BaseOperator):
             "path_to_complete_data_set": File_IO(self.node.outputs[1])
         }
 
-    def run(self, sentence_length):
+    def run(self, sentence_length, cosine_score_threshold):
         """
         Generate data for the purpose of scoring
         :param sentence_length: filter data on minimum number of sentences per topic
+        :param cosine_score_threshold: threshold to filter cosine similarity score on
         :return: None
         """
         path_to_result_folder = self.inputs["path_to_result_folder"].read()
@@ -416,7 +417,7 @@ class ScoringDataPreparation(BaseOperator):
             raise Exception("Column names are invalid")
         stb_df, ref_df = modify_df(base_df, sentence_length)
         cos_sim_df = generate_cosine_similarity_score(stb_df, ref_df, path_to_result_folder)
-        append_cosine_similarity_score(stb_df, ref_df, cos_sim_df, path_to_result_folder)
+        append_cosine_similarity_score(stb_df, ref_df, cos_sim_df, path_to_result_folder, cosine_score_threshold)
         self.outputs["path_to_cosine_similarity_matrix"].write(os.path.join(path_to_result_folder,
                                                                             'cosine_similarity.pkl'))
         self.outputs["path_to_complete_data_set"].write(os.path.join(path_to_result_folder, 'complete_data_set.csv'))

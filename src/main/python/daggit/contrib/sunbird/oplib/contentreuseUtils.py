@@ -9,7 +9,6 @@ import shutil
 import time
 import warnings
 from collections import ChainMap
-from operator import itemgetter
 
 import gspread
 import numpy as np
@@ -1081,13 +1080,14 @@ def generate_cosine_similarity_score(stb_df, ref_df, input_folder_path):
     return cos_sim
 
 
-def append_cosine_similarity_score(stb_df, ref_df, cos_sim, input_folder_path):
+def append_cosine_similarity_score(stb_df, ref_df, cos_sim, input_folder_path, cosine_score_threshold):
     """
     join stb, ref and cosine similarity dataframes together
     :param stb_df: data frame consisting of ['STB_Id', 'STB_Grade', 'STB_Section', 'STB_Text', 'Ref_id'] columns
     :param ref_df: data frame consisting of ['Ref_id', 'Ref_Grade', 'Ref_Section', 'Ref_Text'] columns
     :param cos_sim: data frame consisting of ['cos_sim_score'] column
     :param input_folder_path: folder path where to save the complete data set
+    :param cosine_score_threshold: threshold to filter cosine similarity score on
     :return:
     """
     jdf = stb_df.set_index('join_id').join(ref_df.set_index('join_id'), how='left', lsuffix='_stb')
@@ -1098,4 +1098,5 @@ def append_cosine_similarity_score(stb_df, ref_df, cos_sim, input_folder_path):
     jdf.drop('Ref_id_stb', axis=1, inplace=True)
     jdf.columns = ['stb_id', 'stb_grade', 'stb_topic', 'sentence1', 'ref_id', 'ref_grade', 'ref_topic', 'sentence2',
                    'cos_sim_score', 'actual_label']
+    jdf = jdf[jdf['cos_sim_score'] > cosine_score_threshold]
     jdf.to_csv(os.path.join(input_folder_path, 'complete_data_set.csv'))
