@@ -151,6 +151,8 @@
 <span class="kn">import</span> <span class="nn">contextlib</span>
 <span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">import</span> <span class="nn">mock</span>
+<span class="kn">import</span> <span class="nn">yaml</span>
+<span class="kn">import</span> <span class="nn">re</span>
 
 
 <div class="viewcode-block" id="create_dir"><a class="viewcode-back" href="../../../../daggit.core.base.html#daggit.core.base.utils.create_dir">[docs]</a><span class="k">def</span> <span class="nf">create_dir</span><span class="p">(</span><span class="n">directory</span><span class="p">):</span>
@@ -188,6 +190,35 @@
         <span class="k">return</span> <span class="n">string_or_list</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">string_or_list</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="parse_config"><a class="viewcode-back" href="../../../../daggit.core.base.html#daggit.core.base.utils.parse_config">[docs]</a><span class="k">def</span> <span class="nf">parse_config</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tag</span><span class="o">=</span><span class="s1">&#39;!ENV&#39;</span><span class="p">):</span>
+    <span class="c1"># pattern for global vars: look for ${word}</span>
+    <span class="n">pattern</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">&#39;.*?\${(\w+)}.*?&#39;</span><span class="p">)</span>
+    <span class="n">loader</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">SafeLoader</span>
+    <span class="n">loader</span><span class="o">.</span><span class="n">add_implicit_resolver</span><span class="p">(</span><span class="n">tag</span><span class="p">,</span> <span class="n">pattern</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">constructor_env_variables</span><span class="p">(</span><span class="n">loader</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">loader</span><span class="o">.</span><span class="n">construct_scalar</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="n">match</span> <span class="o">=</span> <span class="n">pattern</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>  <span class="c1"># to find all env variables in line</span>
+        <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
+            <span class="n">full_value</span> <span class="o">=</span> <span class="n">value</span>
+            <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">match</span><span class="p">:</span>
+                <span class="n">full_value</span> <span class="o">=</span> <span class="n">full_value</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span>
+                    <span class="n">f</span><span class="s1">&#39;${{</span><span class="si">{g}</span><span class="s1">}}&#39;</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">g</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="k">return</span> <span class="n">full_value</span>
+        <span class="k">return</span> <span class="n">value</span>
+
+    <span class="n">loader</span><span class="o">.</span><span class="n">add_constructor</span><span class="p">(</span><span class="n">tag</span><span class="p">,</span> <span class="n">constructor_env_variables</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">path</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">as</span> <span class="n">conf_data</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">conf_data</span><span class="p">,</span> <span class="n">Loader</span><span class="o">=</span><span class="n">loader</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">data</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">Loader</span><span class="o">=</span><span class="n">loader</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Either a path or data should be defined as input&#39;</span><span class="p">)</span></div>
 </pre></div>
 
            </div>
