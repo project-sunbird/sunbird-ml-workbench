@@ -9,7 +9,6 @@ import cv2
 import img2pdf
 from PIL import Image, ImageDraw, ImageFont
 from pdf2image import convert_from_path
-from PIL import Image
 import natsort
 from natsort import natsorted, ns
 
