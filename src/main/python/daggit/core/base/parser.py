@@ -10,17 +10,19 @@ from daggit.core.base.config import ORCHESTRATOR_ATTR
 from daggit.core.base.factory import Node
 from daggit.core.base.utils import get_as_list, normalize_path
 from daggit.runtime.airflow_runtime import DaggitPyOp
+from daggit.core.base.utils import parse_config
 
 
 def create_dag(dag_config_file):
     """Creating dags from graph location"""
     print("dag_config_file:", dag_config_file)
-    dag_config = {}
-    with open(dag_config_file, 'r', encoding="latin1") as stream:
-        try:
-            dag_config = yaml.load(stream)
-        except yaml.YAMLError as exc:
-            print(exc)
+    dag_config = parse_config(path=dag_config_file)
+    # dag_config = {}
+    # with open(dag_config_file, 'r', encoding="latin1") as stream:
+    #     try:
+    #         dag_config = yaml.load(stream)
+    #     except yaml.YAMLError as exc:
+    #         print(exc)
 
     experiment_name = dag_config["experiment_name"]
     owner = dag_config["owner"]
@@ -67,6 +69,7 @@ def create_dag(dag_config_file):
     graph_outputs = {}
     if STORE.lower() == 'local':
         for key in dag_config["outputs"].keys():
+
             graph_outputs[key] = normalize_path(
                 cwd=os.path.dirname(dag_config_file),
                 path=dag_config["outputs"][key])

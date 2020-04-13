@@ -374,7 +374,7 @@ class DTBMapping(BaseOperator):
             print("Distance not computed")
 
 
-class ScoringDataPreparation(BaseOperator):
+class scoring_data_preparation(BaseOperator):
     @property
     def inputs(self):
         """
@@ -423,7 +423,7 @@ class ScoringDataPreparation(BaseOperator):
         self.outputs["path_to_complete_data_set"].write(os.path.join(path_to_result_folder, 'complete_data_set.csv'))
 
 
-class BERTScoring(BaseOperator):
+class bert_scoring(BaseOperator):
     @property
     def inputs(self):
         """
@@ -497,7 +497,7 @@ class BERTScoring(BaseOperator):
         self.outputs["path_to_predicted_output"].write(path_to_save_output)
 
 
-class TopicLevelAggregation(BaseOperator):
+class topic_level_aggregation(BaseOperator):
     @property
     def inputs(self):
         """
@@ -542,7 +542,7 @@ class TopicLevelAggregation(BaseOperator):
         self.outputs["path_to_output_topic_agg"].write(path_to_save_output)
 
 
-class ContentReuseEvaluation(BaseOperator):
+class content_reuse_evaluation(BaseOperator):
     @property
     def inputs(self):
         """
