@@ -21,7 +21,7 @@ license = "MIT License"
 
 @init
 def initialize(project):
-    project.plugin_depends_on("flake8", "~=3.5")
+    project.plugin_depends_on("flake8", "~=3.7")
     project.depends_on_requirements("requirements.txt")
     project.build_depends_on('mockito')
     project.set_property_if_unset("filter_resources_target", "$dir_target")

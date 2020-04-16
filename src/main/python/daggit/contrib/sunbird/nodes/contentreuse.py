@@ -1,3 +1,4 @@
+import ast
 import configparser
 import json
 import logging
@@ -12,6 +13,7 @@ from PIL import Image
 from daggit.contrib.sunbird.oplib.contentreuseUtils import agg_actual_predict_df
 from daggit.contrib.sunbird.oplib.contentreuseUtils import aggregation_topic_level
 from daggit.contrib.sunbird.oplib.contentreuseUtils import append_cosine_similarity_score
+from daggit.contrib.sunbird.oplib.contentreuseUtils import connect_to_graph, create_node_relationships
 from daggit.contrib.sunbird.oplib.contentreuseUtils import create_manifest
 from daggit.contrib.sunbird.oplib.contentreuseUtils import create_toc
 from daggit.contrib.sunbird.oplib.contentreuseUtils import generate_cosine_similarity_score
@@ -583,3 +585,95 @@ class content_reuse_evaluation(BaseOperator):
         with open(os.path.join(path_to_result_folder, 'k_eval_metrics.json'), 'w') as f:
             json.dump(eval_dict, f)
         self.outputs["path_to_k_eval_metrics"].write(os.path.join(path_to_result_folder, 'k_eval_metrics.json'))
+
+
+class RecommendKConceptsPerTopic(BaseOperator):
+    @property
+    def inputs(self):
+        """
+        Function that the ContentReuseEvaluation operator defines while returning graph inputs
+        :return: Inputs to the node of the Content Reuse graph
+            path_to_full_score_metrics_file: path to scored dataframe file
+        """
+        return {
+            "path_to_output_topic_agg": File_IO(self.node.inputs[0])
+        }
+
+    @property
+    def outputs(self):
+        """
+        Function that the ContentReuseEvaluation operator defines while returning graph outputs
+        :return: Returns the path to the k_eval_metrics
+        """
+        return {
+            "path_to_dtb_mapping_file": File_IO(self.node.outputs[0])
+        }
+
+    def run(self, window):
+        """
+        Generate k evaluation metrics
+        :param window: length of k eval metrics window
+        :return: None
+        """
+        path_to_output_topic_agg = self.inputs["path_to_output_topic_agg"].read()
+        path_to_dtb_mapping_file = os.path.join(os.path.split(path_to_output_topic_agg)[0], 'dtb_mapping.json')
+        df = pd.read_csv(path_to_output_topic_agg)[['stb_id', 'concept_id', 'pred_score']]
+        df.sort_values(['stb_id', 'pred_score'], ascending=False, inplace=True)
+        output = {}
+        for id_ in df.stb_id.unique():
+            temp = df[df['stb_id'] == id_].head(window).set_index('concept_id').drop('stb_id', axis=1)
+            output[id_] = [{ind: row['pred_score']} for ind, row in temp.iterrows()]
+        with open(path_to_dtb_mapping_file, 'w') as f:
+            json.dump(output, f)
+        self.outputs["path_to_dtb_mapping_file"].write(path_to_dtb_mapping_file)
+
+
+class WriteRelationshipsToNeo4j(BaseOperator):
+    @property
+    def inputs(self):
+        """
+        Function that the WriteRelationshipsToNeo4j operator defines while returning graph inputs
+        :return: Inputs to the node of the Content Reuse graph
+            path_to_configuration_file: path to configuration file
+            path_to_dtb_mapping_file: path to dtb mapping file
+        """
+        return {
+            "path_to_configuration_file": File_IO(self.node.inputs[0]),
+            "path_to_dtb_mapping_file": File_IO(self.node.inputs[1])
+        }
+
+    @property
+    def outputs(self):
+        """
+        Function that the WriteRelationshipsToNeo4j operator defines while returning graph outputs
+        :return: Outputs to the node of the Content Reuse graph
+        """
+        return None
+
+    def run(self):
+        """
+        Create a connection to Graph DB and ingest DTB Mapping relations to it
+        """
+        path_to_credentials = self.inputs["path_to_configuration_file"].read()
+        path_to_dtb_mapping = self.inputs["path_to_dtb_mapping_file"].read()
+        config = configparser.ConfigParser(allow_no_value=True)
+        config.read(path_to_credentials)
+        try:
+            scheme = ast.literal_eval(config["graph"]["scheme"])
+            host = ast.literal_eval(config["graph"]["host"])
+            port = ast.literal_eval(config["graph"]["port"])
+            user = ast.literal_eval(config["graph"]["user"])
+            password = ast.literal_eval(config["graph"]["password"])
+            max_connections = ast.literal_eval(config["graph"]["max_connections"])
+            secure = ast.literal_eval(config["graph"]["secure"])
+            start_node_label = ast.literal_eval(config["relationship"]["start_node_label"])
+            end_node_label = ast.literal_eval(config["relationship"]["end_node_label"])
+            relationship_label = ast.literal_eval(config["relationship"]["relationship_label"])
+            relationship_properties = ast.literal_eval(config["relationship"]["relationship_properties"])
+            graph = connect_to_graph(scheme, host, port, user, password, max_connections, secure)
+            with open(path_to_dtb_mapping, 'r') as f:
+                dtb_mapping = json.load(f)
+            create_node_relationships(graph, dtb_mapping, start_node_label, end_node_label, relationship_label,
+                                      relationship_properties)
+        except KeyError as ke:
+            logging.error("Key Error found", ke.args, ke.__str__())

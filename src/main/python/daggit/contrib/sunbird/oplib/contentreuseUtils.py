@@ -9,6 +9,7 @@ import shutil
 import time
 import warnings
 from collections import ChainMap
+from time import time
 
 import gspread
 import numpy as np
@@ -37,6 +38,7 @@ from natsort import natsorted
 from nltk.stem import PorterStemmer
 from nltk.stem.wordnet import WordNetLemmatizer
 from oauth2client.service_account import ServiceAccountCredentials
+from py2neo import Graph, Relationship
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import average_precision_score
 from sklearn.metrics import precision_recall_curve
@@ -1100,3 +1102,58 @@ def append_cosine_similarity_score(stb_df, ref_df, cos_sim, input_folder_path, c
                    'cos_sim_score', 'actual_label']
     jdf = jdf[jdf['cos_sim_score'] > cosine_score_threshold]
     jdf.to_csv(os.path.join(input_folder_path, 'complete_data_set.csv'))
+
+
+def connect_to_graph(scheme_, host_, port_, user_, password_, max_connections_, secure_):
+    """
+    create connection to graph database
+    :param scheme_: Use a specific URI scheme ['http', 'https', 'bolt']
+    :param host_: Database server host name
+    :param port_: Database server port
+    :param user_: User to authenticate as
+    :param password_: Password to use for authentication
+    :param max_connections_: The maximum number of simultaneous connections permitted
+    :param secure_: Use a secure connection (TLS) Boolean
+    :return graph: Graph instance provides direct or indirect access to most of the functionality available within py2neo
+    """
+    auth_ = (user_, password_)
+    uri_ = scheme_ + '://' + host_ + ':' + str(port_)
+    graph = Graph(uri=uri_, auth=auth_, secure=secure_, max_connections=max_connections_)
+    return graph
+
+
+def create_node_relationships(graph, dtb_mapping, start_node_label, end_node_label, relationship_label,
+                              relationship_properties):
+    """
+    create relationships between dtb mapping nodes with properties
+    :param graph: Graph instance to create transactions over
+    :param dtb_mapping: dtb mapping json
+    :param start_node_label: label for the start node in relationship
+    :param end_node_label: label for the end node in relationship
+    :param relationship_label: label for the relationship
+    :param relationship_properties: properties for the relationship
+    :return:
+    """
+    try:
+        transaction = graph.begin()
+        for start_node_id in dtb_mapping.keys():
+            start_node = graph.nodes.match(start_node_label, identifier__exact=start_node_id).first()
+            if start_node is None:
+                continue
+            for end_node_id in dtb_mapping[start_node_id]:
+                end_node = graph.nodes.match(end_node_label, identifier__exact=end_node_id).first()
+                if end_node is None:
+                    continue
+                relationship = Relationship(start_node, relationship_label, end_node)
+                relationship['fromNode'] = start_node_id
+                relationship['toNode'] = end_node_id
+                relationship['confidenceScore'] = dtb_mapping[start_node_id][end_node_id]
+                relationship['timestamp'] = int(time() * 1000)
+                for key in relationship_properties.keys():
+                    relationship[key] = relationship_properties[key]
+                transaction.create(relationship)
+        transaction.commit()
+    except ConnectionError as ce:
+        logging.error("Connection error found.", ce.args, ce.__str__())
+    except KeyError as ke:
+        logging.error("Key error found", ke.args, ke.__str__())

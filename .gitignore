@@ -5,3 +5,5 @@ venv
 framework/build_env
 .DS_Store
 */nohup.out
+.pybuilder
+.tox
