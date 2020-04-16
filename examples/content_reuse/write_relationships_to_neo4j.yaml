@@ -1,0 +1,21 @@
+experiment_name: write_relationships_to_neo4j
+owner: sunbird
+
+inputs:
+  path_to_configuration_file: !ENV ${CONTENT_REUSE_HOME}/neo4j_config.ini
+  path_to_output_topic_agg: !ENV ${CONTENT_REUSE_HOME}/agg_topic_level_output.csv
+
+outputs:
+  dummy: /home/DS_HOME
+
+graph:
+  - node_name: recommend_k_concepts_per_topic
+    inputs: [path_to_output_topic_agg]
+    outputs: [path_to_dtb_mapping_file]
+    operation: contentreuse.RecommendKConceptsPerTopic
+    arguments:
+      window: 5
+  - node_name: write_relationships_to_neo4j
+    inputs: [path_to_configuration_file, recommend_k_concepts_per_topic.path_to_dtb_mapping_file]
+    outputs: []
+    operation: contentreuse.WriteRelationshipsToNeo4j
