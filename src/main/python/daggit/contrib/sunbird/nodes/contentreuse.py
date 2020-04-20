@@ -407,6 +407,7 @@ class scoring_data_preparation(BaseOperator):
         :return: None
         """
         path_to_result_folder = self.inputs["path_to_result_folder"].read()
+        print("*****path_to_result_folder: ", path_to_result_folder)
         if not os.path.exists(path_to_result_folder):
             raise Exception("Data folder not present.")
         file_path = os.path.join(path_to_result_folder, "base_ref_general_data_prep.csv")

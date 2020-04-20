@@ -3,9 +3,9 @@ owner: sunbird
 
 inputs:
   path_to_siamese_config: inputs/siamese_configuration.json
-  path_to_result_folder: !ENV ${CONTENT_REUSE_HOME}/state_dtb
-  path_to_trained_model: ! ENV ${MODEL_REPO_HOME}/lstm_50_50_0_17_0_25.h5
-  path_to_pickled_tokenizer: ! ENV ${MODEL_REPO_HOME}/tokenizer.pkl
+  path_to_result_folder: !ENV ${CONTENT_REUSE_HOME}/${RESULT_FOLDER}
+  path_to_trained_model: !ENV ${MODEL_REPO_HOME}/lstm_50_50_0_17_0_25.h5
+  path_to_pickled_tokenizer: !ENV ${MODEL_REPO_HOME}/tokenizer.pkl
 
 outputs:
   dummy: /home/DS_HOME

@@ -67,3 +67,4 @@ sklearn==0.0
 torch==1.4.0
 Werkzeug<1.0.0
 py2neo
+mysqlclient==1.4.6
