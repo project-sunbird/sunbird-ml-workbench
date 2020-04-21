@@ -1,33 +1,30 @@
 import requests
 import os
 import json
-import configparser
 import yaml
 import time
 import subprocess
-import pandas as pd
-import numpy as np
-import pandas as pd
 from flask import Flask
 from flask import request, jsonify, Response
+from daggit.core.base.utils import parse_config
 
 app = Flask(__name__)
 
-@app.route('/daggit/submit', methods = ['POST'])
-def submitDag():
-    current_wd = os.path.dirname(os.path.realpath(__file__))
 
+@app.route('/daggit/submit', methods=['POST'])
+def submit_dag():
+    current_wd = os.path.dirname(os.path.realpath(__file__))
+    status = 200
     if (request.is_json):
         try:
             req = request.get_json()
-            input = req["params"]["request"]["input"]
-            job = req["params"]["request"]["job"]
-            content_ids = input["content_ids"]
+            DAGGIT_HOME = req["request"]["input"]["DAGGIT_HOME"]
+            APP_HOME = req["request"]["input"]["APP_HOME"]
+            job = req["request"]["job"]
+            print("******JOB: ", job)
+        except:
+            status = Response(status=400)
 
-        except: 
-            raise InvalidRequest()
-            status = Response(status=400) 
-        
         try:
             with open(os.path.join(current_wd, 'expt_name_map.json')) as f:
                 name_mapping = json.load(f)
@@ -37,99 +34,73 @@ def submitDag():
         except:
             raise ValueError('Unrecognised experiment_name. Check expt_name_map.json for recognised experiment name.')
             status = Response(status=400)
-        
-        credentials_loc = os.path.join(current_wd, "dag_examples/content_tagging/inputs/credentials.ini")
-        config = configparser.ConfigParser(allow_no_value=True)
-        config.read(credentials_loc)
-        api_key = config["postman credentials"]["api_key"]
-        postman_token = config["tagme credentials"]["postman_token"]
-        with open(yaml_loc, 'r') as stream:
-            expt_config = yaml.load(stream)
-        updated_expt_name = expt_config['experiment_name'] + time.strftime("%Y%m%d-%H%M%S")
+        print("Status:----> ", status)
+
+        if status == 200:
+            try:
+                # setting environment variables:
+                DAGGIT_HOME = os.environ['DAGGIT_HOME']
+                APP_HOME = os.environ['APP_HOME']
+            except FileNotFoundError:
+                raise Exception("Environment variables are not set. Please set the variables!!")
+        expt_config = parse_config(path=yaml_loc)
+        timestamp = time.strftime("%Y%m%d-%H%M%S")
+        updated_expt_name = expt_config['experiment_name'] + timestamp
+        for k, v in expt_config["inputs"].items():
+            if expt_config["inputs"][k].startswith("inputs/"):
+                expt_config["inputs"][k] = os.path.join(os.path.split(yaml_loc)[0], v)
         expt_config["experiment_name"] = updated_expt_name
-        expt_config["inputs"]["categoryLookup"] = os.path.join(current_wd, "dag_examples/content_tagging/inputs/category_lookup.yaml")
-        expt_config["inputs"]["pathTocredentials"] = os.path.join(current_wd, "dag_examples/content_tagging/inputs/credentials.ini")
-
+        directory = os.path.join(os.getcwd(), 'data_input', job, timestamp)
+        expt_config["outputs"]["path_to_result_folder"] = directory
+        print("******DIRECTORY: ", directory)
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+        yaml_loc = os.path.join(directory, updated_expt_name + '.yaml')
+        with open(yaml_loc, 'w') as f:
+            yaml.dump(expt_config, f, default_flow_style=False)
         try:
-            directory=os.path.join(os.getcwd(), 'data_input', updated_expt_name)
-            if not os.path.exists(directory):
-                 os.makedirs(directory)
-            df=[]
-            for id in content_ids:
-                print("id:", id)
-                url = "https://api.ekstep.in/composite/v3/search"
-
-                payload = "{\r\n    \"request\": {\r\n        \"filters\":{\r\n            \"identifier\":[\""+id+"\"]\r\n         },\r\n         \"fields\": [\"subject\", \"downloadUrl\", \"language\", \"mimeType\",\"objectType\", \"gradeLevel\", \"artifactUrl\", \"contentType\", \"graph_id\", \"nodeType\", \"node_id\", \"name\", \"description\"],\r\n         \"limit\":1\r\n    }\r\n}"
-                headers = {
-                    'content-type': "application/json",
-                    'authorization': api_key,
-                    'cache-control': "no-cache",
-                    'postman-token': postman_token
-                    }
-
-                response = requests.request("POST", url, data=payload, headers=headers).json()
-                try:
-                    df.append(response["result"]["content"][0])
-                except:
-                    pass
-            print("df:", df)
-            content_df = pd.DataFrame(df)
-            content_meta_loc = os.path.join(directory,'content_meta.csv')
-            pd.DataFrame(content_df).to_csv(content_meta_loc)
-
-            expt_config["inputs"]["localpathTocontentMeta"] = content_meta_loc
-            yaml_loc =os.path.join(directory, updated_expt_name+'.yaml')
-            with open(yaml_loc, 'w') as f:
-                yaml.dump(expt_config, f, default_flow_style=False)
-        except:
-            raise ValueError('Unable to write to '+ directory)
-            Response(status=401) 
-        
-        try:
-            # Run  daggit
+            # Run daggit
             init_command = "daggit init " + yaml_loc
             subprocess.check_output(init_command, shell=True)
             run_command = "nohup daggit run " + updated_expt_name + " &"
             subprocess.check_output(run_command, shell=True)
-            status = Response(status=200) 
+            status = Response(status=200)
 
         except:
-            raise ValueError('DAG run fail. Experiment name: '+ updated_expt_name)
-            status = Response(status=400) 
+            raise ValueError('DAG run fail. Experiment name: ' + updated_expt_name)
+            status = Response(status=400)
         time_format = time.strftime("%Y-%m-%d %H:%M:%S:%s")
         date = time.strftime("%Y-%m-%d")
-        api_response= {
-                "id": "api.org.search",
-                "ver": "v1",
-                "ts": time_format,
-                "params": {
-                    "resmsgid": "null",
-                    "msgid": "",
-                    "err": "null",
-                    "status": "success",
-                    "errmsg": "null"
-                },
-                "responseCode": "OK",
-                "result": {
-                    "status": status,
-                    "experiment_name": updated_expt_name,
-                    "estimate_time": "",
-                    "execution_date": date
-                }
+        api_response = {
+            "id": "api.org.search",
+            "ver": "v1",
+            "ts": time_format,
+            "params": {
+                "resmsgid": "null",
+                "msgid": "",
+                "err": "null",
+                "status": "success",
+                "errmsg": "null"
+            },
+            "responseCode": "OK",
+            "result": {
+                "status": status,
+                "experiment_name": updated_expt_name,
+                "estimate_time": "",
+                "execution_date": date
+            }
             }
         return Response(api_response, status=200)
-
     else:
-        raise InvalidRequest()
-        return Response(status=400) 
+        return Response(status=400)
 
-@app.route('/daggit/status', methods = ['GET'])
-def getDagStatus():
 
-    try: 
+@app.route('/daggit/status', methods=['GET'])
+def get_dag_status():
+    try:
         expt_name = request.args.get('experiment_name')
     except:
-        return Response(status=400) 
+        return Response(status=400)
     print("*****expt_name:", expt_name)
     try:
         from_time = request.args.get('execution_date')
@@ -138,24 +109,24 @@ def getDagStatus():
     except:
         print("Execution date invalid")
     time_format = time.strftime("%Y-%m-%d %H:%M:%S:%s")
-    api_response= {
-                "id": "api.daggit.status",
-                "ver": "v1",
-                "ts": time_format,
-                "params": {
-                    "resmsgid": "null",
-                    "msgid": "",
-                    "err": "null",
-                    "status": "success",
-                    "errmsg": "null"
-                },
-                "responseCode": "OK",
-                "result": {
-                    "status": status,
-                }
-            }
+    api_response = {
+        "id": "api.daggit.status",
+        "ver": "v1",
+        "ts": time_format,
+        "params": {
+            "resmsgid": "null",
+            "msgid": "",
+            "err": "null",
+            "status": "success",
+            "errmsg": "null"
+        },
+        "responseCode": "OK",
+        "result": {
+            "status": status,
+        }
+    }
     return Response(api_response, status=200)
 
- 
-app.run(host='0.0.0.0', port= 3579)
+
+app.run(host='0.0.0.0', port=3579)
 

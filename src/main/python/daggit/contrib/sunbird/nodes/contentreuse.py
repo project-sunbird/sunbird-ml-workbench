@@ -385,7 +385,7 @@ class scoring_data_preparation(BaseOperator):
             path_to_base_data_file: path to base data file
         """
         return {
-            "path_to_result_folder": File_IO(self.node.inputs[0])
+            "path_to_baseref_data": File_IO(self.node.inputs[0])
         }
 
     @property
@@ -395,8 +395,9 @@ class scoring_data_preparation(BaseOperator):
         :return: Returns the path to the cosine similarity pickle and complete data set
         """
         return {
-            "path_to_cosine_similarity_matrix": File_IO(self.node.outputs[0]),
-            "path_to_complete_data_set": File_IO(self.node.outputs[1])
+            "path_to_result_folder": File_IO(self.node.outputs[0]),
+            "path_to_cosine_similarity_matrix": File_IO(self.node.outputs[1]),
+            "path_to_complete_data_set": File_IO(self.node.outputs[2])
         }
 
     def run(self, sentence_length, cosine_score_threshold):
@@ -406,13 +407,14 @@ class scoring_data_preparation(BaseOperator):
         :param cosine_score_threshold: threshold to filter cosine similarity score on
         :return: None
         """
-        path_to_result_folder = self.inputs["path_to_result_folder"].read()
+        path_to_result_folder = self.outputs["path_to_result_folder"].read()
+        path_to_baseref_data = self.inputs["path_to_baseref_data"].read()
         print("*****path_to_result_folder: ", path_to_result_folder)
         if not os.path.exists(path_to_result_folder):
             raise Exception("Data folder not present.")
-        file_path = os.path.join(path_to_result_folder, "base_ref_general_data_prep.csv")
+        # file_path = os.path.join(path_to_result_folder, "base_ref_general_data_prep.csv")
         try:
-            base_df = pd.read_csv(file_path)[
+            base_df = pd.read_csv(path_to_baseref_data)[
                 ['STB_Id', 'STB_Grade', 'STB_Section', 'STB_Text', 'Ref_id', 'Ref_Grade', 'Ref_Section', 'Ref_Text']]
         except FileNotFoundError:
             raise Exception("Base data file does not exist")
@@ -438,11 +440,10 @@ class bert_scoring(BaseOperator):
 
         """
         return {
-            "path_to_result_folder": File_IO(self.node.inputs[0]),
-            "path_to_trained_model": ReadDaggitTask_Folderpath(self.node.inputs[1]),
-            "path_to_pickled_tokenizer": File_IO(self.node.inputs[2]),
-            "path_to_scoring_data": File_IO(self.node.inputs[3]),
-            "path_to_siamese_config": File_IO(self.node.inputs[4])
+            "path_to_trained_model": ReadDaggitTask_Folderpath(self.node.inputs[0]),
+            "path_to_pickled_tokenizer": File_IO(self.node.inputs[1]),
+            "path_to_scoring_data": File_IO(self.node.inputs[2]),
+            "path_to_siamese_config": File_IO(self.node.inputs[3])
         }
 
     @property
@@ -453,16 +454,17 @@ class bert_scoring(BaseOperator):
         :returns: Returns the path to the mapping json file
 
         """
-        return {"path_to_predicted_output": File_Txt(
+        return {
+            "path_to_predicted_output": File_Txt(
             self.node.outputs[0])}
 
     def run(self, filterby_typeofmatch, filterby_grade_range, threshold, embedding_method):
-        path_to_result_folder = self.inputs["path_to_result_folder"].read()
         path_to_best_model = self.inputs["path_to_trained_model"].read_loc()
         path_to_pickled_tokenizer = self.inputs["path_to_pickled_tokenizer"].read()
         path_to_scoring_data = self.inputs["path_to_scoring_data"].read()
         path_to_siamese_config = self.inputs["path_to_siamese_config"].read()
 
+        path_to_result_folder = os.path.split(path_to_scoring_data)[0]
         test_df = pd.read_csv(path_to_scoring_data)
         test_df.fillna({'sentence1': '', 'sentence2': ''}, inplace=True)
         if "Unnamed: 0" in test_df.columns:
