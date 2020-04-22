@@ -51,7 +51,12 @@ def submit_dag():
                 expt_config["inputs"][k] = os.path.join(os.path.split(yaml_loc)[0], v)
         expt_config["experiment_name"] = updated_expt_name
         directory = os.path.join(os.getcwd(), 'data_input', job, timestamp)
-        expt_config["outputs"]["path_to_result_folder"] = directory
+        # expt_config["outputs"]["path_to_result_folder"] = directory
+        expt_config["inputs"]["path_to_result_folder"] = os.path.join(DAGGIT_HOME, job, timestamp)
+        if not os.path.exists(os.path.join(DAGGIT_HOME, job)):
+            os.mkdir(os.path.join(DAGGIT_HOME, job))
+        if not os.path.exists(os.path.join(DAGGIT_HOME, job, timestamp)):
+            os.mkdir(os.path.join(DAGGIT_HOME, job, timestamp))
         print("******DIRECTORY: ", directory)
         if not os.path.exists(directory):
             os.makedirs(directory)

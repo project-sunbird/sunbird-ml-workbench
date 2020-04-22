@@ -925,20 +925,22 @@ def create_confusion_matrix(row):
             return 'TN'
 
 
-def aggregation_topic_level(output_df, aggregation_criteria, mandatory_column_names):
+def aggregation_topic_level(output_df, aggregation_criteria, mandatory_column_names, data_labeled):
     """
     Aggregate output of the sentence similarity model at topic level
     Args:
         output_df: Predicted output dataframe
         aggregation_criteria: The method of aggregation that needs to be performed
         mandatory_column_names: Dictionary of columns names for the output dataframe
+        data_labeled:
     Returns:
         full_score_df(dataframe): Dataframe with aggregated similarity score at topic level for a given pair of
              state topic ID and reference topic ID.
     """
     full_df_ls = []
-    if 'cm' not in output_df.columns:
-        output_df['cm'] = output_df.apply(create_confusion_matrix, axis=1)
+    if data_labeled:
+        if 'cm' not in output_df.columns:
+            output_df['cm'] = output_df.apply(create_confusion_matrix, axis=1)
     try:
         for stb_topic_id in output_df["stb_id"].unique():
             big_ls = []
@@ -946,25 +948,27 @@ def aggregation_topic_level(output_df, aggregation_criteria, mandatory_column_na
             for ref_id in stb_df["ref_id"].unique():
                 pred_score_percent = 0
                 stb_1_df_sam = stb_df[stb_df["ref_id"] == ref_id]
-                eval_dict = dict(stb_1_df_sam['cm'].value_counts())
-                print("eval_dict: ", eval_dict)
+                if data_labeled:
+                    eval_dict = dict(stb_1_df_sam['cm'].value_counts())
+                    print("eval_dict: ", eval_dict)
                 columns = [v for k, v in mandatory_column_names.items()]
                 score_df = pd.DataFrame(index=[0], columns=columns)
                 score_df = score_df.fillna(0)
                 if aggregation_criteria == "average":
-                    pred_score_percent = (stb_1_df_sam['predicted_label'].sum() / len(stb_1_df_sam)) * 100
+                    pred_score_percent = stb_1_df_sam['pred_score'].mean()
                 score_df[mandatory_column_names["stb_topic_col_name"]] = stb_topic_id
                 score_df[mandatory_column_names["ref_topic_col_name"]] = ref_id
                 score_df[mandatory_column_names["pred_agg_col_name"]] = pred_score_percent
-                score_df[mandatory_column_names["label_col_name"]] = stb_1_df_sam['actual_label'].mean()
-                if "FP" in eval_dict.keys():
-                    score_df[mandatory_column_names["fp_col_name"]] = eval_dict["FP"]
-                if "TN" in eval_dict.keys():
-                    score_df[mandatory_column_names["tn_col_name"]] = eval_dict["TN"]
-                if "TP" in eval_dict.keys():
-                    score_df[mandatory_column_names["tp_col_name"]] = eval_dict["TP"]
-                if "FN" in eval_dict.keys():
-                    score_df[mandatory_column_names["fn_col_name"]] = eval_dict["FN"]
+                if data_labeled:
+                    score_df[mandatory_column_names["label_col_name"]] = stb_1_df_sam['actual_label'].mean()
+                    if "FP" in eval_dict.keys():
+                        score_df[mandatory_column_names["fp_col_name"]] = eval_dict["FP"]
+                    if "TN" in eval_dict.keys():
+                        score_df[mandatory_column_names["tn_col_name"]] = eval_dict["TN"]
+                    if "TP" in eval_dict.keys():
+                        score_df[mandatory_column_names["tp_col_name"]] = eval_dict["TP"]
+                    if "FN" in eval_dict.keys():
+                        score_df[mandatory_column_names["fn_col_name"]] = eval_dict["FN"]
                 big_ls.append(score_df)
             full_score_df = pd.concat(big_ls).reset_index(drop=True).sort_values(
                 by=[mandatory_column_names["pred_agg_col_name"]], ascending=False)
@@ -993,8 +997,8 @@ def k_topic_recommendation(full_score_df, window):
         actual_label_max_score = max(stb_df["actual_label"].unique())
         actual_ref_id = stb_df[stb_df["actual_label"] == actual_label_max_score]["ref_id"].iloc[0]
         print("actual ref id: ", actual_ref_id)
-        grouped_refid_df_ = stb_df.groupby('pred_label_percentage')['ref_id'].apply(list).reset_index(
-            name='grouped_ref_id').sort_values(by=['pred_label_percentage'], ascending=False)[:window]
+        grouped_refid_df_ = stb_df.groupby('pred_score_mean')['ref_id'].apply(list).reset_index(
+            name='grouped_ref_id').sort_values(by=['pred_score_mean'], ascending=False)[:window]
         grouped_refid_df_["stb_id"] = stb_topic_id
         full_df_ls.append(grouped_refid_df_)
         columns = ["stb_id", "k=1", "k=2", "k=3", "k=4", "k=5"]
@@ -1034,28 +1038,16 @@ def modify_df(df, sentence_length):
     :param sentence_length:  drop row if topic has number of sentences less than or equal to sentence_length
     :return: exploded, enriched STB and Ref data frames
     """
-    df['STB_Text'] = df['STB_Text'].apply(listify)
-    df['Ref_Text'] = df['Ref_Text'].apply(listify)
-    df.dropna(axis=0, subset=['STB_Text', 'Ref_Text'], inplace=True)
-    df['STB_Text_len'] = df['STB_Text'].apply(lambda x: len(x))
-    df['Ref_Text_len'] = df['Ref_Text'].apply(lambda x: len(x))
-    df = df[df['STB_Text_len'] > sentence_length]
-    df = df[df['Ref_Text_len'] > sentence_length]
-    df.drop(['STB_Text_len', 'Ref_Text_len'], axis=1, inplace=True)
+    df['text_len'] = df['text'].apply(lambda x: len(x))
+    df = df[df['text_len'] > sentence_length]
+    df.drop(['text_len'], axis=1, inplace=True)
     df.reset_index(drop=True, inplace=True)
-    stb_df = df[['STB_Id', 'STB_Grade', 'STB_Section', 'STB_Text', 'Ref_id']]
-    stb_df = stb_df.explode('STB_Text')
-    stb_df['join_id'] = 1
-    stb_df.drop_duplicates(subset=['STB_Id', 'STB_Text'], inplace=True)
-    stb_df.reset_index(drop=True, inplace=True)
-    stb_df.reset_index(inplace=True)
-    ref_df = df[['Ref_id', 'Ref_Grade', 'Ref_Section', 'Ref_Text']]
-    ref_df = ref_df.explode('Ref_Text')
-    ref_df['join_id'] = 1
-    ref_df.drop_duplicates(subset=['Ref_id', 'Ref_Text'], inplace=True)
-    ref_df.reset_index(drop=True, inplace=True)
-    ref_df.reset_index(inplace=True)
-    return stb_df, ref_df
+    df = df.explode('text')
+    df['join_id'] = 1
+    df.drop_duplicates(subset=['identifier', 'text'], inplace=True)
+    df.reset_index(drop=True, inplace=True)
+    df.reset_index(inplace=True)
+    return df
 
 
 def generate_cosine_similarity_score(stb_df, ref_df, input_folder_path):
@@ -1067,7 +1059,7 @@ def generate_cosine_similarity_score(stb_df, ref_df, input_folder_path):
     :param input_folder_path: folder path where to save the cosine similarity matrix
     :return: cosine similarity matrix for the sentence pairs
     """
-    corpus = stb_df['STB_Text'].tolist() + ref_df['Ref_Text'].tolist()
+    corpus = stb_df['text'].tolist() + ref_df['text'].tolist()
     limiter = stb_df.shape[0]
     vectorizer = TfidfVectorizer(stop_words='english', ngram_range=(1, 1), analyzer='word')
     X = vectorizer.fit_transform(corpus)
@@ -1076,7 +1068,7 @@ def generate_cosine_similarity_score(stb_df, ref_df, input_folder_path):
     with open(os.path.join(input_folder_path, 'cosine_similarity.pkl'), 'wb') as f:
         pickle.dump(similarity, f)
     cos_sim = pd.DataFrame(pd.DataFrame(similarity).stack())
-    cos_sim.index.names = ['index_stb', 'index']
+    cos_sim.index.names = ['index_stb', 'index_ref']
     cos_sim.columns = ['cos_sim_score']
     return cos_sim
 
@@ -1091,14 +1083,18 @@ def append_cosine_similarity_score(stb_df, ref_df, cos_sim, input_folder_path, c
     :param cosine_score_threshold: threshold to filter cosine similarity score on
     :return:
     """
-    jdf = stb_df.set_index('join_id').join(ref_df.set_index('join_id'), how='left', lsuffix='_stb')
-    jdf.set_index(['index_stb', 'index'], inplace=True)
+    jdf = stb_df.set_index('join_id').join(ref_df.set_index('join_id'), how='left', lsuffix='_stb', rsuffix='_ref')
+    jdf.set_index(['index_stb', 'index_ref'], inplace=True)
     jdf = jdf.join(cos_sim, how='left')
     jdf.index.names = ['stb_sent_id', 'ref_sent_id']
-    jdf['actual_label'] = jdf.apply(lambda x: 1 if x['Ref_id_stb'] == x['Ref_id'] else 0, axis=1)
-    jdf.drop('Ref_id_stb', axis=1, inplace=True)
-    jdf.columns = ['stb_id', 'stb_grade', 'stb_topic', 'sentence1', 'ref_id', 'ref_grade', 'ref_topic', 'sentence2',
-                   'cos_sim_score', 'actual_label']
+    try:
+        jdf['actual_label'] = jdf.apply(lambda x: 1 if x['identifier_ref_'] == x['identifier_ref'] else 0, axis=1)
+        jdf.drop('identifier_ref_', axis=1, inplace=True)
+    except KeyError:
+        pass
+    jdf.rename(
+        {'identifier_stb': 'stb_id', 'text_stb': 'sentence1', 'identifier_ref': 'ref_id', 'text_ref': 'sentence2'},
+        axis=1, inplace=True)
     jdf = jdf[jdf['cos_sim_score'] > cosine_score_threshold]
     jdf.to_csv(os.path.join(input_folder_path, 'complete_data_set.csv'))
 
@@ -1135,22 +1131,27 @@ def create_node_relationships(graph, dtb_mapping, start_node_label, end_node_lab
     """
     try:
         transaction = graph.begin()
+        logging.info('graph connection received.')
         for start_node_id in dtb_mapping.keys():
             start_node = graph.nodes.match(start_node_label, identifier__exact=start_node_id).first()
             if start_node is None:
+                logging.info('stb node not found' + str(start_node_id))
                 continue
-            for end_node_id in dtb_mapping[start_node_id]:
-                end_node = graph.nodes.match(end_node_label, identifier__exact=end_node_id).first()
-                if end_node is None:
-                    continue
-                relationship = Relationship(start_node, relationship_label, end_node)
-                relationship['fromNode'] = start_node_id
-                relationship['toNode'] = end_node_id
-                relationship['confidenceScore'] = dtb_mapping[start_node_id][end_node_id]
-                relationship['timestamp'] = int(time() * 1000)
-                for key in relationship_properties.keys():
-                    relationship[key] = relationship_properties[key]
-                transaction.create(relationship)
+            for record in dtb_mapping[start_node_id]:
+                for end_node_id in record.keys():
+                    end_node = graph.nodes.match(end_node_label, identifier__exact=end_node_id).first()
+                    if end_node is None:
+                        logging.info('ref node not found' + end_node_id)
+                        continue
+                    relationship = Relationship(start_node, relationship_label, end_node)
+                    relationship['fromNode'] = start_node_id
+                    relationship['toNode'] = end_node_id
+                    relationship['confidenceScore'] = record[end_node_id]
+                    relationship['timestamp'] = int(time.time() * 1000)
+                    for key in relationship_properties.keys():
+                        relationship[key] = relationship_properties[key]
+                        logging.info('relationship created' + str(relationship))
+                    transaction.create(relationship)
         transaction.commit()
     except ConnectionError as ce:
         logging.error("Connection error found.", ce.args, ce.__str__())
