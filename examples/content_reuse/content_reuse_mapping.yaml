@@ -3,7 +3,7 @@ owner: sunbird
 
 inputs:
   path_to_base_data: !ENV ${APP_HOME}/input/base_ref_general_data_prep.csv
-  path_to_result_folder: !ENV ${DAGGIT_HOME}
+  path_to_result_folder: !ENV ${APP_HOME}
   path_to_trained_model: !ENV ${APP_HOME}/model/lstm_50_50_0_17_0_25.h5
   path_to_pickled_tokenizer: !ENV ${APP_HOME}/model/tokenizer.pkl
   path_to_siamese_configuration: !ENV ${APP_HOME}/model/siamese_configuration.json

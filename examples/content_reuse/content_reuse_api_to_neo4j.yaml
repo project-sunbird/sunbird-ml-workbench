@@ -4,7 +4,7 @@ owner: sunbird
 inputs:
   path_to_stb_data: !ENV ${APP_HOME}/input/base_stb_data.csv
   path_to_ref_data: !ENV ${APP_HOME}/input/base_ref_data.csv
-  path_to_result_folder: !ENV ${DAGGIT_HOME}
+  path_to_result_folder: !ENV ${APP_HOME}
   path_to_neo4j_configuration: !ENV ${APP_HOME}/model/neo4j_config.ini
   path_to_pickled_tokenizer: !ENV ${APP_HOME}/model/tokenizer.pkl
   path_to_siamese_configuration: !ENV ${APP_HOME}/model/siamese_configuration.json
