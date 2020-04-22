@@ -1,12 +1,12 @@
-import requests
-import os
 import json
-import yaml
-import time
+import os
 import subprocess
-from flask import Flask
-from flask import request, jsonify, Response
+import time
+
+import yaml
 from daggit.core.base.utils import parse_config
+from flask import Flask
+from flask import request, Response
 
 app = Flask(__name__)
 
@@ -18,7 +18,6 @@ def submit_dag():
     if (request.is_json):
         try:
             req = request.get_json()
-            DAGGIT_HOME = req["request"]["input"]["DAGGIT_HOME"]
             APP_HOME = req["request"]["input"]["APP_HOME"]
             job = req["request"]["job"]
             print("******JOB: ", job)
@@ -39,22 +38,22 @@ def submit_dag():
         if status == 200:
             try:
                 # setting environment variables:
-                DAGGIT_HOME = os.environ['DAGGIT_HOME']
-                APP_HOME = os.environ['APP_HOME']
+                os.environ['APP_HOME'] = APP_HOME
             except FileNotFoundError:
                 raise Exception("Environment variables are not set. Please set the variables!!")
         expt_config = parse_config(path=yaml_loc)
         timestamp = time.strftime("%Y%m%d-%H%M%S")
-        updated_expt_name = expt_config['experiment_name'] + timestamp
-        for k, v in expt_config["inputs"].items():
-            if expt_config["inputs"][k].startswith("inputs/"):
-                expt_config["inputs"][k] = os.path.join(os.path.split(yaml_loc)[0], v)
+        updated_expt_name = expt_config['experiment_name'] + '_' + timestamp
         expt_config["experiment_name"] = updated_expt_name
-        directory = os.path.join(os.getcwd(), 'data_input', job, timestamp)
-        expt_config["outputs"]["path_to_result_folder"] = directory
-        print("******DIRECTORY: ", directory)
+        if "path_to_result_folder" in expt_config["inputs"]:
+            expt_config["inputs"]["path_to_result_folder"] = os.path.join(
+                expt_config["inputs"]["path_to_result_folder"], job, timestamp)
+        directory = expt_config["inputs"]["path_to_result_folder"]
+        if not os.path.exists(os.path.join(APP_HOME, job)):
+            os.mkdir(os.path.join(APP_HOME, job))
         if not os.path.exists(directory):
-            os.makedirs(directory)
+            os.mkdir(directory)
+        print("******DIRECTORY: ", directory)
         yaml_loc = os.path.join(directory, updated_expt_name + '.yaml')
         with open(yaml_loc, 'w') as f:
             yaml.dump(expt_config, f, default_flow_style=False)
@@ -89,7 +88,7 @@ def submit_dag():
                 "estimate_time": "",
                 "execution_date": date
             }
-            }
+        }
         return Response(api_response, status=200)
     else:
         return Response(status=400)
@@ -129,4 +128,3 @@ def get_dag_status():
 
 
 app.run(host='0.0.0.0', port=3579)
-

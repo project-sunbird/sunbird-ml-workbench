@@ -1,26 +1,26 @@
-experiment_name: content_reuse_mapping
+experiment_name: content_reuse_api_to_neo4j
 owner: sunbird
 
 inputs:
-  path_to_base_data: !ENV ${APP_HOME}/input/base_ref_general_data_prep.csv
+  path_to_stb_data: !ENV ${APP_HOME}/input/base_stb_data.csv
+  path_to_ref_data: !ENV ${APP_HOME}/input/base_ref_data.csv
   path_to_result_folder: !ENV ${APP_HOME}
-  path_to_trained_model: !ENV ${APP_HOME}/model/lstm_50_50_0_17_0_25.h5
+  path_to_neo4j_configuration: !ENV ${APP_HOME}/model/neo4j_config.ini
   path_to_pickled_tokenizer: !ENV ${APP_HOME}/model/tokenizer.pkl
   path_to_siamese_configuration: !ENV ${APP_HOME}/model/siamese_configuration.json
+  path_to_trained_model: !ENV ${APP_HOME}/model/lstm_50_50_0_17_0_25.h5
 
 outputs:
   dummy: /home/DS_HOME
 
 graph:
-
   - node_name: data_preparation
-    inputs: [path_to_base_data, path_to_result_folder]
+    inputs: [path_to_stb_data, path_to_ref_data, path_to_result_folder]
     outputs: [path_to_cosine_similarity_matrix, path_to_complete_data_set]
-    operation: content_reuse.DataPreparation
+    operation: content_reuse.DataPreparationV2
     arguments:
       sentence_length: 4
       cosine_score_threshold: 0.51
-
   - node_name: bert_scoring
     inputs: [data_preparation.path_to_complete_data_set, path_to_trained_model, path_to_pickled_tokenizer, path_to_siamese_configuration]
     outputs: [path_to_predicted_output]
@@ -30,7 +30,6 @@ graph:
       filter_by_grade_range_: nan
       threshold: 0.482528924942016
       embedding_method: BERT
-
   - node_name: topic_aggregation
     inputs: [bert_scoring.path_to_predicted_output]
     outputs: [path_to_output_topic_agg]
@@ -42,16 +41,14 @@ graph:
         stb_topic_col_name: stb_id
         ref_topic_col_name: ref_id
         pred_agg_col_name: pred_score_mean
-        label_col_name: actual_label
-        tp_col_name: TP_count
-        fp_col_name: FP_count
-        tn_col_name: TN_count
-        fn_col_name: FN_count
-      data_labeled: True
-
-  - node_name: evaluation
+      data_labeled: False
+  - node_name: recommend_k_concepts_per_topic
     inputs: [topic_aggregation.path_to_output_topic_agg]
-    outputs: [path_to_k_eval_metrics]
-    operation: content_reuse.ContentReuseEvaluation
+    outputs: [path_to_dtb_mapping_file]
+    operation: content_reuse.RecommendKConceptsPerTopic
     arguments:
       window: 5
+  - node_name: write_relationships_to_neo4j
+    inputs: [path_to_neo4j_configuration, recommend_k_concepts_per_topic.path_to_dtb_mapping_file]
+    outputs: []
+    operation: content_reuse.WriteRelationshipsToNeo4j
