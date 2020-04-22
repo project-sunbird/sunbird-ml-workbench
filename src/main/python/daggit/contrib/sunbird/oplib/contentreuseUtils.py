@@ -9,7 +9,6 @@ import shutil
 import time
 import warnings
 from collections import ChainMap
-from time import time
 
 import gspread
 import numpy as np
