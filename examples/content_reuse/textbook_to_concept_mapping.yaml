@@ -1,4 +1,4 @@
-experiment_name: content_reuse_api_to_neo4j
+experiment_name: textbook_to_concept_mapping
 owner: sunbird
 
 inputs:

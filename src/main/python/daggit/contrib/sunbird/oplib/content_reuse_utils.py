@@ -1153,7 +1153,7 @@ def create_node_relationships(graph, dtb_mapping, start_node_label, end_node_lab
                         logging.info('relationship created' + str(relationship))
                     transaction.create(relationship)
         transaction.commit()
-    except ConnectionError as ce:
+    except ConnectionRefusedError as ce:
         logging.error("Connection error found.", ce.args, ce.__str__())
     except KeyError as ke:
         logging.error("Key error found", ke.args, ke.__str__())
