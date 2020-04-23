@@ -44,6 +44,9 @@ def submit_dag():
         expt_config = parse_config(path=yaml_loc)
         timestamp = time.strftime("%Y%m%d-%H%M%S")
         updated_expt_name = expt_config['experiment_name'] + '_' + timestamp
+        for k, v in expt_config["inputs"].items():
+            if expt_config["inputs"][k].startswith("inputs/"):
+                expt_config["inputs"][k] = os.path.join(os.path.split(yaml_loc)[0], v)
         expt_config["experiment_name"] = updated_expt_name
         if "path_to_result_folder" in expt_config["inputs"]:
             expt_config["inputs"]["path_to_result_folder"] = os.path.join(
