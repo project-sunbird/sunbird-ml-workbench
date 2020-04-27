@@ -410,6 +410,7 @@ class DataPreparation(BaseOperator):
         path_to_base_data = self.inputs["path_to_base_data"].read()
         path_to_result_folder = self.inputs["path_to_result_folder"].read()
         node_name = 'data_preparation'
+        print("***path_to_base_data: ", path_to_base_data)
         path_to_result_folder = os.path.join(path_to_result_folder, node_name)
         if not os.path.exists(path_to_result_folder):
             os.mkdir(path_to_result_folder)

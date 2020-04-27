@@ -7,3 +7,4 @@ framework/build_env
 */nohup.out
 .pybuilder
 .tox
+DAGGIT_HOME
