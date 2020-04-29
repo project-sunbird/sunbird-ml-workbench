@@ -12,6 +12,24 @@ from flask import request, Response,jsonify
 
 app = Flask(__name__)
 
+# global declaration of api_response:
+api_response = {
+        "id": "api.org.search",
+        "ver": "v1",
+        "ts": "",
+        "params": {
+            "resmsgid": "null",
+            "msgid": "",
+            "err": "null",
+            "status": "fail",
+            "errmsg": "null"
+        },
+        "responseCode": "OK",
+        "result": {
+            "status": 400
+        }
+    }
+
 
 def match_date(line, level_tag):
     match_this = ""
@@ -43,33 +61,16 @@ def submit_dag():
     status = 400
     time_format = time.strftime("%Y-%m-%d %H:%M:%S:%s")
     date = time.strftime("%Y-%m-%d")
-    api_response = {
-        "id": "api.org.search",
-        "ver": "v1",
-        "ts": time_format,
-        "params": {
-            "resmsgid": "null",
-            "msgid": "",
-            "err": "null",
-            "status": "fail",
-            "errmsg": "null"
-        },
-        "responseCode": "OK",
-        "result": {
-            "status": status,
-            "experiment_name": "null",
-            "estimate_time": "",
-            "execution_date": date
-        }
-    }
-    if (request.is_json):
+    api_response["ts"] = time_format
+    api_response["result"]["execution_date"] = date
+    if request.is_json:
         try:
             req = request.get_json()
             APP_HOME = req["request"]["input"]["APP_HOME"]
             job = req["request"]["job"]
             print("******JOB: ", job)
             status = 200
-        except:
+        except ValueError:
             status = 400
 
         try:
@@ -78,9 +79,9 @@ def submit_dag():
             print("current path", os.path.dirname(os.path.realpath(__file__)))
             yaml_loc = current_wd + name_mapping[job]
             print("yaml location: ", yaml_loc)
-        except:
+        except ValueError:
             status = 400
-            raise ValueError('Unrecognised experiment_name. Check expt_name_map.json for recognised experiment name.')
+            raise Exception('Unrecognised experiment_name. Check expt_name_map.json for recognised experiment name.')
 
         if status == 200:
             try:
@@ -114,8 +115,6 @@ def submit_dag():
         out_init, res_init = subprocess.getstatusoutput(init_command)
         if out_init == 0:
             logging.info("----- Daggit Initialization successful :) -----")
-            print()
-            print()
             run_command = "daggit run " + updated_expt_name
             out_run, res_run = subprocess.getstatusoutput(run_command)
             if out_run != 0:
@@ -133,7 +132,7 @@ def submit_dag():
         api_response["params"]["status"] = "success"
         api_response["result"]["status"] = status
         api_response["result"]["experiment_name"] = updated_expt_name
-        api_response["result"]["execution_date"] = date
+        # api_response["result"]["execution_date"] = date
         logging.info("API Status: {0}".format(api_response["params"]["status"]))
         logging.info("Experiment name: {0}".format(api_response["result"]["experiment_name"]))
         logging.info("Execution date: {0}".format(api_response["result"]["execution_date"]))
@@ -153,33 +152,18 @@ def submit_dag():
 def get_dag_status():
     try:
         expt_name = request.args.get('experiment_name')
-    except:
+    except ValueError:
         return Response(status=400)
     print("*****expt_name:", expt_name)
     try:
         from_time = request.args.get('execution_date')
         command = "airflow dag_state " + expt_name + " " + from_time
         status = subprocess.check_output(command, shell=True)
-    except:
+    except ValueError:
         status = 400
         print("Execution date invalid")
     time_format = time.strftime("%Y-%m-%d %H:%M:%S:%s")
-    api_response = {
-        "id": "api.daggit.status",
-        "ver": "v1",
-        "ts": time_format,
-        "params": {
-            "resmsgid": "null",
-            "msgid": "",
-            "err": "null",
-            "status": "success",
-            "errmsg": "null"
-        },
-        "responseCode": "OK",
-        "result": {
-            "status": status,
-        }
-    }
+    api_response["ts"] = time_format
     response = jsonify(api_response)
     return response
 
@@ -187,30 +171,14 @@ def get_dag_status():
 @app.route('/daggit/status', methods=['POST'])
 def get_dag_status_from_log():
     time_format = time.strftime("%Y-%m-%d %H:%M:%S:%s")
-    api_response = {
-        "id": "api.daggit.status",
-        "ver": "v1",
-        "ts": time_format,
-        "params": {
-            "resmsgid": "null",
-            "msgid": "",
-            "err": "null",
-            "status": "fail",
-            "errmsg": "null"
-        },
-        "responseCode": "OK",
-        "result": {
-            "status": 400,
-        }
-    }
-
+    api_response["ts"] = time_format
     if request.is_json:
         try:
             req = request.get_json()
             EXPERIMENT_HOME = req["request"]["input"]["EXPERIMENT_HOME"]
             print("******EXPERIMENT_HOME: ", EXPERIMENT_HOME)
             status = 200
-        except:
+        except ValueError:
             status = 400
         if "daggit_api.log" in [os.path.split(file)[1] for file in os.listdir(EXPERIMENT_HOME)]:
             with open(os.path.join(EXPERIMENT_HOME, "daggit_api.log"), "r") as log_file:

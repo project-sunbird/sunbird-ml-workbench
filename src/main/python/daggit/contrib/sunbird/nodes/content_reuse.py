@@ -69,7 +69,6 @@ class OcrTextExtraction(BaseOperator):
         pathTocredentials = self.inputs["pathTocredentials"].read()
         path_to_PDF_file = self.inputs["pathToPDF"].read()
         status = False
-        print("***path to credentials:***", pathTocredentials)
         if os.path.exists(pathTocredentials):
             try:
                 config = configparser.ConfigParser(allow_no_value=True)
@@ -410,7 +409,6 @@ class DataPreparation(BaseOperator):
         path_to_base_data = self.inputs["path_to_base_data"].read()
         path_to_result_folder = self.inputs["path_to_result_folder"].read()
         node_name = 'data_preparation'
-        print("***path_to_base_data: ", path_to_base_data)
         path_to_result_folder = os.path.join(path_to_result_folder, node_name)
         if not os.path.exists(path_to_result_folder):
             os.mkdir(path_to_result_folder)
@@ -559,7 +557,6 @@ class BertScoring(BaseOperator):
         if filter_by_type_of_match != "nan":
             test_df = test_df[test_df["type_of_match"] == filter_by_type_of_match].copy()
             test_df = test_df.reset_index(drop=True)
-        print("****The best model path: ", path_to_best_model)
         # if model not present terminate the process:
         assert os.path.exists(path_to_result_folder)
         assert os.path.exists(path_to_best_model)
@@ -618,7 +615,6 @@ class TopicLevelAggregation(BaseOperator):
             output_aggregated_topic_level.to_csv(path_to_save_output)
         else:
             path_to_save_output = path_to_predicted_output
-            print("*****Topic similarity aggregation not computed")
         self.outputs["path_to_output_topic_agg"].write(path_to_save_output)
 
 
