@@ -9,12 +9,13 @@ inputs:
   pathToToc: <path to TOC>
   pathToReference_DTB: <path to ReferenceDTB>
   pathToActualDTB: <path to Actual DTB>
+  
 
 outputs:
   dummy: /home/DS_HOME
 
+
 graph:
-  
   - node_name: ocr_text_extraction
     inputs: [DS_DATA_HOME, pathTocredentials, pathToPDF]
     outputs: [path_to_result_folder]
@@ -51,10 +52,3 @@ graph:
       no_of_recommendations: 5
       distance_method: BERT
   
-
-
-
- 
-
-
-

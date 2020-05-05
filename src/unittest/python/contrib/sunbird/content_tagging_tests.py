@@ -1,17 +1,16 @@
-from contrib.sunbird.TestingUtils import text_reading
-from contrib.sunbird.TestingUtils import sentence_similarity
-from contrib.sunbird.TestingUtils import keyword_extraction
-import unittest
 import sys
-import os
-import yaml
-import nltk
-import pandas as pd
+import unittest
+import daggit
 from daggit.contrib.sunbird.oplib.taggingUtils import *
 from daggit.core.oplib.misc import df_feature_check
 from daggit.core.oplib.nlp import jaccard_with_phrase
-
 from nltk.corpus import stopwords
+import pandas as pd
+import os
+
+# from daggit.contrib.sunbird.oplib.contentreuseUtils import scoring_module, filter_by_grade_range
+# from daggit.contrib.sunbird.oplib.contentreuseUtils import aggregation_topic_level
+
 stopwords = stopwords.words('english')
 
 testdir = os.path.dirname(os.path.realpath(__file__))
@@ -39,7 +38,7 @@ class UnitTests(unittest.TestCase):
             "df_feature_check/" +
             "Content_Meta_feature_checking_df_3.csv")
         mandatatory_field_location = test_case_data_location + \
-            "df_feature_check/" + "ContentTagging_mandatory_fields.yaml"
+                                     "df_feature_check/" + "ContentTagging_mandatory_fields.yaml"
         with open(mandatatory_field_location, 'r') as stream:
             data = yaml.load(stream)
         mandatatory_field_ls = list(data['mandatory_fields'])
@@ -107,6 +106,46 @@ class UnitTests(unittest.TestCase):
     @staticmethod
     def test_jaccard_evaluation():
         assert jaccard_with_phrase(['simple', 'algebraic', 'problem', 'mathematics'], [
-                                   'algebraic', 'maths'])['jaccard'] == 0.2
+            'algebraic', 'maths'])['jaccard'] == 0.2
         assert jaccard_with_phrase(['simple', 'algebraic', 'problem', 'mathematics'], [
-                                   'tree', 'apple'])['jaccard'] == 0
+            'tree', 'apple'])['jaccard'] == 0
+
+    # @staticmethod
+    # def test_bert_scoring():
+    #     test_data = pd.read_csv(test_case_data_location + "bert_scoring/" + "input.csv")
+    #     test_tokenizer_path = pd.read_csv(
+    #         test_case_data_location +
+    #         "bert_scoring/" +
+    #         "tokenizer.pkl")
+    #     test_model_path = pd.read_csv(
+    #         test_case_data_location +
+    #         "bert_scoring/" +
+    #         "lstm_50_50_0_17_0_25.h5")
+    #     test_config = pd.read_csv(
+    #         test_case_data_location +
+    #         "bert_scoring/" +
+    #         "siamese_configuration.json")
+    #     test_threshold = 0.482528924942016
+    #     with open(test_tokenizer_path, 'rb') as tokenizer_file:
+    #         test_tokenizer = pickle.load(tokenizer_file)
+    #     output_pred_df = scoring_module(test_tokenizer, test_model_path, test_config, test_data, test_threshold)
+    #     mandatory_field_location = test_case_data_location + "bert_scoring/" + "bert_scoring_mandatory_fields.yaml"
+    #     with open(mandatory_field_location, 'r') as stream:
+    #         data = yaml.load(stream)
+    #     mandatory_field_ls = list(data['mandatory_fields'])
+    #     assert df_feature_check(output_pred_df, mandatory_field_ls)
+    #
+    # @staticmethod
+    # def test_aggregation_topic_level():
+    #     test_output_bert = pd.read_csv(test_case_data_location + "bert_scoring/" + "input.csv")
+    #     aggregation_criteria = "average"
+    #     mandatory_field_location = test_case_data_location + "bert_scoring/" + "topic_aggregation_mandatory_fields.yaml"
+    #     with open(mandatory_field_location, 'r') as stream:
+    #         data = yaml.load(stream)
+    #     mandatory_field_ls = list(data['mandatory_fields'])
+    #     output_aggregated_topic_level = aggregation_topic_level(test_output_bert,
+    #                                                             aggregation_criteria, data["mandatory_column_name"])
+    #     assert df_feature_check(output_aggregated_topic_level, mandatory_field_ls)
+    #
+    #
+    #
