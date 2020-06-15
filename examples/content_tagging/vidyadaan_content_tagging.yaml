@@ -2,7 +2,7 @@ experiment_name: Content_tagging
 owner: sunbird
 
 inputs:
-  DS_DATA_HOME: /Users/adarsa/Ilimi/data_home/daggit_home
+  DS_DATA_HOME: /home/daggit_home
   pathTocredentials: inputs/credentials.ini
   categoryLookup: inputs/category_lookup.yaml
   pathTotaxonomy: inputs/taxonomy.csv
@@ -58,7 +58,7 @@ graph:
   - node_name: writeToKafka
     inputs: [keyword_extraction.pathTocontentKeywords, pathTocredentials]
     outputs: []
-    operation: contenttagging.WriteToKafkaTopic
+    operation: contenttagging.WriteToKafkaTopicVD
     arguments:
       write_to_kafkaTopic: new_topic
 

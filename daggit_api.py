@@ -154,13 +154,14 @@ def submit_dag():
         with open(yaml_loc, 'w') as f:
             yaml.dump(expt_config, f, default_flow_style=False)
         init_command = "daggit init " + yaml_loc
-  
-
         out_init, res_init = subprocess.getstatusoutput(init_command)
         
         if out_init == 0:
             logging.info("----- Daggit Initialization successful :) Starting run.-----")
             run_command = "nohup daggit run " + updated_expt_name
+            status=200
+            api_response["params"]["status"] = "success"
+
             #out_run, res_run = subprocess.getstatusoutput(run_command)
             out_run = subprocess.Popen(run_command.split()).pid
 
@@ -180,9 +181,11 @@ def submit_dag():
         else:
             logging.info("----- Unsuccessful Daggit Initialization -----", exc_info=True)
             logger.error(res_init, exc_info=True)
+            status = 400
+            api_response["params"]["status"] = "Fail"
+            api_response["params"]["errmsg"] = "Dag Initialization failed"
             raise FileNotFoundError(res_init)
 
-        api_response["params"]["status"] = "success"
         api_response["result"]["status"] = status
         api_response["result"]["experiment_name"] = updated_expt_name
         # api_response["result"]["execution_date"] = date
@@ -249,4 +252,4 @@ def get_dag_status_from_log():
         return response
 
 
-app.run(host='0.0.0.0', port=3579)
+app.run(host='0.0.0.0', port=3578)

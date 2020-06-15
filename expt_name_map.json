@@ -1,4 +1,5 @@
 {
+        "vidyadaan_content_keyword_tagging": "/examples/content_tagging/vidyadaan_content_tagging.yaml",
         "diksha_content_keyword_tagging": "/examples/content_tagging/content_tagging.yaml",
         "housing_prices": "/examples/housing_prices/housing_prices.yaml",
         "iris_classification": "/examples/iris_classification/iris_classification_graph.yaml",
