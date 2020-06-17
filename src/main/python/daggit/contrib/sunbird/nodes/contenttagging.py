@@ -135,11 +135,8 @@ class ContentToTextRead(BaseOperator):
             'gradeLevel',
             'identifier',
             'language',
-            'subject',
-            'graph_id',
-            'nodeType',
-            'objectType',
-            'node_id']
+            'subject'
+            ] #'graph_id','nodeType','objectType','node_id'
         assert df_feature_check(content_meta, contentMeta_mandatory_fields)
 
         logging.info("CTT_CONTENT_TO_TEXT_START")

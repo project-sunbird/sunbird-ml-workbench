@@ -2,14 +2,14 @@ experiment_name: Content_tagging
 owner: sunbird
 
 inputs:
-  DS_DATA_HOME: /home/daggit_home
+  DS_DATA_HOME: /home/DS_HOME
   pathTocredentials: inputs/credentials.ini
   categoryLookup: inputs/category_lookup.yaml
   pathTotaxonomy: inputs/taxonomy.csv
   input_arg1: arg_from_api
 
 outputs:
-  dummy: /home/DS_HOME
+  filepath: /home/DS_HOME
 
 graph:
 
@@ -50,7 +50,7 @@ graph:
     operation: contenttagging.KeywordExtraction
     arguments:
       extract_keywords: tagme
-      filter_criteria: none
+      filter_criteria: dbpedia
       update_corpus: 0
       filter_score_val: 0.4
       num_keywords: 5
@@ -60,6 +60,6 @@ graph:
     outputs: []
     operation: contenttagging.WriteToKafkaTopicVDD
     arguments:
-      write_to_kafkaTopic: content_tagging_topic
+      write_to_kafkaTopic: stage2_topic
       remove_folder: False
 

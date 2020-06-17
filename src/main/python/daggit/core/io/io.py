@@ -269,7 +269,7 @@ class KafkaDispatcher(DataType):
         if self.connection_established:
             if self.write_to_topic in self.server_topics.keys():
                 try:
-                    producer = KafkaProducer(bootstrap_servers=self.kafka_broker, value_serializer=lambda v: json.dumps(v, indent=4).encode('utf-8'))
+                    producer = KafkaProducer(bootstrap_servers=self.kafka_broker, value_serializer=lambda v: json.dumps(v, indent=1).encode('utf-8'))
                     # serializing json message:-
                     event_send = producer.send(self.write_to_topic, transaction_event)
                     result = event_send.get(timeout=60)
