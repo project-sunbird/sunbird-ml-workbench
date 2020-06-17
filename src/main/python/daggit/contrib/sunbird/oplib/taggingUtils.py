@@ -798,13 +798,17 @@ def get_tagme_spots(path_to_text, tagme_cred):
         index_count += window_len
         response_list.append(tagme_text(text, tagme_cred))
         response_df = pd.concat(response_list)
-        response_df = response_df.drop_duplicates('spot')
-        response_df.reset_index(drop=True, inplace=True)
-        cleaned_keyword_list = [str(x).lower() for x in list(
-            set(response_df['spot'])) if str(x) != 'nan']
-        cleaned_keyword_list = clean_string_list(cleaned_keyword_list)
-        unique_cleaned_keyword_list = list(set(cleaned_keyword_list))
-        spot = pd.DataFrame(unique_cleaned_keyword_list, columns=['keyword'])
+        try:
+            response_df = response_df.drop_duplicates('spot')
+            response_df.reset_index(drop=True, inplace=True)
+            cleaned_keyword_list = [str(x).lower() for x in list(
+                set(response_df['spot'])) if str(x) != 'nan']
+            cleaned_keyword_list = clean_string_list(cleaned_keyword_list)
+            unique_cleaned_keyword_list = list(set(cleaned_keyword_list))
+            spot = pd.DataFrame(unique_cleaned_keyword_list, columns=['keyword'])
+        except:
+            print("No keywords identified")
+            spot =  pd.DataFrame(columns=['keyword'])
     return spot
 
 
@@ -865,10 +869,11 @@ def keyword_filter(tagme_response_df, cache_cred, path_to_category_lookup, subje
             cache_status=True 
     except:
         try:
-            r=redis.redis(host=cache_cred['host'], port=cache_cred['port'])
+            r=redis.Redis(host=cache_cred['host'], port=cache_cred['port'])
             r.set("test","test")
             cache_cred["password"]=""
             cache_status=True 
+            print("Trying to establish redis connection without authentication")
         except IOError:
             print("Unable to establish connection with redis cache.")
 

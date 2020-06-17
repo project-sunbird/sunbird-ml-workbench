@@ -12,7 +12,7 @@ def setRediskey(key, val, host, port, password):
     :returns: The detected language for the given text.
     """
     try:
-        r = redis.StrictRedis(host=redis_host, port=redis_port, password=redis_password, decode_responses=True)
+        r = redis.StrictRedis(host=host, port=port, password=password, decode_responses=True)
         msg = r.set(key, val)   
     except Exception as e:
         print(e)
@@ -27,7 +27,7 @@ def getRediskey(key, host, port, password):
     :returns: The detected language for the given text.
     """
     try:
-        r = redis.StrictRedis(host=redis_host, port=redis_port, password=redis_password, decode_responses=True)
+        r = redis.StrictRedis(host=host, port=port, password=password, decode_responses=True)
         msg = r.get(key)     
         return msg
     except Exception as e:

@@ -263,6 +263,9 @@ class KeywordExtraction(BaseOperator):
             logging.info("No such directory as: ", content_to_text_path)
         else:
             logging.info('------Transcripts to keywords extraction-----')
+            
+            ### Pooled keyword extraction
+            """
             pool = multiprocessing.Pool(processes=4)
             keywordExtraction_partial = partial(
                keyword_extraction_parallel,
@@ -280,14 +283,31 @@ class KeywordExtraction(BaseOperator):
                 keywordExtraction_partial, [
                     dir for dir in os.listdir(content_to_text_path)])
             print(results)
+
+            pool.close()
+            pool.join()
+            """
+            ### For single Content
+            result = keyword_extraction_parallel(
+               os.listdir(content_to_text_path)[0],
+               timestr=timestr,
+               content_to_text_path=content_to_text_path,
+               extract_keywords=extract_keywords,
+               filter_criteria=filter_criteria,
+               cache_cred=cache_cred,
+               path_to_category_lookup=path_to_category_lookup,
+               update_corpus=update_corpus,
+               filter_score_val=filter_score_val,
+               num_keywords=num_keywords,
+               tagme_cred=tagme_cred)
+
             print("path to content keywords:", max(glob.glob(
                 os.path.join(timestamp_folder, 'content_to_text'))))
             c2t_path = os.path.join(timestamp_folder, 'content_to_text')
             self.outputs["path_to_contentKeywords"].write(max(glob.glob(
                 c2t_path), key=os.path.getmtime))
 
-            pool.close()
-            pool.join()
+            
 
 
 class WriteToElasticSearch(BaseOperator):
@@ -369,15 +389,16 @@ class WriteToKafkaTopic(BaseOperator):
         # Remove the timestamp folder:-
         shutil.rmtree(timestamp_folder)
 
-class WriteToKafkaTopicVD(BaseOperator):
+class WriteToKafkaTopicVDD(BaseOperator):
 
     @property
     def inputs(self):
         return {"path_to_contentKeywords": File_Txt(self.node.inputs[0]),
                 "pathTocredentials": ReadDaggitTask_Folderpath(self.node.inputs[1])
+
                 }
 
-    def run(self, write_to_kafkaTopicVD):
+    def run(self,write_to_kafkaTopic, remove_folder):
         path_to_contentKeywords = self.inputs["path_to_contentKeywords"].read()
         pathTocredentials = self.inputs["pathTocredentials"].read_loc()
         timestamp_folder = os.path.split(path_to_contentKeywords)[0]
@@ -386,6 +407,8 @@ class WriteToKafkaTopicVD(BaseOperator):
         content_to_textpath = os.path.join(timestamp_folder, "content_to_text")
         cid_name = [i for i in os.listdir(content_to_textpath) if i not in ['.DS_Store']]
         for cid in cid_name:
+            logging.info("Writing to Kafka for cid: ",cid)
+
             merge_json_list = []
             json_file = findFiles(os.path.join(content_to_textpath, cid), ["json"])
             for file in json_file:
@@ -421,7 +444,7 @@ class WriteToKafkaTopicVD(BaseOperator):
                           "ver": "1.0",
                           "id": cid
                         },
-                        "edata":{
+                        "eventData":{
                             "action": "update-ml-keywords",
                             "stage": 2,
                             "ml_Keywords":autotagging_json["transactionData"]["properties" ]["tags"]["system_keywords"],
@@ -441,8 +464,10 @@ class WriteToKafkaTopicVD(BaseOperator):
 
             else:
                 logging.info("******Error pushing the event")
+        if remove_folder:
+            shutil.rmtree(timestamp_folder)
         # Remove the timestamp folder:-
-        shutil.rmtree(timestamp_folder)
+        #shutil.rmtree(timestamp_folder)
 
             
 class CorpusCreation(BaseOperator):
