@@ -58,7 +58,8 @@ graph:
   - node_name: writeToKafka
     inputs: [keyword_extraction.pathTocontentKeywords, pathTocredentials]
     outputs: []
-    operation: contenttagging.WriteToKafkaTopicVD
+    operation: contenttagging.WriteToKafkaTopicVDD
     arguments:
-      write_to_kafkaTopic: new_topic
+      write_to_kafkaTopic: content_tagging_topic
+      remove_folder: False
 
