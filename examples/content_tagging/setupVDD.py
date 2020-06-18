@@ -1,5 +1,7 @@
 """
-The script upadates variables in the inputs/credential.ini file. 
+
+The script sets up the environment for VDD content tagging pipeline setup
+1. Upadates variables in the inputs/credential.ini file. 
 Running VDD Content tagging requires the following environment variables to be set:
 GOOGLE_APPLICATION_CREDENTIALS - Path to google vision and speech api credentials
 redis_host - Default localhost
@@ -8,6 +10,9 @@ redis_password - none
 tagme_token - none
 kafka_host - localhost
 kafka_port - 9092
+
+2. Import nltk stopwords in the environment.
+3. Populate redis 
 """
 
 import os
@@ -38,7 +43,6 @@ try:
 	config["redis"]["password"] = os.getenv('redis_password')	
 except:
 	print("redis_password environment variable not set. Defaulting to none.")
-	config["redis"]["password"] = "none"
 
 try:
 	config["tagme credentials"]["gcube_token"] = os.getenv('tagme_token')
@@ -60,3 +64,28 @@ except:
 updatedPathTocredentials = os.path.join(base_path,'inputs/credentials.ini')
 with open(updatedPathTocredentials, 'w+') as configfile:
 	config.write(configfile)
+
+
+### Install nltk stopwords
+import subprocess
+import sys
+
+def install(package):
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "nltk"])
+
+import ssl
+
+try:
+    _create_unverified_https_context = ssl._create_unverified_context
+except AttributeError:
+    pass
+else:
+    ssl._create_default_https_context = _create_unverified_https_context
+import nltk
+nltk.download('stopwords')
+
+
+### populate redis
+def install(package):
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "redis"])
+os.system("python "+os.path.join(base_path,'load_corpusToRedis.py'))

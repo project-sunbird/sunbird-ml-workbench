@@ -27,7 +27,7 @@ graph:
           video_to_speech: none
           speech_to_text: googleAT
           image_to_text: none
-          pdf_to_text: none
+          pdf_to_text: nones
           ecml_index_to_text: none
         ecml:
           contentDownloadField: downloadUrl
@@ -60,6 +60,6 @@ graph:
     outputs: []
     operation: contenttagging.WriteToKafkaTopicVDD
     arguments:
-      write_to_kafkaTopic: stage2_topic
+      write_to_kafkaTopic: mvc-processor
       remove_folder: False
 
