@@ -252,4 +252,4 @@ def get_dag_status_from_log():
         return response
 
 
-app.run(host='0.0.0.0', port=3579s)
+app.run(host='0.0.0.0', port=3579)
