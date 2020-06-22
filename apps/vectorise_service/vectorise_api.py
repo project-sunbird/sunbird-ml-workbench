@@ -44,29 +44,33 @@ def getTextVec():
 		try:
 			req = request.get_json()
 			try:
-				if req['model']=="BERT" & req["language"]=="en":
-					text = req["text"]
-					bc = BertClient()
+				time_format = time.strftime("%Y-%m-%d %H:%M:%S:%s")
+				api_response["ets"] = time_format
+				if req["request"]['method']=="BERT" and req["request"]["language"]=="en":
+					text = req["request"]["text"]
+					bc = BertClient(timeout = 2000)
 					vector = bc.encode(text)
 					bc.close()
 					api_response["result"]["vector"]= vector.tolist()
 					api_response["params"]["status"]= "success"
 					status=200
-					time_format = time.strftime("%Y-%m-%d %H:%M:%S:%s")
-					api_response["ets"] = time_format
-
+					print("here")
 					response = jsonify(api_response)
 					response.status_code = 200
 					return response
+
 			except ValueError:
+				api_response["params"]["errmsg"] = "Bert service not available."
 				api_response["params"]["status"]= "fail"
 				response = jsonify(api_response)
 				response.status_code = 400
 				return response
 		except:
+			api_response["params"]["errmsg"] = "API request in incorrect format."
 			api_response["params"]["status"]= "fail"
 			response = jsonify(api_response)
 			response.status_code = 400
+			return response
 
 	else:
 		response = jsonify(api_response)
@@ -95,7 +99,7 @@ def writeToKafka(pathTocredentials, vector, cid, topic_name):
 	      "ver": "1.0",
 	      "id": cid
 	    },
-	    "edata":{
+	    "eventData":{
 	        "action": "update-ml-contenttextvector",
 	        "stage": 3,
 	        "ml_contentTextVector":vector
@@ -124,13 +128,14 @@ def getContentTextVDD():
 					text = req["request"]["text"]
 					cid = req["request"]["cid"]
 					topic_name = config['kafka']['topic_name']
-					bc = BertClient()
+					bc = BertClient(timeout = 2000)
 					vector = bc.encode(text)
 					bc.close()
 					vector_list = vector.tolist()
 					#vector_list =[]
 					api_response["result"]["vector"]= vector_list
-					print(api_response)
+					#print(api_response)
+
 					kafka_write_status = writeToKafka(pathTocredentials, vector_list, cid, topic_name)
 					if kafka_write_status:
 						api_response["params"]["status"]= "success"
@@ -166,6 +171,6 @@ def getContentTextVDD():
 		response.status_code = 500
 		return response
 
-app.run(host='0.0.0.0', port=1729)
+app.run(host='0.0.0.0', port=1729,threaded=True )
 #server.close()
 
