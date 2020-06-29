@@ -3,4 +3,4 @@ FROM python:3.6-stretch
 RUN mkdir /app
 COPY . /app
 WORKDIR /app
-RUN sh build.sh
+RUN bash build.sh
