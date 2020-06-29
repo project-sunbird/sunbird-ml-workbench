@@ -34,7 +34,7 @@ node('build-slave') {
             stage('Build') {
                 env.NODE_ENV = "build"
                 print "Environment will be : ${env.NODE_ENV}"
-                docker build -f ./Dockerfile.build -t sunbird/ml-build
+                sh('docker build -f ./Dockerfile.build -t sunbird/ml-build')
                 sh('chmod 777 build.sh')
                 sh("./build.sh ${build_tag} ${env.NODE_NAME} ${hub_org}")
             }
