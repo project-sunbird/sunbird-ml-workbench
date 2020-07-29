@@ -55,11 +55,4 @@ graph:
       filter_score_val: 0.4
       num_keywords: 5
 
-  - node_name: writeToKafka
-    inputs: [keyword_extraction.pathTocontentKeywords, pathTocredentials]
-    outputs: []
-    operation: contenttagging.WriteToKafkaTopicVDD
-    arguments:
-      write_to_kafkaTopic: mvc-processor
-      remove_folder: False
 
