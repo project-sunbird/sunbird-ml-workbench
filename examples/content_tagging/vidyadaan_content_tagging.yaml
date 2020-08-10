@@ -54,5 +54,15 @@ graph:
       update_corpus: 0
       filter_score_val: 0.4
       num_keywords: 5
+      
+ 
+  - node_name: writeToKafka
+    inputs: [keyword_extraction.pathTocontentKeywords, pathTocredentials]
+    outputs: []
+    operation: contenttagging.WriteToKafkaTopicVDD
+    arguments:
+      write_to_kafkaTopic: sunbirddock.mvc.processor.job.request
+      remove_folder: False
+
 
 
