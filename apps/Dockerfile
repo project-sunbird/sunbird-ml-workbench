@@ -9,4 +9,4 @@ RUN mkdir /app/examples -p
 COPY examples /app/examples
 COPY expt_name_map.json /app
 ENV APP_HOME=/app
-CMD sh /app/start.sh
+CMD python apps/vectorise_service/startService.py
