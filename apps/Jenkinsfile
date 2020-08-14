@@ -36,7 +36,7 @@ node('build-slave') {
                 print "Environment will be : ${env.NODE_ENV}"
                 sh('docker build -f ./apps/Dockerfile.build -t sunbird/ml-build .')
                 sh('chmod 777 ./apps/vector-build.sh')
-                sh("./docker-build.sh ${build_tag} ${env.NODE_NAME} ${hub_org}")
+                sh("./apps/vector-build.sh ${build_tag} ${env.NODE_NAME} ${hub_org}")
             }
             stage('ArchiveArtifacts') {
                 archiveArtifacts "metadata.json"
