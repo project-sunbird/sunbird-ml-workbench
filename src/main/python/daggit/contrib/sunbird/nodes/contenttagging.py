@@ -395,9 +395,13 @@ class WriteToKafkaTopicVDD(BaseOperator):
 
                 }
 
-    def run(self,write_to_kafkaTopic, remove_folder):
+    def run(self, remove_folder):
         path_to_contentKeywords = self.inputs["path_to_contentKeywords"].read()
         pathTocredentials = self.inputs["pathTocredentials"].read_loc()
+        config = configparser.ConfigParser(allow_no_value=True)
+        config.read(pathTocredentials)
+        write_to_kafkaTopic = config['kafka']["topic"]
+
         timestamp_folder = os.path.split(path_to_contentKeywords)[0]
         timestr = os.path.split(timestamp_folder)[1]
         epoch_time = time.mktime(time.strptime(timestr, "%Y%m%d-%H%M%S"))

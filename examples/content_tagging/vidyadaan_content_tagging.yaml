@@ -50,7 +50,7 @@ graph:
     operation: contenttagging.KeywordExtraction
     arguments:
       extract_keywords: tagme
-      filter_criteria: dbpedia
+      filter_criteria: none
       update_corpus: 0
       filter_score_val: 0.4
       num_keywords: 5
@@ -61,7 +61,6 @@ graph:
     outputs: []
     operation: contenttagging.WriteToKafkaTopicVDD
     arguments:
-      write_to_kafkaTopic: sunbirddock.mvc.processor.job.request
       remove_folder: False
 
 

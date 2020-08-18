@@ -61,6 +61,11 @@ except:
 	print("kafka_port environment variable not set. Defaulting to 9092.")
 	config["kafka"]["port"] = 9092	
 
+try:	
+	config["kafka"]["topic"] = ".".join([os.getenv('env'),"mvc.processor.job.request"])
+except:
+	print("env environment variable not set. Defaulting to sunbirddock.")
+	config["kafka"]["topic"] = "sunbirddock.mvc.processor.job.request"
 updatedPathTocredentials = os.path.join(base_path,'inputs/credentials.ini')
 with open(updatedPathTocredentials, 'w+') as configfile:
 	config.write(configfile)
