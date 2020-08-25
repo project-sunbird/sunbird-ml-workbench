@@ -22,6 +22,16 @@ print(daggit_home)
 import configparser
 config = configparser.ConfigParser(allow_no_value=True)
 config.read(os.path.join(base_path,"inputs/credentials.ini"))
+try:	
+	config["kafka"]["topic_name"] = ".".join([os.getenv('env'),"mvc.processor.job.request"])
+except:
+	print("env environment variable not set. Defaulting to sunbirddock.")
+	config["kafka"]["topic_name"] = "sunbirddock.mvc.processor.job.request"
+updatedPathTocredentials = os.path.join(base_path,'inputs/credentials.ini')
+
+with open(updatedPathTocredentials, 'w+') as configfile:
+	config.write(configfile)
+
 
 ### Get the model
 from daggit.core.io.files import downloadZipFile
@@ -29,11 +39,11 @@ model_url = config["pretrained BERT"]["path"]
 model_name = os.path.split(model_url)[1][:-4]
 model_dir = os.path.join(daggit_home,"apps/vectorise_service/inputs", model_name)
 
+
 if not os.path.isdir(model_dir):
 	downloadZipFile(model_url, os.path.join(daggit_home,"apps/vectorise_service/inputs"))
 else:
 	print("Using "+model_name+" in "+model_dir+". To download a different model, remove the folder.")
-
 
 ### Start service
 

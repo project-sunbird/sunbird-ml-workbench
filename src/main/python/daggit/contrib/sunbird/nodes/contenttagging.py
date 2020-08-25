@@ -401,6 +401,7 @@ class WriteToKafkaTopicVDD(BaseOperator):
         config = configparser.ConfigParser(allow_no_value=True)
         config.read(pathTocredentials)
         write_to_kafkaTopic = config['kafka']["topic"]
+        logging.info("Attempting to write to topic: ", write_to_kafkaTopic)
 
         timestamp_folder = os.path.split(path_to_contentKeywords)[0]
         timestr = os.path.split(timestamp_folder)[1]
@@ -424,7 +425,16 @@ class WriteToKafkaTopicVDD(BaseOperator):
                     [new_json.pop(ignore) for ignore in ignore_list if ignore in new_json.keys()]
                 dict_list.append(new_json)
             # merge the nested jsons:-
-            autotagging_json = reduce(merge_json, dict_list)         
+            autotagging_json = reduce(merge_json, dict_list) 
+
+            try:
+                content_text = autotagging_json["transactionData"]["properties"]["tags"]["text"]
+            except:
+                content_text = "[]"        
+            try:
+                keywords = autotagging_json["transactionData"]["properties" ]["tags"]["system_keywords"]
+            except:
+                keywords = "[]"
 
             event_json ={
                         "eid": "MVC_JOB_PROCESSOR",
@@ -448,8 +458,8 @@ class WriteToKafkaTopicVDD(BaseOperator):
                         "eventData":{
                             "action": "update-ml-keywords",
                             "stage": 2,
-                            "ml_Keywords":autotagging_json["transactionData"]["properties" ]["tags"]["system_keywords"],
-                            "ml_contentText":autotagging_json["transactionData"]["properties"]["tags"]["text"]
+                            "ml_Keywords": keywords,
+                            "ml_contentText": content_text 
                         }
                     }
 
