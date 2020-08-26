@@ -6,16 +6,23 @@ from flask import Flask
 from flask import request, Response,jsonify
 from daggit.core.io.io import KafkaDispatcher, KafkaCLI
 import configparser
+import logging
 
 
 app = Flask(__name__)
 
 DS_DATA_HOME = os.environ['DS_DATA_HOME']
-model_path = os.path.join(DS_DATA_HOME+"BERT_models/multi_cased_L-12_H-768_A-12")
 base_path=os.path.dirname(os.path.realpath(__file__))
+model_path = os.path.join(base_path,"apps/vectorise_service/inputs/multi_cased_L-12_H-768_A-12")
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(name)s %(levelname)s:%(message)s',
+                            filename=os.path.join(base_path, "vectorService.log"))
+logger = logging.getLogger(__name__)
 
-print("BERT server started at port:5555. Ready to serve vectors!" )
-print("Rendering /ml/vector/search and /vector/ContentText apis at port:1729. ")
+
+logging.info("Loading model from ", model_path)
+
+logging.info("BERT server started at port:5555. Ready to serve vectors!" )
+logging.info("Rendering /ml/vector/search and /vector/ContentText apis at port:1729. ")
 base_path=os.path.dirname(os.path.realpath(__file__))
 pathTocredentials = os.path.join(base_path,'inputs/credentials.ini')
 config = configparser.ConfigParser(allow_no_value=True)
@@ -48,13 +55,14 @@ def getTextVec():
 				api_response["ets"] = time_format
 				if req["request"]['method']=="BERT" and req["request"]["language"]=="en":
 					text = req["request"]["text"]
+					app.logger.info("trying to connect to BERT Client")
 					bc = BertClient(timeout = 2000)
 					vector = bc.encode(text)
 					bc.close()
 					api_response["result"]["vector"]= vector.tolist()
 					api_response["params"]["status"]= "success"
 					status=200
-					print("here")
+					logging.info("here")
 					response = jsonify(api_response)
 					response.status_code = 200
 					return response
@@ -105,26 +113,32 @@ def writeToKafka(pathTocredentials, vector, cid, topic_name):
 	        "ml_contentTextVector":vector
 	    }
 	}
-	print("Trying to write "+str(topic_output)+" to "+str(topic_name))
+	app.logger.info("Trying to write "+str(topic_output)+" to "+str(topic_name))
 	kafka_cli = KafkaCLI(pathTocredentials)
 	status = kafka_cli.write(topic_output, topic_name)
 	if status:
-		print("Write to kafka successful.")
+		app.logger.info("Write to kafka successful.")
 	else:
-		print("Failed to write to kafka")
+		app.logger.info("Failed to write to kafka")
 	return status
 
 @app.route('/ml/vector/ContentText', methods=['POST'])
 def getContentTextVDD():
 	time_format = time.strftime("%Y-%m-%d %H:%M:%S:%s")
 	api_response["ets"] = time_format
+	app.logger.info("/vector/ContentText called.")
+	try:
+		request.is_json
+	except:
+		app.logger.info("request wrong format")
 
 	if request.is_json:
 		try:
 			req = request.get_json()
-			print("/vector/ContentText called.")
+			app.logger.info("/vector/ContentText called.")
 			try:
 				if req["request"]['method']=="BERT" and req["request"]["language"]=="en":
+					app.logger.info("Vectorisation method: BERT english ")
 					text = req["request"]["text"]
 					cid = req["request"]["cid"]
 					topic_name = config['kafka']['topic_name']
@@ -135,12 +149,13 @@ def getContentTextVDD():
 					#vector_list =[]
 					api_response["result"]["vector"]= vector_list
 					#print(api_response)
+					app.logger.info("Initiating write to kafka.")
 
 					kafka_write_status = writeToKafka(pathTocredentials, vector_list, cid, topic_name)
 					if kafka_write_status:
 						api_response["params"]["status"]= "success"
 						status=200
-						print("Success writing to kafka")
+						app.logger.info("Success writing to kafka")
 					else:
 						api_response["params"]["status"]= "fail"
 						status=400
@@ -149,7 +164,7 @@ def getContentTextVDD():
 					response.status_code = status
 					return response
 				else:
-					print("unidentified model or language parameter")
+					app.logger.info("unidentified model or language parameter")
 					status=400
 					response = jsonify(api_response)
 					response.status_code = status
