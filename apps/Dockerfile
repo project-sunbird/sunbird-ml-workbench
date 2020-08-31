@@ -1,12 +1,9 @@
 FROM python:3.6
 RUN mkdir /app
 WORKDIR /app
-COPY --from=sunbird/ml-build /app/bin/daggit-0.5.0.tar.gz /app
-RUN pip install daggit-0.5.0.tar.gz
-COPY daggit_api.py /app
-COPY start.sh /app
-RUN mkdir /app/examples -p
-COPY examples /app/examples
-COPY expt_name_map.json /app
+COPY . /app
+RUN pip install bin/daggit-0.5.0.tar.gz
+RUN mkdir /data
 ENV APP_HOME=/app
-CMD python apps/vectorise_service/startService.py
+ENV DS_DATA_HOME=/data
+ENTRYPOINT python apps/vectorise_service/startService.py
