@@ -61,7 +61,7 @@ graph:
     outputs: []
     operation: contenttagging.WriteToKafkaTopicVDD
     arguments:
-      remove_folder: False
+      remove_folder: True
 
 
 
