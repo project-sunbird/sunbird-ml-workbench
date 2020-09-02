@@ -32,6 +32,18 @@ import configparser
 config = configparser.ConfigParser(allow_no_value=True)
 config.read(os.path.join(base_path,"inputs/credentials.ini"))
 try:	
+	config["kafka"]["host"] = os.getenv('kafka_host')
+except:
+	logging.info("kafka_host environment variable not set. Defaulting to localhost")
+	config["kafka"]["host"] = "localhost"
+
+try:	
+	config["kafka"]["port"] = os.getenv('kafka_port')
+except:
+	logging.info("env environment variable not set. Defaulting to 9092.")
+	config["kafka"]["port"] = "9092"
+
+try:	
 	config["kafka"]["topic_name"] = ".".join([os.getenv('env'),"mvc.processor.job.request"])
 except:
 	logging.info("env environment variable not set. Defaulting to sunbirddock.")
