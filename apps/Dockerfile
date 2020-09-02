@@ -1,4 +1,5 @@
 FROM python:3.6
+MAINTAINER Harsha <harshavardhanc95@gmail.com>
 RUN mkdir /app
 WORKDIR /app
 COPY . /app
