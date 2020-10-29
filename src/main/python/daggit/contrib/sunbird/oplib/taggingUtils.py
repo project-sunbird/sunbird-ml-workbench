@@ -53,8 +53,8 @@ from daggit.core.oplib.nlp import clean_string_list
 from daggit.core.oplib.nlp import get_tokens
 from daggit.core.io.redis import setRediskey, getRediskey
 from daggit.core.io.files import findFiles
-
-
+from daggit.core.io.files import downloadZipFile
+from daggit.core.io.files import unzip_files
 
 def download_file_to_folder(url_to_download, path_to_folder, file_name): #download_from_downloadUrl
     download_dir = os.path.join(path_to_folder, 'temp' + file_name)
@@ -326,21 +326,24 @@ def video_to_speech(method, path_to_assets):
         logging.info("VTS_START_FOR_METHOD: {0}".format(method))
 
         for file in video_names:
-            # ffmpy wrapper to convert mp4 to mp3:
-            if "webm" in file:
-                ff = ffmpy.FFmpeg(inputs={file: None}, outputs={os.path.join(
-                    file[:-5] + ".mp3"): '-vn -ar 44100 -ac 2 -ab 192 -f mp3'})
-            else:    
-                ff = ffmpy.FFmpeg(inputs={file: None}, outputs={os.path.join(
-                    file[:-4] + ".mp3"): '-vn -ar 44100 -ac 2 -ab 192 -f mp3'})
-            ff.run()
-            if os.path.exists(os.path.join(
-                    path_to_assets, file[:-4] + ".mp3")):
-                path_to_audio = os.path.join(
-                    path_to_assets, file[:-4] + ".mp3")
-                logging.info("VTS_AUDIO_DOWNLOAD_PATH: ".format(path_to_audio))
-            else:
-                logging.info("mp3 download unsuccessful")
+            try:
+                # ffmpy wrapper to convert mp4 to mp3:
+                if "webm" in file:
+                    ff = ffmpy.FFmpeg(inputs={file: None}, outputs={os.path.join(
+                        file[:-5] + ".mp3"): '-vn -ar 44100 -ac 2 -ab 192 -f mp3'})
+                else:    
+                    ff = ffmpy.FFmpeg(inputs={file: None}, outputs={os.path.join(
+                        file[:-4] + ".mp3"): '-vn -ar 44100 -ac 2 -ab 192 -f mp3'})
+                ff.run()
+                if os.path.exists(os.path.join(
+                        path_to_assets, file[:-4] + ".mp3")):
+                    path_to_audio = os.path.join(
+                        path_to_assets, file[:-4] + ".mp3")
+                    logging.info("VTS_AUDIO_DOWNLOAD_PATH: ".format(path_to_audio))
+                else:
+                    logging.info("mp3 download unsuccessful")
+            except:
+                logging.info("Unable to convert audio file: {0}".format(file))
     if method == "none":
         logging.info("No Video content detected")
     logging.info('VTS_STOP')
@@ -730,8 +733,7 @@ def tagme_text(text, tagme_cred):
             "gcube-token": tagme_cred['gcube_token'],
             "text": "test"}
         headers = {
-            'cache-control': "no-cache",
-            'postman-token': tagme_cred['postman_token'] 
+            'cache-control': "no-cache" 
         }
         response = requests.request(
             "GET",
@@ -796,13 +798,17 @@ def get_tagme_spots(path_to_text, tagme_cred):
         index_count += window_len
         response_list.append(tagme_text(text, tagme_cred))
         response_df = pd.concat(response_list)
-        response_df = response_df.drop_duplicates('spot')
-        response_df.reset_index(drop=True, inplace=True)
-        cleaned_keyword_list = [str(x).lower() for x in list(
-            set(response_df['spot'])) if str(x) != 'nan']
-        cleaned_keyword_list = clean_string_list(cleaned_keyword_list)
-        unique_cleaned_keyword_list = list(set(cleaned_keyword_list))
-        spot = pd.DataFrame(unique_cleaned_keyword_list, columns=['keyword'])
+        try:
+            response_df = response_df.drop_duplicates('spot')
+            response_df.reset_index(drop=True, inplace=True)
+            cleaned_keyword_list = [str(x).lower() for x in list(
+                set(response_df['spot'])) if str(x) != 'nan']
+            cleaned_keyword_list = clean_string_list(cleaned_keyword_list)
+            unique_cleaned_keyword_list = list(set(cleaned_keyword_list))
+            spot = pd.DataFrame(unique_cleaned_keyword_list, columns=['keyword'])
+        except:
+            print("No keywords identified")
+            spot =  pd.DataFrame(columns=['keyword'])
     return spot
 
 
@@ -863,10 +869,11 @@ def keyword_filter(tagme_response_df, cache_cred, path_to_category_lookup, subje
             cache_status=True 
     except:
         try:
-            r=redis.redis(host=cache_cred['host'], port=cache_cred['port'])
+            r=redis.Redis(host=cache_cred['host'], port=cache_cred['port'])
             r.set("test","test")
             cache_cred["password"]=""
             cache_status=True 
+            print("Trying to establish redis connection without authentication")
         except IOError:
             print("Unable to establish connection with redis cache.")
 
@@ -968,7 +975,7 @@ def keyword_extraction_parallel(
         content_to_text_path, dir, "keywords", extract_keywords + "_" + filter_criteria)
     if os.path.isfile(path_to_cid_transcript):
         logging.info("Transcript present for cid: {0}".format(dir))
-        # try:
+        #try:
         if os.path.getsize(path_to_cid_transcript) > 0:
             os.makedirs(path_to_keywords)
             print("Path to transcripts ", path_to_cid_transcript)

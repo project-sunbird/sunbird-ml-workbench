@@ -93,7 +93,10 @@ class ContentToTextRead(BaseOperator):
         timestamp folder with the content id and its enriched text to an h5 file that gets saved as an intermediate result  
 
         """
-        DS_DATA_HOME = self.inputs["DS_DATA_HOME"].read_loc()
+        #DS_DATA_HOME = self.inputs["DS_DATA_HOME"].read_loc()
+        contentmeta_path = self.inputs["localpathTocontentMeta"].read_loc()
+        DS_DATA_HOME = contentmeta_path[:-19]
+
         pathTocredentials = self.inputs["pathTocredentials"].read_loc()
         timestr = time.strftime("%Y%m%d-%H%M%S")
         path_to_timestamp_folder = os.path.join(DS_DATA_HOME, timestr)
@@ -107,10 +110,13 @@ class ContentToTextRead(BaseOperator):
         contentmeta_path = self.inputs["localpathTocontentMeta"].read_loc()
         # move the content meta to timestamp folder[destination folder]
         #for the time being experiment with copy: change it later.
-        shutil.move(contentmeta_path, os.path.join(path_to_timestamp_folder, os.path.split(contentmeta_path)[1]))
+        shutil.copy(contentmeta_path, os.path.join(path_to_timestamp_folder, os.path.split(contentmeta_path)[1]))
         moved_contentmeta_path = os.path.join(path_to_timestamp_folder, os.path.split(contentmeta_path)[1])
         
-        content_meta = pd.read_csv(moved_contentmeta_path)
+        with open(os.path.join(moved_contentmeta_path)) as f:
+                data = json.load(f)
+
+        content_meta = pd.DataFrame(data['content'])
         if "derived_contentType" not in list(content_meta.columns):
             content_meta["derived_contentType"] = np.nan
             for row_ind, artifact_url in enumerate(content_meta["artifactUrl"]):
@@ -129,11 +135,8 @@ class ContentToTextRead(BaseOperator):
             'gradeLevel',
             'identifier',
             'language',
-            'subject',
-            'graph_id',
-            'nodeType',
-            'objectType',
-            'node_id']
+            'subject'
+            ] #'graph_id','nodeType','objectType','node_id'
         assert df_feature_check(content_meta, contentMeta_mandatory_fields)
 
         logging.info("CTT_CONTENT_TO_TEXT_START")
@@ -257,6 +260,9 @@ class KeywordExtraction(BaseOperator):
             logging.info("No such directory as: ", content_to_text_path)
         else:
             logging.info('------Transcripts to keywords extraction-----')
+            
+            ### Pooled keyword extraction
+            """
             pool = multiprocessing.Pool(processes=4)
             keywordExtraction_partial = partial(
                keyword_extraction_parallel,
@@ -274,14 +280,31 @@ class KeywordExtraction(BaseOperator):
                 keywordExtraction_partial, [
                     dir for dir in os.listdir(content_to_text_path)])
             print(results)
+
+            pool.close()
+            pool.join()
+            """
+            ### For single Content
+            result = keyword_extraction_parallel(
+               os.listdir(content_to_text_path)[0],
+               timestr=timestr,
+               content_to_text_path=content_to_text_path,
+               extract_keywords=extract_keywords,
+               filter_criteria=filter_criteria,
+               cache_cred=cache_cred,
+               path_to_category_lookup=path_to_category_lookup,
+               update_corpus=update_corpus,
+               filter_score_val=filter_score_val,
+               num_keywords=num_keywords,
+               tagme_cred=tagme_cred)
+
             print("path to content keywords:", max(glob.glob(
                 os.path.join(timestamp_folder, 'content_to_text'))))
             c2t_path = os.path.join(timestamp_folder, 'content_to_text')
             self.outputs["path_to_contentKeywords"].write(max(glob.glob(
                 c2t_path), key=os.path.getmtime))
 
-            pool.close()
-            pool.join()
+            
 
 
 class WriteToElasticSearch(BaseOperator):
@@ -362,6 +385,100 @@ class WriteToKafkaTopic(BaseOperator):
                 logging.info("******Error pushing the event")
         # Remove the timestamp folder:-
         shutil.rmtree(timestamp_folder)
+
+class WriteToKafkaTopicVDD(BaseOperator):
+
+    @property
+    def inputs(self):
+        return {"path_to_contentKeywords": File_Txt(self.node.inputs[0]),
+                "pathTocredentials": ReadDaggitTask_Folderpath(self.node.inputs[1])
+
+                }
+
+    def run(self, remove_folder):
+        path_to_contentKeywords = self.inputs["path_to_contentKeywords"].read()
+        pathTocredentials = self.inputs["pathTocredentials"].read_loc()
+        config = configparser.ConfigParser(allow_no_value=True)
+        config.read(pathTocredentials)
+        write_to_kafkaTopic = config['kafka']["topic"]
+        logging.info("Attempting to write to topic: ", write_to_kafkaTopic)
+
+        timestamp_folder = os.path.split(path_to_contentKeywords)[0]
+        timestr = os.path.split(timestamp_folder)[1]
+        epoch_time = time.mktime(time.strptime(timestr, "%Y%m%d-%H%M%S"))
+        content_to_textpath = os.path.join(timestamp_folder, "content_to_text")
+        cid_name = [i for i in os.listdir(content_to_textpath) if i not in ['.DS_Store']]
+        for cid in cid_name:
+            logging.info("Writing to Kafka for cid: ",cid)
+
+            merge_json_list = []
+            json_file = findFiles(os.path.join(content_to_textpath, cid), ["json"])
+            for file in json_file:
+                if os.path.split(file)[1] in [
+                        "ML_keyword_info.json", "ML_content_info.json"]:
+                    merge_json_list.append(file)
+            ignore_list = ["ets"]
+            dict_list = []
+            for file in merge_json_list:
+                with open(file, "r", encoding="UTF-8") as info:
+                    new_json = json.load(info)
+                    [new_json.pop(ignore) for ignore in ignore_list if ignore in new_json.keys()]
+                dict_list.append(new_json)
+            # merge the nested jsons:-
+            autotagging_json = reduce(merge_json, dict_list) 
+
+            try:
+                content_text = autotagging_json["transactionData"]["properties"]["tags"]["text"]
+            except:
+                content_text = "[]"        
+            try:
+                keywords = autotagging_json["transactionData"]["properties" ]["tags"]["system_keywords"]
+            except:
+                keywords = "[]"
+
+            event_json ={
+                        "eid": "MVC_JOB_PROCESSOR",
+                        "ets": epoch_time,
+                        "mid": "LP.1591603456223.a5d1c6f0-a95e-11ea-b80d-b75468d19fe4",
+                        "actor": {
+                          "id": "UPDATE ML KEYWORDS",
+                          "type": "System"
+                        },
+                        "context": {
+                          "pdata": {
+                            "ver": "1.0",
+                            "id": "org.ekstep.platform"
+                          },
+                          "channel": "01285019302823526477"
+                        },
+                        "object": {
+                          "ver": "1.0",
+                          "id": cid
+                        },
+                        "eventData":{
+                            "action": "update-ml-keywords",
+                            "stage": 2,
+                            "ml_Keywords": keywords,
+                            "ml_contentText": content_text 
+                        }
+                    }
+
+
+            #autotagging_json.update({"ets": epoch_time})
+            with open(os.path.join(timestamp_folder, "content_to_text", cid, "autoTagging_json.json"), "w+") as main_json:
+                json.dump(event_json, main_json, sort_keys=True, indent=4)
+            # writing to kafka topic:-
+            kafka_cli = KafkaCLI(pathTocredentials)
+            status = kafka_cli.write(event_json, write_to_kafkaTopic)
+            if status:
+                logging.info("******Transaction event successfully pushed to topic:{0}".format(write_to_kafkaTopic))
+
+            else:
+                logging.info("******Error pushing the event")
+        if remove_folder:
+            shutil.rmtree(timestamp_folder)
+        # Remove the timestamp folder:-
+        #shutil.rmtree(timestamp_folder)
 
             
 class CorpusCreation(BaseOperator):

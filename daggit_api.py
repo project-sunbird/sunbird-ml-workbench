@@ -14,7 +14,7 @@ app = Flask(__name__)
 
 # global declaration of api_response:
 api_response = {
-        "id": "api.org.search",
+        "id": "api.daggit",
         "ver": "v1",
         "ts": "",
         "params": {
@@ -66,10 +66,24 @@ def submit_dag():
     if request.is_json:
         try:
             req = request.get_json()
-            APP_HOME = req["request"]["input"]["APP_HOME"]
-            job = req["request"]["job"]
-            print("******JOB: ", job)
-            status = 200
+            try:
+                APP_HOME = req["request"]["input"]["APP_HOME"]
+                status = 200
+            except KeyError:
+                try:
+                    APP_HOME = os.environ['APP_HOME']
+                    status = 200
+                except:
+                    print("APP_HOME not set")
+                    status = 400
+            
+            try:
+                job = req["request"]["job"]
+                status = 200
+            except KeyError:
+                print("job required to initiate experiment.")
+                status = 400
+            
         except ValueError:
             status = 400
 
@@ -84,39 +98,78 @@ def submit_dag():
             raise Exception('Unrecognised experiment_name. Check expt_name_map.json for recognised experiment name.')
 
         if status == 200:
-            try:
-                # setting environment variables:
-                os.environ['APP_HOME'] = APP_HOME
-            except FileNotFoundError:
-                raise Exception("Environment variables are not set. Please set the variables!!")
+            os.environ['APP_HOME'] = APP_HOME
+        
         expt_config = parse_config(path=yaml_loc)
         timestamp = time.strftime("%Y%m%d-%H%M%S")
         updated_expt_name = expt_config['experiment_name'] + '_' + timestamp
         for k, v in expt_config["inputs"].items():  # handle input files from app data_input folder
+
             if expt_config["inputs"][k].startswith("inputs/"):
                 expt_config["inputs"][k] = os.path.join(os.path.split(yaml_loc)[0], v)
         expt_config["experiment_name"] = updated_expt_name
+        
         if "path_to_result_folder" in expt_config["inputs"]:
             expt_config["inputs"]["path_to_result_folder"] = os.path.join(
                 expt_config["inputs"]["path_to_result_folder"], job, timestamp)
-        directory = expt_config["inputs"]["path_to_result_folder"]
+            output_directory = expt_config["inputs"]["path_to_result_folder"]
+        else:
+            output_directory = os.path.join(APP_HOME, job, timestamp)
+        
+
         if not os.path.exists(os.path.join(APP_HOME, job)):
             os.mkdir(os.path.join(APP_HOME, job))
-        if not os.path.exists(directory):
-            os.mkdir(directory)
+            print("making "+ os.path.join(APP_HOME, job))
+        if not os.path.exists(output_directory):
+            os.mkdir(output_directory)
+            print("making "+ output_directory)
+
+        #dump input passed in api and write to yaml
+        try:
+            dag_input_path = os.path.join(output_directory, 'input')
+            if not os.path.exists(dag_input_path):
+                        os.mkdir(dag_input_path)
+                        print("making "+dag_input_path)
+
+            argcount = 0
+            for submit_input in req["request"]["input"]:
+                if submit_input not in["APP_HOME"]:
+                    input_data = {submit_input:req["request"]["input"][submit_input]}
+                    argcount+=1
+                    with open(os.path.join(dag_input_path ,str(submit_input)+'.json'), 'w') as outfile:
+                        json.dump(input_data, outfile)
+                    try:
+                        expt_config["inputs"]["input_arg"+str(argcount)] = os.path.join(dag_input_path ,str(submit_input)+'.json')
+                    except:
+                        print("Passed argument not updated in yaml. 'input_arg"+str(argcount)+"' field not found in inputs.")
+        except:
+            pass
+
         logging.basicConfig(level=logging.INFO, format='%(asctime)s %(name)s %(levelname)s:%(message)s',
-                            filename=os.path.join(directory, "daggit_api.log"))
+                            filename=os.path.join(output_directory, "daggit_api.log"))
         logger = logging.getLogger(__name__)
-        print("******DIRECTORY: ", directory)
-        yaml_loc = os.path.join(directory, updated_expt_name + '.yaml')
+        print("******DIRECTORY: ", output_directory)
+        yaml_loc = os.path.join(output_directory, updated_expt_name + '.yaml')
+        
         with open(yaml_loc, 'w') as f:
             yaml.dump(expt_config, f, default_flow_style=False)
         init_command = "daggit init " + yaml_loc
         out_init, res_init = subprocess.getstatusoutput(init_command)
+        
         if out_init == 0:
-            logging.info("----- Daggit Initialization successful :) -----")
-            run_command = "daggit run " + updated_expt_name
-            out_run, res_run = subprocess.getstatusoutput(run_command)
+            logging.info("----- Daggit Initialization successful :) Starting run.-----")
+            run_command = "nohup daggit run " + updated_expt_name
+            status=200
+            api_response["params"]["status"] = "success"
+
+            #out_run, res_run = subprocess.getstatusoutput(run_command)
+            out_run = subprocess.Popen(run_command.split()).pid
+
+            #with subprocess.Popen(run_command.split(), stdout=subprocess.PIPE) as proc:
+            #    logger.write(proc.stdout.read())
+
+            """
+            out_run, res_run = subprocess.Popen(run_command.split())
             if out_run != 0:
                 logging.info("----- DAG run failed for experiment: {0} -----".format(updated_expt_name), exc_info=True)
                 logger.error(res_run, exc_info=True)
@@ -124,12 +177,15 @@ def submit_dag():
             else:
                 logging.info("----- Daggit Run Successful :) -----", exc_info=True)
                 status = 200
+            """
         else:
             logging.info("----- Unsuccessful Daggit Initialization -----", exc_info=True)
             logger.error(res_init, exc_info=True)
+            status = 400
+            api_response["params"]["status"] = "Fail"
+            api_response["params"]["errmsg"] = "Dag Initialization failed"
             raise FileNotFoundError(res_init)
 
-        api_response["params"]["status"] = "success"
         api_response["result"]["status"] = status
         api_response["result"]["experiment_name"] = updated_expt_name
         # api_response["result"]["execution_date"] = date
@@ -143,6 +199,7 @@ def submit_dag():
         response = jsonify(api_response)
         response.status_code = 400
         return response
+
     logging.info("API Status: ", api_response["params"]["status"])
     logging.info("Experiment name: ", api_response["result"]["experiment_name"])
     logging.info("Execution date: ", api_response["result"]["execution_date"])
@@ -195,4 +252,4 @@ def get_dag_status_from_log():
         return response
 
 
-app.run(host='0.0.0.0', port=3579)
+app.run(host='0.0.0.0', port=3579,threaded=True )
