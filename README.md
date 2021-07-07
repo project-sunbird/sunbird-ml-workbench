@@ -27,7 +27,7 @@ If your solution has a long standing application, it is inevitable that the solu
 ### Installation
 #### Installation from binary
 1. The binary file is present at the following location `bin/`
-2. Install - `pip install  ML-Workbench/bin/daggit-0.5.0.tar.gz`
+2. Install - `pip install  sunbird-ml-workbench/bin/daggit-0.5.0.tar.gz`
 #### Installation after build
 1. Clone the repository or download the zipped file from `https://github.com/ekstep/ML-Workbench.git`
 2. Change directory into ML-Workbench
