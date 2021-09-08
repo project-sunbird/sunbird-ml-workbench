@@ -58,7 +58,7 @@ gspread==3.1.0
 opencv-python==4.1.1.26
 spacy==2.1.8
 pdf2image==1.8.0
-Pillow==7.1.1
+Pillow==8.3.2
 img2pdf==0.3.3
 transformers==2.1.1
 Keras==2.1.1
